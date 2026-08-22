@@ -7,8 +7,8 @@ VIDEO_PATH = "sample_crowd.mp4"   # <-- same video used in select_regions.py
 REGIONS_FILE = "regions.json"
  
 # Density thresholds - tune these based on your test footage
-LOW_THRESHOLD = 1
-HIGH_THRESHOLD = 3
+LOW_THRESHOLD = 3
+HIGH_THRESHOLD = 8
  
 COLOR_LOW = (0, 255, 0)      # green
 COLOR_MEDIUM = (0, 255, 255) # yellow
@@ -83,7 +83,7 @@ def main():
                     cv2.FONT_HERSHEY_SIMPLEX, 0.7, (255, 255, 255), 2)
  
         cv2.imshow("CrowdSense - Region Density Monitor", frame)
-        if cv2.waitKey(1) & 0xFF == ord('q'):
+        if cv2.waitKey(450) & 0xFF == ord('q'):
             break
  
     cap.release()
@@ -93,3 +93,18 @@ def main():
 if __name__ == "__main__":
     main()
  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
