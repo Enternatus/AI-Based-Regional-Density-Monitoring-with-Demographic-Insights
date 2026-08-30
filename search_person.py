@@ -13,11 +13,24 @@ def load_records():
         return json.load(f)
 
 
+def source_tag(record):
+    source = record.get("source")
+    if record.get("confirmed") or source == "settled":
+        return "[confirmed]"
+    if source == "last_resort":
+        return "[guess]"
+    if source == "best_raw":
+        return "[best-raw]"
+    return ""
+
+
 def show_all(records):
     print(f"\n{len(records)} person(s) on record:\n")
     for pid, r in records.items():
+        tag = source_tag(r)
+        tag_s = f" {tag}" if tag else ""
         print(f"  ID {pid}: {r['gender']} | Age {r['age']} | {r['race']} "
-              f"| seen frames {r['first_seen_frame']}-{r['last_seen_frame']}")
+              f"| seen frames {r['first_seen_frame']}-{r['last_seen_frame']}{tag_s}")
 
 
 def search(records, gender=None, age=None, race=None):
@@ -38,6 +51,9 @@ def show_person(pid, record):
     print(f"Gender: {record['gender']} ({record['gender_conf']:.0f}%)")
     print(f"Age: {record['age']}")
     print(f"Race: {record['race']}")
+    tag = source_tag(record)
+    if tag:
+        print(f"Read quality: {tag} (source={record.get('source')})")
     print(f"First seen frame: {record['first_seen_frame']}")
     print(f"Last seen frame: {record['last_seen_frame']}")
 

@@ -15,6 +15,9 @@ run this file BEFORE you trust the new version.
 """
 
 from collections import defaultdict, Counter
+import numpy as np
+
+from unsettled_fallback import apply_last_resort_live, apply_unsettled_fallback
 
 # --- paste-or-import the logic under test ----------------------------------
 # For now this is a copy of the functions from gender_monitor.py so the
@@ -120,6 +123,172 @@ def test_smoothing_window_does_not_grow_unbounded():
     for i in range(50):
         update_attribute(state, "age", "p1", "20-29", 60, 20)
     assert len(state["age"]["p1"]) == SMOOTHING_WINDOW
+
+
+def pose_offset(landmarks):
+    pts = np.asarray(landmarks, dtype=float)
+    left_eye, right_eye, nose = pts[0], pts[1], pts[2]
+    eye_dist = np.linalg.norm(right_eye - left_eye)
+    if eye_dist < 1e-6:
+        return 999.0
+    eye_mid_x = (left_eye[0] + right_eye[0]) / 2.0
+    return abs(nose[0] - eye_mid_x) / eye_dist
+
+
+MIN_SHARPNESS = 15.0
+MAX_POSE_OFFSET = 0.55
+
+
+def is_good_quality(sharpness, offset):
+    if sharpness < MIN_SHARPNESS:
+        return False
+    if offset > MAX_POSE_OFFSET:
+        return False
+    return True
+
+
+def test_frontal_face_passes_pose_check():
+    # eyes level, nose dead-center between them -> offset should be ~0
+    landmarks = [(90, 100), (110, 100), (100, 120), (92, 140), (108, 140)]
+    offset = pose_offset(landmarks)
+    assert offset < MAX_POSE_OFFSET, f"a frontal face was rejected, offset={offset:.2f}"
+
+
+def test_turned_face_fails_pose_check():
+    # nose pulled far to one side relative to the eyes -> should be rejected
+    landmarks = [(90, 100), (150, 100), (180, 120), (92, 140), (108, 140)]
+    offset = pose_offset(landmarks)
+    assert offset > MAX_POSE_OFFSET, f"a clearly turned face passed the pose check, offset={offset:.2f}"
+
+
+def test_blurry_input_is_rejected_before_prediction():
+    # low variance-of-Laplacian score should never reach FairFace
+    assert not is_good_quality(sharpness=5.0, offset=0.05)
+
+
+def test_sharp_frontal_input_is_accepted():
+    assert is_good_quality(sharpness=120.0, offset=0.1)
+
+
+def _empty_record(**overrides):
+    record = {
+        "gender": "Detecting...",
+        "gender_conf": 0,
+        "age": "",
+        "race": "",
+        "confirmed": False,
+        "locked": False,
+        "source": None,
+        "raw_attempts": [],
+        "low_quality_attempts": [],
+    }
+    record.update(overrides)
+    return record
+
+
+def test_never_settled_track_falls_back_to_best_raw_attempt():
+    """Bug: someone who leaves frame before settling got stuck showing
+    'Detecting...' forever, even if we captured decent (if not
+    quite-gate-clearing) reads along the way. Must fall back to the best
+    one instead of leaving nothing."""
+    record = _empty_record(raw_attempts=[
+        {"frame": 10, "gender": "Male", "gender_conf": 40.0, "age": "20-29", "race": "White"},
+        {"frame": 30, "gender": "Male", "gender_conf": 58.0, "age": "20-29", "race": "White"},
+        {"frame": 50, "gender": "Female", "gender_conf": 22.0, "age": "30-39", "race": "Black"},
+    ])
+    assert apply_unsettled_fallback(record) == "best_raw"
+    assert record["gender"] == "Male" and record["gender_conf"] == 58.0
+    assert record["confirmed"] is False
+    assert record["source"] == "best_raw"
+
+
+def test_quality_rejected_predictions_never_confirm_or_enter_smoothing():
+    """Last-resort FairFace on blurry crops must not set confirmed, and
+    must not be treated as smoothing history (raw_attempts stays empty)."""
+    state = make_fresh_state()
+    record = _empty_record(low_quality_attempts=[
+        {"frame": 80, "gender": "Male", "gender_conf": 71.0, "age": "10-19", "race": "White"},
+    ])
+    apply_last_resort_live(record)
+    assert record["confirmed"] is False
+    assert record["source"] == "last_resort"
+    assert record["raw_attempts"] == []
+    assert len(state["gender"]["1"]) == 0
+
+
+def test_only_low_quality_attempts_get_last_resort_fill():
+    """Track 1 case: never cleared the sharpness gate, so no raw_attempts.
+    Must fill from low_quality_attempts and tag last_resort, not Detecting."""
+    record = _empty_record(low_quality_attempts=[
+        {"frame": 90, "gender": "Female", "gender_conf": 40.0, "age": "20-29", "race": "White"},
+        {"frame": 120, "gender": "Male", "gender_conf": 55.0, "age": "10-19", "race": "White"},
+    ])
+    assert apply_unsettled_fallback(record) == "last_resort"
+    assert record["gender"] == "Male"
+    assert record["gender_conf"] == 55.0
+    assert record["age"] == "10-19"
+    assert record["source"] == "last_resort"
+    assert record["confirmed"] is False
+    assert record["gender"] != "Detecting..."
+
+
+def test_raw_attempts_preferred_over_low_quality():
+    record = _empty_record(
+        raw_attempts=[
+            {"frame": 200, "gender": "Female", "gender_conf": 80.0, "age": "30-39", "race": "East Asian"},
+        ],
+        low_quality_attempts=[
+            {"frame": 80, "gender": "Male", "gender_conf": 99.0, "age": "10-19", "race": "White"},
+        ],
+    )
+    assert apply_unsettled_fallback(record) == "best_raw"
+    assert record["gender"] == "Female"
+    assert record["source"] == "best_raw"
+
+
+def test_confirmed_track_unchanged_by_fallback():
+    record = _empty_record(
+        gender="Female",
+        gender_conf=92.0,
+        age="20-29",
+        race="East Asian",
+        confirmed=True,
+        locked=True,
+        source="settled",
+        raw_attempts=[
+            {"frame": 200, "gender": "Male", "gender_conf": 99.0, "age": "10-19", "race": "White"},
+        ],
+        low_quality_attempts=[
+            {"frame": 80, "gender": "Male", "gender_conf": 99.0, "age": "10-19", "race": "White"},
+        ],
+    )
+    assert apply_unsettled_fallback(record) == "settled"
+    assert record["gender"] == "Female"
+    assert record["gender_conf"] == 92.0
+    assert record["age"] == "20-29"
+    assert record["confirmed"] is True
+    assert record["source"] == "settled"
+
+
+def test_no_attempts_at_all_stays_detecting():
+    record = _empty_record()
+    assert apply_unsettled_fallback(record) is None
+    assert record["gender"] == "Detecting..."
+    assert record["source"] is None
+
+
+def test_live_last_resort_skipped_once_raw_attempts_exist():
+    record = _empty_record(
+        gender="Detecting...",
+        raw_attempts=[
+            {"frame": 200, "gender": "Female", "gender_conf": 40.0, "age": "20-29", "race": "White"},
+        ],
+        low_quality_attempts=[
+            {"frame": 80, "gender": "Male", "gender_conf": 90.0, "age": "10-19", "race": "White"},
+        ],
+    )
+    assert apply_last_resort_live(record) is None
+    assert record["gender"] == "Detecting..."
 
 
 if __name__ == "__main__":
