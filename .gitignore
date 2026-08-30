@@ -1,0 +1,40 @@
+# Environment & build artefacts to ignore
+
+# Virtual env
+venv/
+.env
+env/
+
+# Python cache
+__pycache__/
+*.py[cod]
+*$py.class
+
+# IDE configs
+.vscode/
+.idea/
+
+# Jupyter
+.ipynb_checkpoints/
+
+# Person crops and backups
+person_crops/
+backups/
+
+# Model weights and large binaries
+*.onnx
+*.pt
+*.tflite
+*.pb
+
+# Video samples and outputs
+*.mp4
+*.avi
+*.mov
+
+# Logs
+*.log
+
+# OS
+.DS_Store
+Thumbs.db
