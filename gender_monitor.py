@@ -368,9 +368,10 @@ while cap.isOpened():
                             a_label, a_conf, a_margin = top_and_margin(result["age_scores"])
                             r_label, r_conf, r_margin = top_and_margin(result["race_scores"])
 
-                            any_accepted = (
+                            gender_accepted = (
                                 g_conf >= MIN_ACCEPT_CONF["gender"] and g_margin >= MIN_MARGIN["gender"]
-                            ) or (
+                            )
+                            any_accepted = gender_accepted or (
                                 a_conf >= MIN_ACCEPT_CONF["age"] and a_margin >= MIN_MARGIN["age"]
                             ) or (
                                 r_conf >= MIN_ACCEPT_CONF["race"] and r_margin >= MIN_MARGIN["race"]
@@ -404,8 +405,6 @@ while cap.isOpened():
                             if any_accepted:
                                 if record.get("source") == "last_resort":
                                     record["source"] = None
-                                if record["settle_start_frame"] is None:
-                                    record["settle_start_frame"] = frame_count
 
                                 if smoothed_gender is not None:
                                     record["gender"] = smoothed_gender
@@ -426,14 +425,27 @@ while cap.isOpened():
                                     record["crop_path"] = crop_path
                                     best_conf_seen[track_id] = g_conf
 
-                                # Lock once enough settle time has passed
-                                # since the first accepted read -- stop
-                                # updating for good, so the label stays put
-                                # and readable.
-                                if (frame_count - record["settle_start_frame"]) >= SETTLE_FRAMES:
-                                    record["locked"] = True
-                                    record["confirmed"] = True
-                                    record["source"] = "settled"
+                            # Settle/lock timing is gated on GENDER
+                            # specifically -- age/race accepting on their
+                            # own must never start or satisfy this timer.
+                            # Locking stops all further detection for the
+                            # track, so if the timer could fire off race/
+                            # age alone, a track could freeze forever as
+                            # "confirmed" while gender still shows
+                            # "Detecting...".
+                            if gender_accepted:
+                                if record["settle_start_frame"] is None:
+                                    record["settle_start_frame"] = frame_count
+
+                            # Lock once enough settle time has passed since
+                            # the first ACCEPTED GENDER read -- stop
+                            # updating for good, so the label stays put and
+                            # readable.
+                            if (record["settle_start_frame"] is not None
+                                    and (frame_count - record["settle_start_frame"]) >= SETTLE_FRAMES):
+                                record["locked"] = True
+                                record["confirmed"] = True
+                                record["source"] = "settled"
                 except Exception:
                     pass
 

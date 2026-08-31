@@ -79,8 +79,9 @@ def main():
         print("2. Search by gender")
         print("3. Search by age range")
         print("4. Search by race")
-        print("5. View a specific person by ID")
-        print("6. Quit")
+        print("5. Search by multiple features at once (gender + age + race)")
+        print("6. View a specific person by ID")
+        print("7. Quit")
         choice = input("Choose an option: ").strip()
 
         if choice == "1":
@@ -102,13 +103,24 @@ def main():
             show_all(matches) if matches else print("No matches.")
 
         elif choice == "5":
+            print("Leave any field blank to skip it -- only filled-in fields are used.")
+            gender = input("Gender (Male/Female): ").strip() or None
+            age = input("Age range exactly as stored (e.g. 20-29): ").strip() or None
+            race = input("Race (e.g. East Asian, White, Black, Indian, etc.): ").strip() or None
+            if not (gender or age or race):
+                print("No fields entered.")
+                continue
+            matches = search(records, gender=gender, age=age, race=race)
+            show_all(matches) if matches else print("No matches.")
+
+        elif choice == "6":
             pid = input("Enter person ID: ").strip()
             if pid in records:
                 show_person(pid, records[pid])
             else:
                 print("No person with that ID.")
 
-        elif choice == "6":
+        elif choice == "7":
             break
 
         else:

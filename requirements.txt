@@ -1,9 +1,8 @@
-ultralytics>=8.0.0
-opencv-python>=4.8.0
-numpy>=1.24.0
-onnxruntime>=1.16.0
-
-# Only needed if you re-export the FairFace ONNX model yourself
-# (see fairface_model/onnx_export.py) -- not required to run the app.
-# torch>=2.0.0
-# torchvision>=0.15.0
+﻿ultralytics
+opencv-python
+numpy
+torch
+deepface
+onnxruntime
+uniface
+pytest

@@ -1,40 +1,31 @@
-# Environment & build artefacts to ignore
-
-# Virtual env
+﻿__pycache__/
+*.pyc
+.venv/
 venv/
-.env
-env/
 
-# Python cache
-__pycache__/
-*.py[cod]
-*$py.class
+# Auto-downloaded / regenerable
+yolov8n.pt
 
-# IDE configs
-.vscode/
-.idea/
-
-# Jupyter
-.ipynb_checkpoints/
-
-# Person crops and backups
+# Debug/scratch output
+debug_crops/
+debug_crops_closerange/
 person_crops/
 backups/
+test_frame.jpg
+test_photo.jpg
+current_person.jpg
 
-# Model weights and large binaries
-*.onnx
-*.pt
-*.tflite
-*.pb
+# Raw frame dumps (large, regenerable via frames_to_video*.py)
+mall_dataset/
+P1E_S1_C1/
+recording_frames/
 
-# Video samples and outputs
-*.mp4
-*.avi
-*.mov
+# Large media files - never commit
+my_recording.mp4
+recording_frames.zip
+sample_crowd.mp4
+close_range_crowd.mp4
 
-# Logs
-*.log
 
-# OS
-.DS_Store
-Thumbs.db
+person_records_backup_*.json
+
