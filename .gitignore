@@ -1,11 +1,10 @@
-﻿__pycache__/
+__pycache__/
 *.pyc
 .venv/
 venv/
 
 # Auto-downloaded / regenerable
 yolov8n.pt
-
 # Debug/scratch output
 debug_crops/
 debug_crops_closerange/
@@ -14,18 +13,24 @@ backups/
 test_frame.jpg
 test_photo.jpg
 current_person.jpg
-
 # Raw frame dumps (large, regenerable via frames_to_video*.py)
 mall_dataset/
 P1E_S1_C1/
 recording_frames/
-
 # Large media files - never commit
 my_recording.mp4
 recording_frames.zip
 sample_crowd.mp4
 close_range_crowd.mp4
-
-
 person_records_backup_*.json
-
+# Model weights
+*.pth
+*.pt
+# Generated runtime data
+person_records.json
+# Archives / large generated files
+*.zip
+# Generated images
+*.jpg
+*.jpeg
+*.png
