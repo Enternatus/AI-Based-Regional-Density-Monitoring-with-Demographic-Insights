@@ -1,0 +1,12 @@
+import json
+
+regions = {
+    "left_walkway": [[0, 60], [260, 60], [260, 220], [0, 220]],
+    "right_walkway": [[420, 60], [640, 60], [640, 220], [420, 220]],
+    "central_plaza": [[150, 220], [480, 220], [480, 480], [150, 480]]
+}
+
+with open("regions.json", "w") as f:
+    json.dump(regions, f, indent=2)
+
+print("Saved regions.json with:", list(regions.keys()))

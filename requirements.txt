@@ -1,0 +1,8 @@
+﻿ultralytics
+opencv-python
+numpy
+torch
+deepface
+onnxruntime
+uniface
+pytest
