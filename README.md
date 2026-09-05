@@ -120,36 +120,74 @@ flowchart TB
 
 ## Getting Started
 
-### Prerequisites
+### System Requirements
 
-- Python 3.9+
-- Node.js 18+ and npm
-- CUDA-capable GPU recommended (not required)
+| Requirement | Minimum | Tested with |
+|-------------|---------|------------|
+| **OS** | Windows 10, Ubuntu 22.04+, or macOS 13+ | Windows 11 |
+| **Python** | 3.10+ | 3.13.5 |
+| **Node.js** | 18+ | 24.20.0 |
+| **RAM** | 8 GB | — |
+| **GPU** | Optional (NVIDIA CUDA recommended) | CPU-only works |
 
-### Installation
+### Step 1 — Clone and create a virtual environment
 
 ```bash
-# Clone
 git clone https://github.com/Enternatus/AI-Based-Regional-Density-Monitoring-with-Demographic-Insights.git
 cd AI-Based-Regional-Density-Monitoring-with-Demographic-Insights
 
-# Python environment
 python -m venv venv
-venv\Scripts\activate          # Linux/macOS: source venv/bin/activate
-pip install -r requirements.txt
+```
 
-# Dashboard frontend
+**Activate the environment:**
+
+| OS | Command |
+|----|---------|
+| Windows (PowerShell) | `venv\Scripts\Activate.ps1` |
+| Windows (cmd) | `venv\Scripts\activate.bat` |
+| Linux / macOS | `source venv/bin/activate` |
+
+### Step 2 — Install Python dependencies
+
+**CPU-only (any machine):**
+```bash
+pip install torch==2.13.0 torchvision==0.28.0 --index-url https://download.pytorch.org/whl/cpu
+pip install -r requirements.txt
+```
+
+**NVIDIA GPU (CUDA 12.x):**
+```bash
+pip install torch==2.13.0 torchvision==0.28.0 --index-url https://download.pytorch.org/whl/cu124
+pip install -r requirements.txt
+```
+
+> [!NOTE]
+> PyTorch must be installed **before** `requirements.txt` so the correct CPU/CUDA build is used. Running `pip install -r requirements.txt` alone defaults to CPU.
+
+### Step 3 — Install dashboard frontend
+
+```bash
 cd crowdsense-dashboard/frontend
 npm install
 cd ../..
 ```
 
-### Model Weights
+### Step 4 — Download model weights
 
 | Weight | Location | How to get |
 |--------|----------|------------|
-| YOLOv8n | Auto-downloads | Via `ultralytics` on first run |
-| FairFace ONNX | `fairface_model/weights/fairface.onnx` | See [docs/WEIGHTS.md](docs/WEIGHTS.md) |
+| YOLOv8n | `yolov8n.pt` (auto-downloads) | Automatic on first run via `ultralytics` |
+| FairFace ONNX | `fairface_model/weights/fairface.onnx` | See [docs/WEIGHTS.md](docs/WEIGHTS.md) for download link |
+
+> [!IMPORTANT]
+> `gender_monitor.py` will not run without the FairFace ONNX file. `crowd_monitor.py` only needs YOLOv8 (auto-downloads).
+
+### Verify installation
+
+```bash
+python test_gender_monitor.py        # Should print: 17 passed, 0 failed
+python -c "import torch; print(f'PyTorch {torch.__version__}, CUDA: {torch.cuda.is_available()}')"
+```
 
 ---
 
@@ -255,6 +293,35 @@ python test_gender_monitor.py
 | [NIST FATE — Age Estimation](https://doi.org/10.6028/NIST.IR.8525) | Age as estimate, not fact |
 | [WCAG 2.2](https://www.w3.org/TR/WCAG22/) | Accessible visualization (color + text + icons) |
 | [Gender Shades (FAT* 2018)](https://proceedings.mlr.press/v81/buolamwini18a.html) | Honest confidence display |
+
+---
+
+## Troubleshooting
+
+<details>
+<summary><b>PyTorch uses CPU instead of GPU</b></summary>
+Ensure you installed the CUDA-specific PyTorch wheels <b>before</b> running <code>pip install -r requirements.txt</code>. See Step 2 in the installation guide.
+</details>
+
+<details>
+<summary><b>FileNotFoundError: fairface.onnx</b></summary>
+The <code>gender_monitor.py</code> script requires the FairFace weights. Ensure you placed them exactly at <code>fairface_model/weights/fairface.onnx</code>. See <a href="docs/WEIGHTS.md">docs/WEIGHTS.md</a>.
+</details>
+
+<details>
+<summary><b>Port 8000 or 5173 already in use</b></summary>
+Kill the existing processes holding those ports. If you must change them, remember to update <code>BASE_URL</code> in <code>crowdsense-dashboard/frontend/src/api.js</code> if you change the backend port.
+</details>
+
+<details>
+<summary><b>PowerShell: venv\Scripts\Activate.ps1 cannot be loaded</b></summary>
+Open PowerShell as Administrator and run <code>Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope CurrentUser</code>, then try activating again.
+</details>
+
+<details>
+<summary><b>OpenCV window freezes or doesn't appear</b></summary>
+Run the scripts in a standard terminal (Command Prompt, PowerShell, or macOS/Linux Terminal), not inside an IDE's restricted internal console.
+</details>
 
 ---
 
