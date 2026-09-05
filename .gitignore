@@ -38,8 +38,8 @@ person_records_backup_*.json
 # Model weights
 *.pth
 *.pt
-# Generated runtime data
-person_records.json
+# Generated runtime data (root-level only — sample_data/ copy is tracked)
+/person_records.json
 # Archives / large generated files
 *.zip
 # Generated images
