@@ -1,6 +1,7 @@
 import sys
 import os
 import time
+import atexit
 import shutil
 import json
 import cv2
@@ -61,7 +62,7 @@ MIN_MARGIN = {
 # updating entirely -- no more flicker, just the settled answer. This
 # trades "always current" for "stable and readable", which is what you
 # actually want for a label a person is meant to read off the screen.
-SETTLE_SECONDS = 5.5
+SETTLE_SECONDS = 2.0
 
 # --- Input-quality gating -------------------------------------------------
 # Confidence/margin gating (above) only catches AMBIGUOUS reads. It does
@@ -144,6 +145,16 @@ if os.path.exists(RECORDS_FILE):
 
 person_records = {}
 
+# Clean leftover crops from previous runs -- they accumulate and confuse
+# the dashboard (e.g. 54 crops on disk for 27 records, with IDs from
+# entirely different videos).
+if os.path.exists("person_crops"):
+    for old_crop in os.listdir("person_crops"):
+        old_path = os.path.join("person_crops", old_crop)
+        if os.path.isfile(old_path):
+            os.remove(old_path)
+    print("Cleared leftover crops from previous run.")
+
 # Per-track, per-attribute rolling history of ACCEPTED (label, confidence)
 # reads, used for confidence-weighted smoothing. Not written to disk --
 # only the smoothed result is saved.
@@ -196,6 +207,43 @@ def pose_offset(landmarks):
     return abs(nose[0] - eye_mid_x) / eye_dist
 
 
+def dominant_clothing_color(crop_bgr):
+    """Rough dominant-color read on the torso band of a person crop
+    (roughly the middle third vertically, avoiding head and legs).
+    Returns one of a small fixed palette, or None if the crop is too
+    small to sample."""
+    h, w = crop_bgr.shape[:2]
+    if h < 20 or w < 10:
+        return None
+    torso = crop_bgr[int(h * 0.30):int(h * 0.65), :]
+    if torso.size == 0:
+        return None
+    avg_bgr = torso.reshape(-1, 3).mean(axis=0)
+    b, g, r = avg_bgr
+    palette = {
+        "red": (196, 60, 55), "blue": (58, 92, 168), "black": (30, 30, 30),
+        "white": (235, 235, 235), "green": (63, 130, 78), "yellow": (214, 178, 46),
+        "grey": (128, 130, 135), "orange": (214, 122, 46),
+    }
+    best_name, best_dist = None, float("inf")
+    for name, (pr, pg, pb) in palette.items():
+        dist = (r - pr) ** 2 + (g - pg) ** 2 + (b - pb) ** 2
+        if dist < best_dist:
+            best_name, best_dist = name, dist
+    return best_name
+
+
+def height_bucket_from_ratio(box_height_ratio):
+    """Buckets the same box_height_ratio the script already computes
+    for the well-positioned check."""
+    if box_height_ratio >= 0.75:
+        return "tall"
+    elif box_height_ratio >= 0.50:
+        return "average"
+    else:
+        return "short"
+
+
 def is_good_quality(aligned_face, landmarks):
     """Reject blurry or non-frontal crops BEFORE spending a FairFace call
     on them. Returns (ok, blur_score, pose_offset_value) so callers can
@@ -235,6 +283,15 @@ def update_attribute(attr_name, track_id, label, conf, margin):
 
 frame_count = 0
 
+INCREMENTAL_SAVE_EVERY = 500  # frames
+
+def save_records():
+    """Write person_records to disk. Called periodically and on exit."""
+    with open(RECORDS_FILE, "w") as f:
+        json.dump(person_records, f, indent=2)
+
+atexit.register(save_records)
+
 print("Running. Press 'q' to quit.")
 
 while cap.isOpened():
@@ -263,6 +320,9 @@ while cap.isOpened():
                     "gender_conf": 0,
                     "age": "",
                     "race": "",
+                    "clothing_color": None,
+                    "height_bucket": None,
+                    "crop_path": None,
                     "first_seen_frame": frame_count,
                     "last_seen_frame": frame_count,
                     "settle_start_frame": None,  # frame of first ACCEPTED read
@@ -279,12 +339,38 @@ while cap.isOpened():
             record = person_records[track_id]
             record["last_seen_frame"] = frame_count
 
+            # Compute positioning FIRST — needed by both crop upgrade and
+            # detection gating below.
             box_center_x_ratio = ((x1 + x2) / 2) / frame_w
             box_height_ratio = (y2 - y1) / frame_h
+            record["height_bucket"] = height_bucket_from_ratio(box_height_ratio)
+            color = dominant_clothing_color(crop)
+            if color:
+                record["clothing_color"] = color
             is_well_positioned = (
                 CENTER_BAND_MIN <= box_center_x_ratio <= CENTER_BAND_MAX
                 and box_height_ratio >= MIN_BOX_HEIGHT_RATIO
             )
+
+            # Save a representative crop for EVERY tracked person.
+            # Require minimum bbox dimensions to avoid saving just an eye
+            # or forehead when the person is entering/leaving frame edge.
+            crop_h, crop_w = crop.shape[:2] if crop.size > 0 else (0, 0)
+            crop_area = crop_h * crop_w
+            if crop.size > 0 and crop_h >= 50 and crop_w >= 25:
+                if not record.get("crop_path"):
+                    # First usable crop
+                    crop_path = f"person_crops/person_{track_id}.jpg"
+                    os.makedirs("person_crops", exist_ok=True)
+                    cv2.imwrite(crop_path, crop)
+                    record["crop_path"] = crop_path
+                    record["_best_crop_area"] = crop_area
+                elif is_well_positioned and crop_area > record.get("_best_crop_area", 0):
+                    # Better crop available (larger, well-positioned)
+                    crop_path = f"person_crops/person_{track_id}.jpg"
+                    os.makedirs("person_crops", exist_ok=True)
+                    cv2.imwrite(crop_path, crop)
+                    record["_best_crop_area"] = crop_area
 
             # Run periodically until this person has a confirmed answer,
             # then drop to periodic refreshes to save compute. Once a
@@ -469,6 +555,11 @@ while cap.isOpened():
             cv2.putText(frame, label, (x1, y1 - 10),
                         cv2.FONT_HERSHEY_SIMPLEX, 0.6, color, 2)
 
+    # Incremental save so data isn't lost if the script is interrupted
+    if frame_count > 0 and frame_count % INCREMENTAL_SAVE_EVERY == 0:
+        save_records()
+        print(f"[frame {frame_count}] Incremental save: {len(person_records)} records")
+
     frame_count += 1
     cv2.imshow("Gender Detection - FairFace", frame)
     # 1ms is enough to pump the GUI and catch 'q'. The old 50ms wait
@@ -502,7 +593,6 @@ if last_resort_count:
           f"(and [guess] on the overlay) so these are never confused with settled reads.")
 
 # Save all person records to disk so they can be searched later
-with open(RECORDS_FILE, "w") as f:
-    json.dump(person_records, f, indent=2)
+save_records()
 
 print(f"Saved {len(person_records)} person record(s) to {RECORDS_FILE}")

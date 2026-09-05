@@ -1,10 +1,17 @@
 import cv2
 import json
+import time
 import numpy as np
+from datetime import datetime, timezone
+from pathlib import Path
 from ultralytics import YOLO
  
 VIDEO_PATH = "sample_crowd.mp4"   # <-- same video used in select_regions.py
 REGIONS_FILE = "regions.json"
+DENSITY_SNAPSHOT_FILE = "density_snapshot.json"
+DENSITY_HISTORY_FILE = "density_history.json"
+SNAPSHOT_EVERY_N_FRAMES = 5
+MAX_HISTORY_SAMPLES = 3600
  
 # Density thresholds - tune these based on your test footage
 LOW_THRESHOLD = 3
@@ -36,6 +43,26 @@ def density_level(count):
         return "MEDIUM", COLOR_MEDIUM
     else:
         return "HIGH", COLOR_HIGH
+
+
+def write_json_atomically(path, data):
+    """Avoid the API reading a half-written JSON file while the monitor runs."""
+    path = Path(path)
+    temporary_path = path.with_suffix(path.suffix + ".tmp")
+    temporary_path.write_text(json.dumps(data))
+    temporary_path.replace(path)
+
+
+def build_sample(frame_index, counts, run_status):
+    return {
+        "updated_at": datetime.now(timezone.utc).isoformat(),
+        "frame_index": frame_index,
+        "run_status": run_status,
+        "regions": [
+            {"region_id": name, "name": name, "count": count}
+            for name, count in counts.items()
+        ],
+    }
  
  
 def main():
@@ -52,6 +79,12 @@ def main():
         return
  
     print("Running. Press 'q' to quit.")
+    # History represents this run only: do not blend it with an old clip.
+    history = []
+    write_json_atomically(DENSITY_HISTORY_FILE, history)
+    last_counts = None
+    last_frame_index = 0
+    stopped_early = False
  
     while cap.isOpened():
         ret, frame = cap.read()
@@ -70,6 +103,15 @@ def main():
                 counts[region] += 1
                 cv2.circle(frame, (int(cx), int(cy)), 4, (255, 255, 255), -1)
  
+        frame_index = int(cap.get(cv2.CAP_PROP_POS_FRAMES))
+        last_counts = counts.copy()
+        last_frame_index = frame_index
+        if frame_index % SNAPSHOT_EVERY_N_FRAMES == 0:
+            snapshot = build_sample(frame_index, counts, "running")
+            history.append(snapshot)
+            history = history[-MAX_HISTORY_SAMPLES:]
+            write_json_atomically(DENSITY_HISTORY_FILE, history)
+            write_json_atomically(DENSITY_SNAPSHOT_FILE, snapshot)
         # draw region polygons colored by density level
         for name, poly in regions.items():
             level, color = density_level(counts[name])
@@ -84,27 +126,22 @@ def main():
  
         cv2.imshow("CrowdSense - Region Density Monitor", frame)
         if cv2.waitKey(450) & 0xFF == ord('q'):
+            stopped_early = True
             break
- 
+
+    # Publish the true final frame even when it is not on the sample boundary.
+    if last_counts is not None:
+        final_status = "stopped" if stopped_early else "completed"
+        final_sample = build_sample(last_frame_index, last_counts, final_status)
+        if not history or history[-1]["frame_index"] != last_frame_index:
+            history.append(final_sample)
+            history = history[-MAX_HISTORY_SAMPLES:]
+            write_json_atomically(DENSITY_HISTORY_FILE, history)
+        write_json_atomically(DENSITY_SNAPSHOT_FILE, final_sample)
+
     cap.release()
     cv2.destroyAllWindows()
  
  
 if __name__ == "__main__":
     main()
- 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

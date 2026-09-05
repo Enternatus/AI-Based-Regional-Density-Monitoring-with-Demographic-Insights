@@ -3,6 +3,17 @@ __pycache__/
 .venv/
 venv/
 
+# Dashboard runtime / build
+node_modules/
+crowdsense-dashboard/frontend/node_modules/
+crowdsense-dashboard/backend/pipeline_repo
+density_snapshot.json
+density_history.json
+
+# Safety copies — local only, not pushed
+crowdsense-dashboard (3)_MODIFIED/
+crowdsense-dashboard-BACKUP/
+
 # Auto-downloaded / regenerable
 yolov8n.pt
 # Debug/scratch output
