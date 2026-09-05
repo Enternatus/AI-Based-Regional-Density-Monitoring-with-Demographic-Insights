@@ -1,117 +1,203 @@
 # AI-Based Regional Density Monitoring with Demographic Insights
 
-> Real-time, per-zone crowd density monitoring with optional close-range demographic attribute detection, built with YOLOv8, OpenCV, and FairFace.
+> Real-time, per-zone crowd density monitoring with close-range demographic attribute detection and a live operational dashboard — built with YOLOv8, FairFace, React, and FastAPI.
 
-## The problem
+## Overview
 
-Public spaces (stations, campuses, malls) lack real-time visibility into crowd density at a sub-area level — most systems give a single headcount for an entire camera feed, not a per-zone breakdown. This delays response to overcrowding, bottlenecks, or safety-relevant zones.
+This project provides two independent video-analysis pipelines and a unified web dashboard for crowd monitoring:
 
-## What this does
+| Pipeline | What it does | Video type |
+|----------|-------------|------------|
+| **Density Monitor** | Counts people per user-defined polygon zone, classifies density as LOW / MEDIUM / HIGH | Wide-angle crowd footage |
+| **Demographic Monitor** | Tracks individuals, estimates gender, age range, and appearance group via FairFace | Close-range footage where faces are resolvable |
+| **CrowdSense Dashboard** | Live web UI showing density trends, person search, and per-record evidence profiles | Reads output from both pipelines |
 
-- **Per-zone density monitoring** — define arbitrary polygon regions on a camera feed and track live person-count and density level (LOW / MEDIUM / HIGH) per zone, not just a single frame-wide headcount.
-- **Person tracking with demographic attributes** — for close-range footage, tracks individuals across frames and estimates gender, age range, and race using the FairFace model, with confidence-weighted temporal smoothing so a label settles rather than flickering frame-to-frame.
-- **Per-person lookup** — every tracked individual is stored with their attributes and a reference crop, searchable afterward by gender, age range, or race, or by ID.
-
-## How it works
+## Architecture
 
 ```
-                     ┌─────────────────────┐
-  Region density  →  │  select_regions.py  │  → regions.json (polygon zones, drawn once)
-                     └─────────────────────┘
-                               │
-                               ▼
-                     ┌─────────────────────┐
-                     │   crowd_monitor.py   │  → YOLOv8n person detection per frame
-                     │                      │     + per-zone count/density overlay
-                     └─────────────────────┘
-
-                     ┌─────────────────────┐
-  Person attributes →│  gender_monitor.py   │  → YOLOv8n + ByteTrack (persistent per-run ID)
-                     │                      │     → RetinaFace face detect + align
-                     │                      │     → FairFace (gender / age / race)
-                     │                      │     → confidence-weighted smoothing per track
-                     └─────────────────────┘
-                               │
-                               ▼
-                       person_records.json
-                               │
-                               ▼
-                     ┌─────────────────────┐
-                     │  search_person.py    │  → interactive lookup / filter by attribute
-                     └─────────────────────┘
+┌──────────────────────────────────────────────────────────────────┐
+│                        VIDEO PIPELINES                           │
+│                                                                  │
+│  ┌───────────────────┐         ┌───────────────────────┐         │
+│  │  crowd_monitor.py │         │   gender_monitor.py   │         │
+│  │  YOLOv8 detection │         │   YOLOv8 + ByteTrack  │         │
+│  │  per-zone counts  │         │   RetinaFace + FairFace│        │
+│  └────────┬──────────┘         └──────────┬────────────┘         │
+│           │                               │                      │
+│    density_snapshot.json          person_records.json             │
+│                                   person_crops/*.jpg              │
+└──────────┬────────────────────────────────┬──────────────────────┘
+           │                                │
+           ▼                                ▼
+┌──────────────────────────────────────────────────────────────────┐
+│                    CROWDSENSE DASHBOARD                           │
+│                                                                  │
+│  ┌──────────────────┐    ┌───────────────────────────────┐       │
+│  │  FastAPI Backend  │    │  React + Vite Frontend        │       │
+│  │  /api/density     │◄──│  DensityPanel (live trends)    │       │
+│  │  /api/search      │◄──│  SearchPanel (attribute search)│       │
+│  │  /api/persons/:id │◄──│  PersonProfile (evidence view) │       │
+│  └──────────────────┘    └───────────────────────────────┘       │
+└──────────────────────────────────────────────────────────────────┘
 ```
 
-The density pipeline and the demographic-attribute pipeline are independent — you can run region density monitoring on wide-angle crowd footage and, separately, run attribute detection on close-range footage where faces are actually resolvable.
+## Features
 
-## Tech stack
+### Density Monitoring
+- User-defined polygon regions via interactive GUI (`select_regions.py`)
+- Per-zone person count with LOW / MEDIUM / HIGH density classification
+- Live `density_snapshot.json` written every 5 frames for dashboard consumption
+
+### Demographic Detection
+- Per-person tracking with persistent IDs (within a single run)
+- FairFace-based gender, age range, and appearance group estimation
+- Confidence-weighted temporal smoothing — labels settle over ~2 seconds before locking
+- Quality gating: blurry or non-frontal crops are rejected before prediction
+- Incremental saves every 500 frames + crash-safe `atexit` handler
+
+### CrowdSense Dashboard
+- **Split / Density / People** view modes for flexible presentation
+- **Density panel**: Live trend chart with annotated HIGH threshold line, per-region sparklines, peak tracking, and smart status states (`Live` / `Run stopped` / `Video complete`)
+- **People search**: Free-text attribute search (e.g., "tall young man in a red shirt"), quality filter tabs (Confirmed / Best available / Low-quality guess)
+- **Person profiles**: Clickable evidence modal with all attributes labeled as model estimates, confidence bar, detection timeline, and raw attempt history
+- **Research-backed UI**: Follows IBM Carbon, Google SRE, NIST AI RMF, and WCAG 2.2 guidelines for data-visualization, operational monitoring, AI transparency, and accessibility
+
+## Tech Stack
 
 | Component | Used for |
-|---|---|
-| [Ultralytics YOLOv8n](https://github.com/ultralytics/ultralytics) | Person detection + multi-object tracking |
+|-----------|----------|
+| [Ultralytics YOLOv8n](https://github.com/ultralytics/ultralytics) | Person detection + multi-object tracking (ByteTrack) |
 | OpenCV | Video I/O, region drawing, visualization |
-| [FairFace](https://github.com/dchen236/FairFace) (ONNX) | Gender / age / race attribute prediction |
-| RetinaFace (via `uniface`) | Face detection + landmark alignment ahead of FairFace |
+| [FairFace](https://github.com/dchen236/FairFace) (ONNX) | Gender / age / appearance group prediction |
+| RetinaFace (via `uniface`) | Face detection + landmark alignment |
+| [FastAPI](https://fastapi.tiangolo.com/) | Dashboard REST API backend |
+| [React](https://react.dev/) + [Vite](https://vite.dev/) | Dashboard frontend |
 
 ## Setup
+
+### Prerequisites
+- Python 3.9+
+- Node.js 18+ and npm
+- A CUDA-capable GPU is recommended but not required
+
+### Installation
 
 ```bash
 git clone https://github.com/Enternatus/AI-Based-Regional-Density-Monitoring-with-Demographic-Insights.git
 cd AI-Based-Regional-Density-Monitoring-with-Demographic-Insights
+
+# Python dependencies
 python -m venv venv
-source venv/bin/activate        # Windows: venv\Scripts\activate
+venv\Scripts\activate          # Linux/macOS: source venv/bin/activate
 pip install -r requirements.txt
+
+# Dashboard frontend
+cd crowdsense-dashboard/frontend
+npm install
+cd ../..
 ```
 
-`yolov8n.pt` and the FairFace ONNX weights are required — see [Model weights](#model-weights) below.
+### Model Weights
+
+- **YOLOv8n** — auto-downloads via `ultralytics` on first run.
+- **FairFace ONNX** — place at `fairface_model/weights/fairface.onnx`. See the [FairFace repo](https://github.com/dchen236/FairFace) or `docs/WEIGHTS.md` for details.
 
 ## Usage
 
-**1. Define density regions on your footage (once per camera angle):**
+### 1. Define density regions (once per camera angle)
 ```bash
-python select_regions.py
+python scripts/select_regions.py
 ```
 Left-click to add polygon points, press `n` to name and save a region, `q` to finish. Produces `regions.json`.
 
-**2. Run density monitoring:**
+### 2. Run density monitoring
 ```bash
 python crowd_monitor.py
 ```
-Shows live per-zone person count and a LOW / MEDIUM / HIGH density level, drawn directly on the video.
+Shows live per-zone person count with density level overlay. Writes `density_snapshot.json` for the dashboard.
 
-**3. Run demographic attribute detection (close-range footage):**
+### 3. Run demographic attribute detection
 ```bash
 python gender_monitor.py
 ```
-Tracks each person, runs FairFace once a track is well-positioned, and confidence-weight-smooths the result over ~5.5 seconds before locking it in (shown as `[confirmed]`). Saves everyone detected to `person_records.json`.
+Tracks each person, runs FairFace when the face is well-positioned and sharp, and saves results to `person_records.json` with representative crops in `person_crops/`.
 
-**4. Look up detected people:**
+### 4. Launch the dashboard
 ```bash
-python search_person.py
+# Terminal 1 — Backend API
+cd crowdsense-dashboard/backend
+uvicorn main:app --reload --port 8000
+
+# Terminal 2 — Frontend
+cd crowdsense-dashboard/frontend
+npm run dev
 ```
-Interactive menu — list everyone detected, filter by gender/age/race, or pull up a specific person's stored crop and attributes by ID.
+Open http://localhost:5173. The backend auto-detects live pipeline data when a `pipeline_repo` symlink exists.
+
+### 5. Search detected people (CLI alternative)
+```bash
+python scripts/search_person.py
+```
+
+## Project Structure
+
+```
+├── crowd_monitor.py              # Density pipeline — per-zone person counting
+├── gender_monitor.py             # Demographic pipeline — FairFace attribute detection
+├── unsettled_fallback.py         # Fallback logic for tracks that never fully settled
+├── test_gender_monitor.py        # 17 regression tests for attribute smoothing/gating
+├── regions.json                  # Polygon zone definitions (generated by select_regions.py)
+├── requirements.txt              # Python dependencies
+│
+├── crowdsense-dashboard/         # Web dashboard (React + FastAPI)
+│   ├── backend/
+│   │   ├── main.py               # FastAPI — search, density, person detail endpoints
+│   │   ├── generate_sample_data.py
+│   │   ├── requirements.txt
+│   │   └── sample_data/          # Bundled demo data matching real schema
+│   └── frontend/
+│       ├── src/
+│       │   ├── App.jsx           # Layout with Split/Density/People view modes
+│       │   ├── api.js            # API client (density, search, person detail)
+│       │   ├── styles.css        # Full dark-theme terminal aesthetic
+│       │   └── components/
+│       │       ├── DensityPanel.jsx    # Live trend chart, region bars, threshold annotations
+│       │       ├── SearchPanel.jsx     # Attribute search with quality filters
+│       │       └── PersonProfile.jsx   # Evidence modal with confidence display
+│       └── package.json
+│
+├── fairface_model/               # FairFace ONNX predictor + model definitions
+│   ├── models/predictor.py       # ONNX inference wrapper
+│   └── weights/.gitkeep          # Place fairface.onnx here
+│
+├── attribute_recognition/        # Experimental clothing attribute recognition
+├── scripts/                      # Utility scripts (region selection, person search, video tools)
+├── debug/                        # Debug/development scripts
+└── docs/                         # Documentation (model weight instructions)
+```
 
 ## Testing
 
 ```bash
 python test_gender_monitor.py
 ```
-Regression tests for the attribute-smoothing and confidence-gating logic — each test corresponds to a specific bug found during development (see [Known limitations](#known-limitations)), so a future change can't silently reintroduce one.
+17 regression tests covering attribute smoothing, confidence gating, quality rejection, fallback logic, and cross-run isolation. Each test corresponds to a specific bug found during development.
 
-## Known limitations
+## Known Limitations
 
-- **Race classification accuracy varies by category.** FairFace's race classifier is measurably less reliable on certain category pairs (e.g. White / Middle Eastern / Indian can be confused with each other) — this is a documented limitation of the underlying model on ambiguous or lower-quality crops, not something temporal smoothing alone fully resolves. Per-attribute confidence + margin gating is used to reject low-certainty reads before they're accepted.
-- **Track IDs are scoped to a single run.** The tracker's ID counter resets every time `gender_monitor.py` is (re)started, so identity is not persisted across separate recording sessions — this project assumes each person appears once per session, not that the system re-recognizes a returning individual across different runs.
-- **Attribute detection needs a reasonably close, well-lit, front-facing view.** Accuracy degrades on small, angled, or motion-blurred crops, which is why detection is gated on box size/position before FairFace is run at all.
+- **Density and demographics use separate videos.** `crowd_monitor.py` processes wide-angle footage; `gender_monitor.py` processes close-range footage. They do not share track IDs. The dashboard presents them as independent views.
+- **Track IDs are per-run only.** The tracker resets on each execution — there is no cross-session re-identification.
+- **Attribute accuracy varies.** FairFace's predictions are model estimates, not verified facts. Accuracy degrades on small, angled, or motion-blurred crops. The UI labels all attributes as estimates and shows evidence quality (Confirmed / Best available / Low-quality guess).
+- **Race classification has documented limitations.** Per the [Gender Shades](https://proceedings.mlr.press/v81/buolamwini18a.html) study, error rates differ across demographic groups. Confidence + margin gating is used to reject uncertain predictions.
 
-## Model weights
+## Research References
 
-- `yolov8n.pt` auto-downloads via `ultralytics` on first run if not already present.
-- FairFace ONNX weights are expected at `fairface_model/weights/fairface.onnx` — see the [FairFace repo](https://github.com/dchen236/FairFace) or [yakhyo/fairface (ONNX export)](https://github.com/yakhyo) for the weight file and `models/predictor.py` / `models/fairface.py` used here.
-
-## Datasets
-
-- [Mall Dataset](https://personal.ie.cuhk.edu.hk/~ccloy/downloads_mall_dataset.html) — wide-angle crowd footage used for density-region testing.
-- [ChokePoint Dataset](http://arma.sourceforge.net/chokepoint/) — real-world surveillance-condition face footage (portal cameras), used for close-range person tracking and attribute detection testing. Used strictly for academic research purposes per the dataset's license terms.
+The dashboard UI design is informed by:
+- [IBM Carbon Design System — Dashboards](https://carbondesignsystem.com/data-visualization/dashboards/) — KPI hierarchy and threshold annotations
+- [Google SRE Workbook — Monitoring](https://sre.google/workbook/monitoring/) — Operational status states and data freshness
+- [NIST AI Risk Management Framework](https://doi.org/10.6028/NIST.AI.100-1) — AI transparency and honest uncertainty display
+- [WCAG 2.2](https://www.w3.org/TR/WCAG22/) — Accessible data visualization (color + text + icons)
+- [NIST FATE — Age Estimation](https://doi.org/10.6028/NIST.IR.8525) — Presenting age as an estimate, not a fact
 
 ## License
 
