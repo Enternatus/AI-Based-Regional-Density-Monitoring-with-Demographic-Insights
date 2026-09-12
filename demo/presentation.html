@@ -1,0 +1,76 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>AI Density Crowd Monitoring - Demo</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/4.3.1/reveal.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/4.3.1/theme/night.min.css">
+    <style>
+        .reveal section img {
+            max-height: 60vh;
+            border-radius: 8px;
+            border: 2px solid #444;
+        }
+        .header-logo {
+            color: #00ffcc;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <div class="reveal">
+        <div class="slides">
+            <!-- Slide 1: Title -->
+            <section>
+                <h1 class="header-logo">CROWDSENSE</h1>
+                <h3>AI-Based Regional Density & Demographic Monitoring</h3>
+                <p>Presentation & Demo</p>
+            </section>
+
+            <!-- Slide 2: Architecture -->
+            <section>
+                <h2>System Architecture</h2>
+                <p>Real-time processing via YOLOv8, FairFace, and FastAPI.</p>
+                <img src="images/architecture_diagram.jpg" alt="Architecture Diagram">
+            </section>
+
+            <!-- Slide 3: Density Monitoring -->
+            <section>
+                <h2>Live Density Monitoring</h2>
+                <p>Track crowd thresholds across multiple predefined regions dynamically.</p>
+                <img src="images/real_density_view.png" alt="Density View">
+            </section>
+
+            <!-- Slide 4: Semantic Search -->
+            <section>
+                <h2>Demographic Analysis & Semantic Search</h2>
+                <p>Filter records using natural language and demographic tags.</p>
+                <img src="images/real_people_search.png" alt="People Search">
+            </section>
+
+            <!-- Slide 5: Split View -->
+            <section>
+                <h2>Unified Dashboard</h2>
+                <p>Integrated operational console for real-time situational awareness.</p>
+                <img src="images/real_split_view.png" alt="Split View">
+            </section>
+            
+            <!-- Slide 6: Outro -->
+            <section>
+                <h2>Ready for Deployment</h2>
+                <p>Highly scalable, edge-compatible computer vision pipeline.</p>
+            </section>
+        </div>
+    </div>
+    
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/4.3.1/reveal.min.js"></script>
+    <script>
+        Reveal.initialize({
+            hash: true,
+            slideNumber: true,
+            transition: 'fade'
+        });
+    </script>
+</body>
+</html>
