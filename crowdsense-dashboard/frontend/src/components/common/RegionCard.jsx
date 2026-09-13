@@ -31,14 +31,42 @@ export default function RegionCard({
   // Max recent for sparkline
   const maxRecent = Math.max(1, ...recentHistory);
 
+  // Calculate short-term trend from recent history
+  let trend = "stable";
+  let trendIcon = "▬";
+  let trendLabel = "Stable";
+  if (recentHistory.length >= 2) {
+    const last = recentHistory[recentHistory.length - 1];
+    const prev = recentHistory[recentHistory.length - 2];
+    if (last > prev) {
+      trend = "rising";
+      trendIcon = "▲";
+      trendLabel = "Rising";
+    } else if (last < prev) {
+      trend = "falling";
+      trendIcon = "▼";
+      trendLabel = "Falling";
+    }
+  }
+
+  const avgVal = summary?.average != null ? summary.average : count;
+  const peakVal = summary?.peak != null ? summary.peak : count;
+
   return (
     <div className={`region-card density-${level}`}>
       <div className="region-card-top">
         <div className="region-info">
           <h3 className="region-title">{regionLabel(region?.name || region?.region_id)}</h3>
-          <span className={`level-badge level-${level}`}>{levelText}</span>
+          <div className="region-badges">
+            <span className={`level-badge level-${level}`}>{levelText}</span>
+            <span className={`region-trend-badge trend-${trend}`} title={`Short-term trend: ${trendLabel}`}>
+              {trendIcon} {trendLabel}
+            </span>
+          </div>
         </div>
-        <div className="region-count-hero">{count}</div>
+        <div className="region-count-hero" title="Current occupancy">
+          {count}
+        </div>
       </div>
 
       <div className="region-progress-track">
@@ -46,16 +74,11 @@ export default function RegionCard({
       </div>
 
       <div className="region-card-footer">
-        {summary ? (
-          <div className="region-stats">
-            <span>Peak: <strong>{summary.peak ?? count}</strong></span>
-            <span>Avg: <strong>{summary.average ?? count}</strong></span>
-          </div>
-        ) : (
-          <span className="region-threshold-guide">
-            Threshold: &le;{lowThresh} Low · &le;{highThresh} Med · &gt;{highThresh} High
-          </span>
-        )}
+        <div className="region-stats">
+          <span>Current: <strong>{count}</strong></span>
+          <span>Avg: <strong>{avgVal}</strong></span>
+          <span>Peak: <strong>{peakVal}</strong></span>
+        </div>
 
         {recentHistory.length > 1 && (
           <div className="region-sparkline" title="Recent activity trend">

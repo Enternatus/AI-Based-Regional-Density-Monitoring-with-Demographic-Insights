@@ -52,6 +52,8 @@ export default function DensityPanel({ data, historyProp = [], connected }) {
     return spark;
   }, [regions, historyList]);
 
+  const [displayMode, setDisplayMode] = useState("chart"); // "chart" | "stream" | "video"
+
   return (
     <div className="panel density-panel">
       {/* Header with explicit StatusPill and DataSource attribution */}
@@ -119,16 +121,88 @@ export default function DensityPanel({ data, historyProp = [], connected }) {
         </span>
       </div>
 
-      {/* Main Interactive Trend Chart */}
-      <div className="density-chart-wrapper">
-        <TrendChart
-          history={historyList}
-          thresholds={thresholds}
-          height={260}
-          showModeToggle={true}
-          initialMode="total"
-        />
+      {/* Operator View Mode Toolbar: Chart vs Live Stream vs Video Playback (Priority 7) */}
+      <div className="density-view-selector-bar">
+        <div className="view-selector-info">
+          <span className="view-selector-title">OPERATOR MONITORING FEED:</span>
+        </div>
+        <div className="view-selector-tabs">
+          <button
+            type="button"
+            className={`feed-tab-btn ${displayMode === "chart" ? "active" : ""}`}
+            onClick={() => setDisplayMode("chart")}
+          >
+            📊 Telemetry Trend Chart
+          </button>
+          <button
+            type="button"
+            className={`feed-tab-btn ${displayMode === "stream" ? "active" : ""}`}
+            onClick={() => setDisplayMode("stream")}
+          >
+            📹 Live Annotated Camera Stream
+          </button>
+          <button
+            type="button"
+            className={`feed-tab-btn ${displayMode === "video" ? "active" : ""}`}
+            onClick={() => setDisplayMode("video")}
+          >
+            ▶️ Source Video Playback
+          </button>
+        </div>
       </div>
+
+      {/* Main Interactive Display: Chart or Embedded Camera Feed */}
+      {displayMode === "chart" && (
+        <div className="density-chart-wrapper">
+          <TrendChart
+            history={historyList}
+            thresholds={thresholds}
+            height={260}
+            showModeToggle={true}
+            initialMode="total"
+          />
+        </div>
+      )}
+
+      {displayMode === "stream" && (
+        <div className="density-video-card">
+          <div className="video-card-topbar">
+            <div className="video-tag">
+              <span className="live-dot" /> LIVE ANNOTATED CAMERA STREAM (MJPEG)
+            </div>
+            <span className="video-meta-tag">Source: {data?.source_video || "sample_crowd.mp4"} · Spatial Overlays Active</span>
+          </div>
+          <div className="embedded-feed-wrap">
+            <img
+              src="http://localhost:8000/api/stream/density"
+              alt="Live Annotated Camera Detection Feed"
+              className="embedded-feed-media"
+            />
+          </div>
+        </div>
+      )}
+
+      {displayMode === "video" && (
+        <div className="density-video-card">
+          <div className="video-card-topbar">
+            <div className="video-tag">
+              <span>▶️ HIGH-DEFINITION RAW SOURCE VIDEO</span>
+            </div>
+            <span className="video-meta-tag">{data?.source_video || "sample_crowd.mp4"} · Fixed Wide-Angle Perspective</span>
+          </div>
+          <div className="embedded-feed-wrap">
+            <video
+              controls
+              autoPlay
+              loop
+              muted
+              playsInline
+              className="embedded-video-player"
+              src="http://localhost:8000/api/video/density"
+            />
+          </div>
+        </div>
+      )}
 
       {/* Region Status Section */}
       <div className="regions-section">

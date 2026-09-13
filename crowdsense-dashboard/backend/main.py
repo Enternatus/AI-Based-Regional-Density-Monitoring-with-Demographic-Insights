@@ -40,13 +40,16 @@ Run:
 """
 import json
 import re
-from datetime import datetime
+import time
+from datetime import datetime, timezone
 from pathlib import Path
 from typing import Optional
 
+import cv2
+import numpy as np
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import FileResponse
+from fastapi.responses import FileResponse, StreamingResponse
 from pydantic import BaseModel
 
 HERE = Path(__file__).parent
@@ -208,6 +211,39 @@ RACE_WORDS = {
 }
 
 
+def disambiguate_color_and_race(text: str, detected_color: Optional[str], detected_race: Optional[str]) -> tuple[Optional[str], Optional[str]]:
+    """
+    Disambiguates words like 'black' and 'white' based on grammatical context:
+    - 'black shirt', 'in black', 'black hoodie' -> clothing_color='black', race unset
+    - 'black person', 'black man', 'black appearance' -> race='Black', clothing_color unset
+    """
+    t = f" {text.lower()} "
+    for ambig in ["black", "white"]:
+        if f" {ambig} " not in t:
+            continue
+        # Context 1: directly preceding or attached to clothing terms
+        is_clothing = bool(
+            re.search(rf"\b{ambig}\s+(?:shirt|t-?shirt|top|tee|hoodie|jacket|sweater|coat|clothes|clothing|pant|pants|dress|suit)\b", t)
+            or re.search(rf"\b(?:in|wearing|dressed in)\s+(?:a\s+)?{ambig}\b", t)
+        )
+        # Context 2: directly attached to demographic/racial terms
+        is_race = bool(
+            re.search(rf"\b{ambig}\s+(?:man|woman|person|people|guy|girl|individual|appearance|ethnicity|race|group)\b", t)
+            or re.search(rf"\b{ambig}\s+appearance\b", t)
+        )
+
+        if is_clothing and not is_race:
+            detected_color = ambig
+            if detected_race and detected_race.lower() == ambig:
+                detected_race = None
+        elif is_race and not is_clothing:
+            detected_race = ambig.title()
+            if detected_color == ambig:
+                detected_color = None
+
+    return detected_color, detected_race
+
+
 class ParsedQuery(BaseModel):
     gender: Optional[str] = None
     age: Optional[str] = None
@@ -228,6 +264,9 @@ def parse_query(text: str) -> ParsedQuery:
     if color == "gray":
         color = "grey"
     height = next((v for k, v in HEIGHT_WORDS.items() if k in t), None)
+
+    # Disambiguate black/white clothing vs racial appearance
+    color, race = disambiguate_color_and_race(text, color, race)
 
     # explicit age number, e.g. "35 years old" / "age 8"
     m = re.search(r"\b(\d{1,3})\s*(?:years?\s*old|yo|yrs)\b", t)
@@ -280,6 +319,7 @@ class SearchRequest(BaseModel):
     race: Optional[str] = None
     clothing_color: Optional[str] = None
     height_bucket: Optional[str] = None
+    match_mode: Optional[str] = "all"  # "all" (strict AND) | "any" (flexible OR)
 
 
 @app.post("/api/search")
@@ -289,9 +329,9 @@ def search(req: SearchRequest):
     (e.g. the frontend re-submitting after the user edits a filter chip).
     Explicit filter fields override anything parsed from `text`.
 
-    Unresolved tracks (gender == "Detecting...") simply won't match any
-    specific filter, so they fall out of filtered results naturally. An
-    empty-filter search returns everyone, unresolved included.
+    In strict mode ('all', default), all parsed filters must match (AND).
+    In flexible mode ('any'), any single filter match qualifies (OR).
+    An empty-filter search returns all records.
     """
     parsed = parse_query(req.text) if req.text else ParsedQuery(raw_text="")
 
@@ -304,16 +344,24 @@ def search(req: SearchRequest):
         raw_text=req.text or "",
     )
 
+    match_mode = (req.match_mode or "all").lower()
     records = load_records()
     scored = []
     for pid, r in records.items():
         score, total_filters = score_record(r, filters)
-        if total_filters == 0 or score > 0:
-            scored.append((score, record_with_id(pid, r)))
+        if total_filters == 0:
+            scored.append((1, record_with_id(pid, r)))
+        elif match_mode == "all":
+            if score == total_filters:
+                scored.append((score, record_with_id(pid, r)))
+        else:
+            if score > 0:
+                scored.append((score, record_with_id(pid, r)))
     scored.sort(key=lambda pair: pair[0], reverse=True)
 
     return {
         "parsed_filters": filters.model_dump(exclude={"raw_text"}),
+        "match_mode": match_mode,
         "result_count": len(scored),
         "results": [r for _, r in scored],
     }
@@ -357,16 +405,94 @@ def get_person_crop(person_id: str):
     crop_path_str = record.get("crop_path")
     if not crop_path_str:
         raise HTTPException(status_code=404, detail="no crop_path on this record yet (still detecting)")
-    crop_path = CROPS_ROOT / crop_path_str
+    
+    # Path traversal protection: sanitize filename
+    safe_name = Path(crop_path_str).name
+    crop_path = (CROPS_ROOT / "person_crops" / safe_name).resolve()
+    if not crop_path.exists():
+        crop_path = (CROPS_ROOT / crop_path_str).resolve()
+
+    allowed_roots = [
+        PROJECT_ROOT.resolve(),
+        SAMPLE_ROOT.resolve(),
+        (HERE / "sample_data").resolve(),
+    ]
+    if not any(str(crop_path).startswith(str(r)) for r in allowed_roots):
+        raise HTTPException(status_code=400, detail="invalid crop path traversal attempt")
+
     if not crop_path.exists():
         for fallback_dir in [PROJECT_ROOT, SAMPLE_ROOT, HERE / "sample_data" / "person_crops", PROJECT_ROOT / "person_crops"]:
-            candidate = fallback_dir / crop_path_str if (fallback_dir / crop_path_str).exists() else fallback_dir / Path(crop_path_str).name
-            if candidate.exists():
+            candidate = (fallback_dir / safe_name).resolve()
+            if candidate.exists() and any(str(candidate).startswith(str(r)) for r in allowed_roots):
                 crop_path = candidate
                 break
+
     if not crop_path.exists():
         raise HTTPException(status_code=404, detail="crop image not found on disk")
     return FileResponse(crop_path)
+
+
+def compute_run_metadata(snapshot_data: Optional[dict], history: list) -> dict:
+    """Computes first-class run status, timestamps, and pipeline provenance."""
+    if not snapshot_data:
+        return {
+            "run_id": "idle_0",
+            "run_status": "idle",
+            "source_video": "sample_crowd.mp4",
+            "video_fps": 30,
+            "started_at": None,
+            "updated_at": datetime.now(timezone.utc).isoformat(),
+            "completed_at": None,
+            "frame_index": 0,
+            "is_stale": False,
+            "age_seconds": 0,
+        }
+
+    raw_status = snapshot_data.get("run_status", "stopped")
+    updated_at = snapshot_data.get("updated_at", "")
+    try:
+        updated_dt = datetime.fromisoformat(updated_at)
+        now_dt = datetime.now(updated_dt.tzinfo) if updated_dt.tzinfo else datetime.now(timezone.utc)
+        age_seconds = (now_dt - updated_dt).total_seconds()
+    except (ValueError, TypeError):
+        age_seconds = 9999
+
+    # Freshness states: live (recent frame), paused (no frame within 15s), stopped, completed
+    if raw_status == "completed":
+        run_status = "completed"
+    elif raw_status == "stopped":
+        run_status = "stopped"
+    elif raw_status == "running":
+        run_status = "live" if age_seconds <= 15 else "paused"
+    else:
+        run_status = raw_status
+
+    started_at = snapshot_data.get("started_at")
+    if not started_at and history:
+        started_at = history[0].get("updated_at")
+
+    run_id = snapshot_data.get("run_id")
+    if not run_id:
+        if started_at:
+            try:
+                run_id = f"run_{datetime.fromisoformat(started_at).strftime('%Y%m%d_%H%M%S')}"
+            except Exception:
+                run_id = "run_session"
+        else:
+            run_id = "run_session"
+
+    return {
+        "run_id": run_id,
+        "run_status": run_status,
+        "source_video": snapshot_data.get("source_video", "sample_crowd.mp4"),
+        "video_fps": snapshot_data.get("video_fps", 30),
+        "started_at": started_at,
+        "updated_at": updated_at,
+        "completed_at": snapshot_data.get("completed_at"),
+        "frame_index": snapshot_data.get("frame_index", 0),
+        "is_stale": age_seconds > 30,
+        "age_seconds": round(age_seconds),
+    }
 
 
 @app.get("/api/regions/density")
@@ -376,30 +502,27 @@ def regions_density():
     returns configured regions with zero counts.
     """
     history = load_density_history()
+    snapshot_raw = None
     if DENSITY_SNAPSHOT_PATH.exists():
-        with open(DENSITY_SNAPSHOT_PATH) as f:
-            data = json.load(f)
-        data["source"] = "live_snapshot"
-        updated_at = data.get("updated_at", "")
         try:
-            updated_dt = datetime.fromisoformat(updated_at)
-            now_dt = datetime.now(updated_dt.tzinfo) if updated_dt.tzinfo else datetime.utcnow()
-            age_seconds = (now_dt - updated_dt).total_seconds()
-        except (ValueError, TypeError):
-            age_seconds = 9999
-        data["age_seconds"] = round(age_seconds)
-        data["is_stale"] = age_seconds > 30
+            with open(DENSITY_SNAPSHOT_PATH) as f:
+                snapshot_raw = json.load(f)
+        except Exception:
+            snapshot_raw = None
+
+    if snapshot_raw:
+        meta = compute_run_metadata(snapshot_raw, history)
+        data = dict(snapshot_raw)
+        data.update(meta)
+        data["source"] = "live_snapshot"
         data["thresholds"] = DEFAULT_THRESHOLDS
-        data["run_status"] = data.get("run_status", "stopped")
-        data["source_video"] = "sample_crowd.mp4"
-        data["video_fps"] = 30
-        
+
         raw_regions = data.get("regions", [])
         current_regions = [enrich_region(r, i) for i, r in enumerate(raw_regions)]
         data["regions"] = current_regions
         current_total = sum(r.get("count", 0) for r in current_regions)
         data["current_total"] = current_total
-        
+
         if len(history) >= 2:
             prev_total = sum(r.get("count", 0) for r in history[-2].get("regions", []))
             if current_total > prev_total:
@@ -421,19 +544,18 @@ def regions_density():
             region_names = list(json.load(f).keys())
 
     enriched_empty = [enrich_region(name, i) for i, name in enumerate(region_names)]
-    return {
-        "updated_at": datetime.utcnow().isoformat(),
+    meta = compute_run_metadata(None, history)
+    result = {
         "source": "no_live_snapshot_yet",
-        "run_status": "idle",
         "regions": enriched_empty,
         "current_total": 0,
         "trend_direction": "stable",
         "thresholds": DEFAULT_THRESHOLDS,
-        "source_video": "sample_crowd.mp4",
-        "video_fps": 30,
         "history": history,
         "summaries": {},
     }
+    result.update(meta)
+    return result
 
 
 @app.get("/api/overview")
@@ -444,36 +566,40 @@ def get_overview():
     current_regions = density_data.get("regions", [])
     current_total = sum(r.get("count", 0) for r in current_regions)
     history = density_data.get("history", [])
-    
+
     totals_in_history = [sum(r.get("count", 0) for r in h.get("regions", [])) for h in history]
     peak_session = max(totals_in_history, default=current_total)
-    
+
     busiest = max(current_regions, key=lambda r: r.get("count", 0), default=None)
     busiest_zone = busiest.get("display_name", busiest.get("name", "--")) if busiest else "--"
-    
+
     records = load_records()
     total_records = len(records)
     settled = sum(1 for r in records.values() if r.get("source") == "settled")
     best_raw = sum(1 for r in records.values() if r.get("source") == "best_raw")
     last_resort = sum(1 for r in records.values() if r.get("source") == "last_resort")
-    
+
     genders = Counter(r.get("gender") for r in records.values() if r.get("gender") and r.get("gender") != "Detecting...")
     ages = Counter(r.get("age") for r in records.values() if r.get("age"))
     races = Counter((r.get("race") or "").replace("Latino_Hispanic", "Hispanic / Latino") for r in records.values() if r.get("race"))
     colors = Counter(r.get("clothing_color") for r in records.values() if r.get("clothing_color"))
-    
+
     return {
         "density": {
+            "run_id": density_data.get("run_id"),
             "current_total": current_total,
             "peak_session": peak_session,
             "busiest_zone": busiest_zone,
             "regions": current_regions,
             "run_status": density_data.get("run_status", "stopped"),
+            "started_at": density_data.get("started_at"),
             "updated_at": density_data.get("updated_at"),
+            "completed_at": density_data.get("completed_at"),
+            "frame_index": density_data.get("frame_index", 0),
             "thresholds": DEFAULT_THRESHOLDS,
             "trend_direction": density_data.get("trend_direction", "stable"),
-            "source_video": "sample_crowd.mp4",
-            "video_fps": 30,
+            "source_video": density_data.get("source_video", "sample_crowd.mp4"),
+            "video_fps": density_data.get("video_fps", 30),
         },
         "people": {
             "total_records": total_records,
@@ -490,6 +616,90 @@ def get_overview():
             "video_fps": 30,
         }
     }
+
+
+# ---------------------------------------------------------------------------
+# Video & Live Annotated Streaming Endpoints (Priority 7)
+# ---------------------------------------------------------------------------
+
+@app.get("/api/video/density")
+def video_density():
+    """Serves the wide-angle sample_crowd.mp4 video file for HTML5 browser playback."""
+    video_path = PROJECT_ROOT / "sample_crowd.mp4"
+    if not video_path.exists():
+        video_path = SAMPLE_ROOT / "sample_crowd.mp4"
+    if not video_path.exists():
+        raise HTTPException(status_code=404, detail="sample_crowd.mp4 not found on disk")
+    return FileResponse(video_path, media_type="video/mp4")
+
+
+@app.get("/api/video/demographics")
+def video_demographics():
+    """Serves the close-range close_range_crowd.mp4 video file for HTML5 browser playback."""
+    video_path = PROJECT_ROOT / "close_range_crowd.mp4"
+    if not video_path.exists():
+        video_path = SAMPLE_ROOT / "close_range_crowd.mp4"
+    if not video_path.exists():
+        raise HTTPException(status_code=404, detail="close_range_crowd.mp4 not found on disk")
+    return FileResponse(video_path, media_type="video/mp4")
+
+
+def generate_annotated_density_stream():
+    """Generates an MJPEG stream of annotated density frames from sample_crowd.mp4 with zone overlays."""
+    video_path = PROJECT_ROOT / "sample_crowd.mp4"
+    if not video_path.exists():
+        video_path = SAMPLE_ROOT / "sample_crowd.mp4"
+    if not video_path.exists():
+        return
+
+    regions_raw = {}
+    if REGIONS_PATH.exists():
+        try:
+            with open(REGIONS_PATH) as f:
+                raw = json.load(f)
+                regions_raw = {k: np.array(pts, dtype=np.int32) for k, pts in raw.items()}
+        except Exception:
+            pass
+
+    cap = cv2.VideoCapture(str(video_path))
+    try:
+        while True:
+            ret, frame = cap.read()
+            if not ret:
+                cap.set(cv2.CAP_PROP_POS_FRAMES, 0)
+                ret, frame = cap.read()
+                if not ret:
+                    break
+
+            # Draw region polygons and labels
+            for name, poly in regions_raw.items():
+                cv2.polylines(frame, [poly], True, (56, 189, 248), 2)
+                label_pos = tuple(poly[0]) if len(poly) > 0 else (20, 20)
+                cv2.putText(
+                    frame, name.replace("_", " ").title(),
+                    label_pos, cv2.FONT_HERSHEY_SIMPLEX, 0.5, (56, 189, 248), 1
+                )
+
+            success, buffer = cv2.imencode(".jpg", frame, [cv2.IMWRITE_JPEG_QUALITY, 60])
+            if not success:
+                continue
+
+            yield (
+                b"--frame\r\n"
+                b"Content-Type: image/jpeg\r\n\r\n" + buffer.tobytes() + b"\r\n"
+            )
+            time.sleep(0.04)  # ~25 FPS
+    finally:
+        cap.release()
+
+
+@app.get("/api/stream/density")
+def stream_density():
+    """Serves an MJPEG video stream of annotated camera detection frames."""
+    return StreamingResponse(
+        generate_annotated_density_stream(),
+        media_type="multipart/x-mixed-replace; boundary=frame"
+    )
 
 
 @app.get("/api/density/history")

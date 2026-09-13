@@ -153,11 +153,11 @@ export default function TrendChart({
     };
   }, [history, highThresh, height, mode]);
 
-  if (!chartData || chartData.snapshots.length < 2) {
+  if (!chartData || chartData.snapshots.length === 0) {
     return (
       <div className="trend-chart-empty">
         <div className="empty-chart-icon">📈</div>
-        <p>Awaiting monitoring session telemetry (minimum 2 snapshots required for trends).</p>
+        <p>Awaiting monitoring session telemetry (no snapshots recorded yet).</p>
       </div>
     );
   }
@@ -176,7 +176,7 @@ export default function TrendChart({
           <div className="trend-chart-subtitle">
             {latestSnapshot && (
               <span className="chart-latest-readout">
-                Latest: <strong>{latestSnapshot.total} people</strong> ({formatSnapshotTime(latestSnapshot.time, latestSnapshot.frame)}) · {chartData.snapshots.length} snapshots
+                Latest: <strong>{latestSnapshot.total} people</strong> ({formatSnapshotTime(latestSnapshot.time, latestSnapshot.frame)}) · {chartData.snapshots.length} snapshot{chartData.snapshots.length === 1 ? "" : "s"}
               </span>
             )}
           </div>
@@ -245,6 +245,26 @@ export default function TrendChart({
               />
             );
           })}
+
+          {/* Lightweight X-axis time / frame labels */}
+          {chartData.snapshots.length >= 2 && (
+            <g className="chart-axis-labels" fill="#9ca3af" fontSize="9" fontFamily="monospace">
+              <text x={chartData.padding.left} y={chartData.height - 6} textAnchor="start">
+                {formatSnapshotTime(chartData.snapshots[0].time, chartData.snapshots[0].frame)}
+              </text>
+              {chartData.snapshots.length >= 4 && (
+                <text x={chartData.width / 2} y={chartData.height - 6} textAnchor="middle">
+                  {formatSnapshotTime(
+                    chartData.snapshots[Math.floor(chartData.snapshots.length / 2)].time,
+                    chartData.snapshots[Math.floor(chartData.snapshots.length / 2)].frame
+                  )}
+                </text>
+              )}
+              <text x={chartData.width - chartData.padding.right} y={chartData.height - 6} textAnchor="end">
+                {formatSnapshotTime(latestSnapshot.time, latestSnapshot.frame)}
+              </text>
+            </g>
+          )}
 
           {/* Threshold line */}
           {chartData.threshY >= chartData.padding.top && chartData.threshY <= chartData.height - chartData.padding.bottom && (

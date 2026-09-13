@@ -57,6 +57,39 @@ export default function OverviewPanel({
         </div>
       </div>
 
+      {/* Compact Run Information Strip (Priority 5) */}
+      <div className="overview-run-strip">
+        <div className="run-strip-item">
+          <span className="run-strip-label">STATUS:</span>
+          <span className={`run-strip-val status-${density?.run_status || "stopped"}`}>
+            {(density?.run_status || (connected ? "RUNNING" : "STOPPED")).toUpperCase()}
+          </span>
+        </div>
+        <div className="run-strip-item">
+          <span className="run-strip-label">SOURCE:</span>
+          <span className="run-strip-val">{density?.source_video || "sample_crowd.mp4"} ({density?.video_fps || 30} FPS)</span>
+        </div>
+        <div className="run-strip-item">
+          <span className="run-strip-label">FRAME:</span>
+          <span className="run-strip-val">#{density?.frame_index ?? "--"}</span>
+        </div>
+        <div className="run-strip-item">
+          <span className="run-strip-label">RUN ID:</span>
+          <span className="run-strip-val mono">{density?.run_id || "session_active"}</span>
+        </div>
+        <div className="run-strip-actions">
+          <button type="button" className="run-nav-btn" onClick={() => onNavigate && onNavigate("density")}>
+            Full Density &rarr;
+          </button>
+          <button type="button" className="run-nav-btn" onClick={() => onNavigate && onNavigate("people")}>
+            People Explorer &rarr;
+          </button>
+          <button type="button" className="run-nav-btn run-nav-split" onClick={() => onNavigate && onNavigate("split")}>
+            Split Console &rarr;
+          </button>
+        </div>
+      </div>
+
       {/* 1. Primary KPI Row */}
       <div className="overview-hero-grid">
         <MetricCard

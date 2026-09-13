@@ -43,12 +43,13 @@ export default function SearchPanel() {
   const [filterAge, setFilterAge] = useState("all");
   const [filterRace, setFilterRace] = useState("all");
   const [filterColor, setFilterColor] = useState("all");
+  const [matchMode, setMatchMode] = useState("all"); // "all" (strict AND) | "any" (flexible OR)
 
-  async function runSearch(overrides = {}, query = text) {
+  async function runSearch(overrides = {}, query = text, mode = matchMode) {
     setLoading(true);
     setError(null);
     try {
-      const merged = { ...filters, ...overrides };
+      const merged = { match_mode: mode, ...filters, ...overrides };
       const data = await getPeople(query, merged);
       setFilters(data.parsed_filters ?? {});
       setResults(data);
@@ -57,6 +58,11 @@ export default function SearchPanel() {
     } finally {
       setLoading(false);
     }
+  }
+
+  function handleMatchModeChange(newMode) {
+    setMatchMode(newMode);
+    runSearch({ match_mode: newMode }, text, newMode);
   }
 
   useEffect(() => {
@@ -81,7 +87,8 @@ export default function SearchPanel() {
     setFilterRace("all");
     setFilterColor("all");
     setQualityFilter("all");
-    runSearch(resetFilters, "");
+    setMatchMode("all");
+    runSearch({ ...resetFilters, match_mode: "all" }, "", "all");
   }
 
   // Filter visible records based on both natural language chips, quality filter, and dropdown filters
@@ -280,6 +287,14 @@ export default function SearchPanel() {
             <option value="blue">Blue</option>
             <option value="green">Green</option>
             <option value="yellow">Yellow</option>
+          </select>
+        </div>
+
+        <div className="dropdown-filter-group">
+          <label>Match Mode:</label>
+          <select value={matchMode} onChange={(e) => handleMatchModeChange(e.target.value)}>
+            <option value="all">Strict (AND)</option>
+            <option value="any">Flexible (OR)</option>
           </select>
         </div>
 

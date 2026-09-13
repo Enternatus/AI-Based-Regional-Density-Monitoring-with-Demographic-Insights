@@ -62,6 +62,10 @@ export default function DensityZoneMap({ regions = [], thresholds = { low: 3, hi
           <span className="camera-label">Fixed Monocular Camera Vector</span>
         </div>
       </div>
+
+      <div className="zone-map-footer-note">
+        Visual camera perspective layout &bull; Not a metrically calibrated physical plane
+      </div>
     </div>
   );
 }

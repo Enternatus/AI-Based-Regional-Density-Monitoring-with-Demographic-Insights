@@ -40,23 +40,33 @@ export default function App() {
 
     async function pollDashboard() {
       try {
-        const [ovData, histData, demoData] = await Promise.all([
+        const results = await Promise.allSettled([
           getOverview(),
           getDensityHistory(30),
           getPeopleSummary(),
         ]);
-        if (!cancelled) {
-          setDashboardState({
-            overview: ovData,
-            density: ovData?.density,
-            history: histData?.history || [],
-            demographics: demoData,
-            connected: true,
+
+        if (cancelled) return;
+
+        const [ovRes, histRes, demoRes] = results;
+        const anySuccess = results.some((r) => r.status === "fulfilled");
+
+        setDashboardState((prev) => {
+          const nextOverview = ovRes.status === "fulfilled" ? ovRes.value : prev.overview;
+          const nextHistory = histRes.status === "fulfilled" ? (histRes.value?.history || []) : prev.history;
+          const nextDemographics = demoRes.status === "fulfilled" ? demoRes.value : prev.demographics;
+
+          return {
+            overview: nextOverview,
+            density: nextOverview?.density ?? prev.density,
+            history: nextHistory,
+            demographics: nextDemographics,
+            connected: anySuccess,
             loading: false,
-          });
-        }
+          };
+        });
       } catch (err) {
-        console.warn("Dashboard polling error:", err);
+        console.warn("Dashboard polling orchestrator error:", err);
         if (!cancelled) {
           setDashboardState((prev) => ({
             ...prev,

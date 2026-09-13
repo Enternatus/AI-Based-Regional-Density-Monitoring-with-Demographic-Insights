@@ -53,8 +53,12 @@ def write_json_atomically(path, data):
     temporary_path.replace(path)
 
 
-def build_sample(frame_index, counts, run_status):
-    return {
+def build_sample(frame_index, counts, run_status, run_id=None, started_at=None, source_video=None, video_fps=30, completed_at=None):
+    sample = {
+        "run_id": run_id,
+        "source_video": source_video or VIDEO_PATH,
+        "video_fps": video_fps,
+        "started_at": started_at,
         "updated_at": datetime.now(timezone.utc).isoformat(),
         "frame_index": frame_index,
         "run_status": run_status,
@@ -63,6 +67,9 @@ def build_sample(frame_index, counts, run_status):
             for name, count in counts.items()
         ],
     }
+    if completed_at:
+        sample["completed_at"] = completed_at
+    return sample
  
  
 def main():
@@ -81,6 +88,10 @@ def main():
     print("Running. Press 'q' to quit.")
     # History represents this run only: do not blend it with an old clip.
     history = []
+    run_id = f"run_{datetime.now(timezone.utc).strftime('%Y%m%d_%H%M%S')}"
+    started_at = datetime.now(timezone.utc).isoformat()
+    fps = int(cap.get(cv2.CAP_PROP_FPS)) or 30
+
     write_json_atomically(DENSITY_HISTORY_FILE, history)
     last_counts = None
     last_frame_index = 0
@@ -107,7 +118,11 @@ def main():
         last_counts = counts.copy()
         last_frame_index = frame_index
         if frame_index % SNAPSHOT_EVERY_N_FRAMES == 0:
-            snapshot = build_sample(frame_index, counts, "running")
+            snapshot = build_sample(
+                frame_index, counts, "running",
+                run_id=run_id, started_at=started_at,
+                source_video=VIDEO_PATH, video_fps=fps
+            )
             history.append(snapshot)
             history = history[-MAX_HISTORY_SAMPLES:]
             write_json_atomically(DENSITY_HISTORY_FILE, history)
@@ -132,7 +147,13 @@ def main():
     # Publish the true final frame even when it is not on the sample boundary.
     if last_counts is not None:
         final_status = "stopped" if stopped_early else "completed"
-        final_sample = build_sample(last_frame_index, last_counts, final_status)
+        completed_at = datetime.now(timezone.utc).isoformat()
+        final_sample = build_sample(
+            last_frame_index, last_counts, final_status,
+            run_id=run_id, started_at=started_at,
+            source_video=VIDEO_PATH, video_fps=fps,
+            completed_at=completed_at
+        )
         if not history or history[-1]["frame_index"] != last_frame_index:
             history.append(final_sample)
             history = history[-MAX_HISTORY_SAMPLES:]
