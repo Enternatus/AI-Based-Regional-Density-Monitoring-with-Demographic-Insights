@@ -1971,18 +1971,123 @@ body {
   background: var(--border-soft);
 }
 
-/* Split View Container */
+/* Split View Wrapper & Controls */
+.split-view-wrapper {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.split-view-toolbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 10px 16px;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.split-toolbar-info {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.split-toolbar-badge {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  color: var(--cyan);
+  background: rgba(56, 189, 248, 0.12);
+  border: 1px solid rgba(56, 189, 248, 0.3);
+  padding: 3px 8px;
+  border-radius: 4px;
+  text-transform: uppercase;
+}
+
+.split-toolbar-title {
+  font-size: 12px;
+  color: var(--text-dim);
+}
+
+.split-ratio-controls {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.split-ratio-label {
+  font-size: 11px;
+  font-family: var(--font-mono);
+  color: var(--text-dim);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  margin-right: 4px;
+}
+
+.split-ratio-btn {
+  background: var(--panel-raised);
+  border: 1px solid var(--border);
+  color: var(--text-dim);
+  padding: 5px 11px;
+  border-radius: 4px;
+  font-size: 11px;
+  font-family: var(--font-mono);
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.split-ratio-btn:hover {
+  background: var(--border-soft);
+  color: var(--text);
+  border-color: var(--border-soft);
+}
+
+.split-ratio-btn.active {
+  background: rgba(168, 85, 247, 0.18);
+  border-color: #a855f7;
+  color: #f3e8ff;
+  font-weight: 600;
+  box-shadow: 0 0 10px rgba(168, 85, 247, 0.25);
+}
+
+/* Split View Container & Proportions */
 .split-view-container {
   display: grid;
-  grid-template-columns: 1fr 1fr;
   gap: 20px;
   width: 100%;
+  align-items: start;
+  transition: grid-template-columns 0.2s ease-in-out;
+}
+
+/* Default & Demographics Focus (30% Density / 70% Demographics) */
+.split-view-container,
+.split-view-container.ratio-focus {
+  grid-template-columns: 30% calc(70% - 20px);
+}
+
+/* Demographics Max (20% Density / 80% Demographics) */
+.split-view-container.ratio-max {
+  grid-template-columns: 20% calc(80% - 20px);
+}
+
+/* Balanced (50% / 50%) */
+.split-view-container.ratio-balanced {
+  grid-template-columns: 1fr 1fr;
 }
 
 .split-column {
   display: flex;
   flex-direction: column;
   gap: 12px;
+  min-width: 0;
 }
 
 .split-column-header {
@@ -1990,6 +2095,20 @@ body {
   justify-content: space-between;
   align-items: center;
   padding: 4px 0;
+  min-height: 32px;
+}
+
+.split-column-tag {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  color: var(--cyan);
+  text-transform: uppercase;
+}
+
+.split-column-tag.tag-demo {
+  color: #c084fc;
 }
 
 .split-nav-cta {
@@ -2001,11 +2120,73 @@ body {
   font-size: 11px;
   font-family: var(--font-mono);
   cursor: pointer;
+  transition: all 0.15s ease;
 }
 
 .split-nav-cta:hover {
   background: var(--panel-raised);
   border-color: var(--cyan);
+}
+
+/* Optimized Left Column (Density) layout inside split screen */
+.split-left-column .panel {
+  padding: 16px;
+}
+
+.split-left-column .density-hero-grid {
+  grid-template-columns: repeat(2, 1fr) !important;
+  gap: 10px !important;
+}
+
+.split-left-column .metric-card {
+  padding: 12px 14px !important;
+}
+
+.split-left-column .metric-card-value {
+  font-size: 22px !important;
+}
+
+.split-left-column .metric-card-subtext {
+  font-size: 11px !important;
+  line-height: 1.3 !important;
+}
+
+.split-left-column .regions-grid {
+  grid-template-columns: 1fr !important;
+  gap: 10px !important;
+}
+
+.split-left-column .panel-header.density-header {
+  flex-direction: column !important;
+  align-items: flex-start !important;
+  gap: 8px !important;
+}
+
+.split-left-column .panel-header.density-header .header-meta-group {
+  width: 100% !important;
+  justify-content: space-between !important;
+  flex-wrap: wrap !important;
+  gap: 6px !important;
+}
+
+.split-left-column .trend-chart-header {
+  flex-direction: column !important;
+  align-items: flex-start !important;
+  gap: 6px !important;
+}
+
+/* Enhanced Right Column (Demographic & Gender Monitor) in split screen */
+.split-right-column .results-grid {
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 14px;
+}
+
+.split-right-column .filter-controls-bar {
+  gap: 10px;
+}
+
+.split-right-column .kpi-mini-strip {
+  gap: 10px;
 }
 
 /* Empty State Card */
@@ -2062,8 +2243,11 @@ body {
   .overview-spatial-row {
     grid-template-columns: 1fr;
   }
-  .split-view-container {
-    grid-template-columns: 1fr;
+  .split-view-container,
+  .split-view-container.ratio-focus,
+  .split-view-container.ratio-max,
+  .split-view-container.ratio-balanced {
+    grid-template-columns: 1fr !important;
   }
 }
 

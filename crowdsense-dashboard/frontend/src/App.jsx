@@ -141,41 +141,80 @@ export default function App() {
         )}
 
         {view === "split" && (
-          <div className="split-view-container">
-            {/* Left Module: Wide-Angle Density */}
-            <div className="split-column split-left-column">
-              <div className="split-column-header">
-                <DataSourceBadge type="density" />
+          <div className="split-view-wrapper">
+            {/* Split Screen Allocation Toolbar */}
+            <div className="split-view-toolbar">
+              <div className="split-toolbar-info">
+                <span className="split-toolbar-badge">DUAL STREAM</span>
+                <span className="split-toolbar-title">
+                  Density Telemetry (Wide-Angle) + Gender &amp; Demographic Tracking (Close-Range)
+                </span>
+              </div>
+              <div className="split-ratio-controls" role="group" aria-label="Split Screen Allocation">
+                <span className="split-ratio-label">Screen Share:</span>
                 <button
                   type="button"
-                  className="split-nav-cta"
-                  onClick={() => setView("density")}
-                  title="Expand to full Density Monitor"
+                  className={`split-ratio-btn ${splitRatio === "focus" ? "active" : ""}`}
+                  onClick={() => handleSplitRatio("focus")}
+                  title="Allocates ~70% screen to Gender Monitor & Demographics (Recommended)"
                 >
-                  Full Density &rarr;
+                  Demographics Focus (30 / 70)
+                </button>
+                <button
+                  type="button"
+                  className={`split-ratio-btn ${splitRatio === "max" ? "active" : ""}`}
+                  onClick={() => handleSplitRatio("max")}
+                  title="Allocates ~80% screen to Gender Monitor & Demographics (Max Cards)"
+                >
+                  Demographics Max (20 / 80)
+                </button>
+                <button
+                  type="button"
+                  className={`split-ratio-btn ${splitRatio === "balanced" ? "active" : ""}`}
+                  onClick={() => handleSplitRatio("balanced")}
+                  title="Equal 50 / 50 split"
+                >
+                  Equal (50 / 50)
                 </button>
               </div>
-              <DensityPanel
-                data={density}
-                historyProp={history}
-                connected={connected}
-              />
             </div>
 
-            {/* Right Module: Close-Range Demographic */}
-            <div className="split-column split-right-column">
-              <div className="split-column-header">
-                <DataSourceBadge type="people" />
-                <button
-                  type="button"
-                  className="split-nav-cta"
-                  onClick={() => setView("people")}
-                  title="Expand to full People Explorer"
-                >
-                  Full Explorer &rarr;
-                </button>
+            <div className={`split-view-container ratio-${splitRatio}`}>
+              {/* Left Module: Wide-Angle Density */}
+              <div className="split-column split-left-column">
+                <div className="split-column-header">
+                  <span className="split-column-tag">Spatial Density (Wide-Angle)</span>
+                  <button
+                    type="button"
+                    className="split-nav-cta"
+                    onClick={() => setView("density")}
+                    title="Expand to full Density Monitor"
+                  >
+                    Full Density &rarr;
+                  </button>
+                </div>
+                <DensityPanel
+                  data={density}
+                  historyProp={history}
+                  connected={connected}
+                />
               </div>
-              <SearchPanel />
+
+              {/* Right Module: Close-Range Demographic & Gender Monitor */}
+              <div className="split-column split-right-column">
+                <div className="split-column-header">
+                  <span className="split-column-tag tag-demo">Demographic &amp; Gender Monitor (Close-Range)</span>
+                  <button
+                    type="button"
+                    className="split-nav-cta"
+                    onClick={() => setView("people")}
+                    title="Expand to full Demographic & Gender Explorer"
+                  >
+                    Full Explorer &rarr;
+                  </button>
+                </div>
+                <SearchPanel />
+              </div>
             </div>
           </div>
         )}
