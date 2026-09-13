@@ -797,7 +797,7 @@ body {
 .result-card-clickable { cursor: pointer; }
 .result-card-clickable:focus-visible, .view-button:focus-visible, .quick-searches button:focus-visible, .quality-filters button:focus-visible { outline: 2px solid var(--cyan); outline-offset: 2px; }
 .result-card:hover { border-color: var(--cyan); transform: translateY(-1px); }
-.result-crop { aspect-ratio: 4 / 3; object-position: top; }
+.result-crop { aspect-ratio: 1 / 1; object-position: center; }
 .result-meta { padding: 12px; }
 .result-card-heading { display: flex; align-items: start; justify-content: space-between; gap: 6px; margin-bottom: 9px; }
 .result-id { margin: 3px 0 0; font-size: 12px; }

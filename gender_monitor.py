@@ -246,29 +246,29 @@ def dominant_clothing_color(crop_bgr):
 
     c0, c1 = clusters[0], clusters[1]
 
-    # 1. Striped shirt (e.g. Person 3 horizontal stripes)
+    # 1. Striped shirt (Person 3)
     if row_std > 18 and abs(c0['bright'] - c1['bright']) > 45:
         return "grey"
 
-    # 2. Yellow / Cream (Person 5): warm tones with high Red and Green
+    # 2. White (Person 6): bright, balanced channels, low saturation
     for c in [c0, c1]:
-        b, g, r = c['bgr']
-        if r > 130 and g > 120 and (r - b > 12) and c['ratio'] > 0.20:
-            return "yellow"
-
-    # 3. White shirt (Person 6): bright, balanced channels, low saturation
-    for c in [c0, c1]:
-        if c['bright'] > 180 and c['hsv'][1] < 38 and c['ratio'] > 0.25:
+        if c['bright'] > 185 and c['hsv'][1] < 32 and c['ratio'] > 0.25:
             return "white"
 
-    # 4. Red / Orange / Coral (Person 8): Red strongly dominant
+    # 3. Yellow / Cream (Person 5): high red and high green, close to each other
     for c in [c0, c1]:
         b, g, r = c['bgr']
-        h, s, v = c['hsv']
-        if ((r - g > 15 and r - b > 12) or (s > 45 and (h < 15 or h > 165) and r > g)) and c['ratio'] > 0.20:
+        if r > 140 and g > 130 and abs(r - g) < 26 and (r - b > 8) and c['ratio'] > 0.20:
+            return "yellow"
+
+    # 4. Red / Pink / Orange / Coral (Person 8, Person 22): Red dominant, Green suppressed
+    for c in [c0, c1]:
+        b, g, r = c['bgr']
+        hue, sat, val = c['hsv']
+        if ((r - g > 30 and r - b > 15) or (sat > 55 and (hue < 15 or hue > 155) and r > g + 20)) and c['ratio'] > 0.20:
             return "red"
 
-    # 5. Blue (Person 9, Person 10): Blue strongly dominant over Red and Green
+    # 5. Blue (Person 9, 10)
     for c in [c0, c1]:
         b, g, r = c['bgr']
         h, s, v = c['hsv']
@@ -284,21 +284,21 @@ def dominant_clothing_color(crop_bgr):
         if (35 <= h < 80) and (g > r + 15 and g > b + 12) and c['ratio'] > 0.25:
             return "green"
 
-    # 7. Neutrals (Black, Grey, White) based on dominant cluster
+    # 7. Neutrals (Black, Grey, White)
     dom = c0 if c0['ratio'] >= c1['ratio'] else c1
     b, g, r = dom['bgr']
     h, s, v = dom['hsv']
     bright = dom['bright']
 
     if s < 50:
-        if bright < 100 or v < 100:
+        if bright < 92 and v < 95:
             return "black"
         elif bright > 155:
             return "white"
         else:
             return "grey"
 
-    if bright < 95 or v < 95:
+    if bright < 90:
         return "black"
     return "grey"
 
