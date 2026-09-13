@@ -37,21 +37,29 @@ This project provides two independent video-analysis pipelines and a unified web
 
 ---
 
-## Product Showcase & Screenshots
+## Product Showcase & Live V2 Screenshots
 
-### 🖥️ Operational Console (Split View)
-Unified operational dashboard combining live regional crowd density on the left with real-time demographic person tracking on the right.
-![Operational Dashboard](demo/images/dashboard_split_view.png)
+### 🖥️ 1. Unified Operational Overview
+Executive operations console displaying real-time occupancy metrics, dynamic busiest zone telemetry, regional status bars, and persistent session trend preview.
+![System Overview Top](demo/images/v2_overview_top.png)
+![Demographic Insights & Quality Provenance](demo/images/v2_overview_demographics.png)
 
-### 📊 Live Regional Density Monitoring
-Real-time per-zone occupancy tracking across user-defined polygon regions with automated congestion threshold alerts and historical trend telemetry.
-![Density Monitoring](demo/images/dashboard_density_view.png)
+### 📊 2. Spatial Density Monitoring V2
+Real-time per-zone occupancy tracking across user-defined polygon regions with interactive SVG trend chart, danger threshold alerts (8+), and multi-zone rolling sparkline telemetry.
+![Spatial Density Monitor](demo/images/v2_density_monitor.png)
+![Regional Breakdown & Trend Hover](demo/images/v2_density_regional_breakdown.png)
 
-### 👤 Demographic Profiling & Natural Language Semantic Search
-Search and filter detected individuals by gender, age bracket, appearance group, and clothing color. All cards display unchopped, high-resolution representative crops.
-![Demographic People Search 1](demo/images/dashboard_people_search_1.png)
-![Demographic People Search 2](demo/images/dashboard_people_search_2.png)
-![Demographic People Search 3](demo/images/dashboard_people_search_3.png)
+### 👤 3. People Explorer V2 & Multi-Attribute Search
+Full demographic research explorer with natural language search, multi-attribute dropdown filters (Gender, Age, Appearance Group, Shirt Color), 1:1 bust crops, Cards/Table toggle, and one-click CSV/JSON dataset export.
+![People Explorer V2](demo/images/v2_people_explorer.png)
+
+### 🔍 4. Person Evidence Dossiers & Provenance Verification
+Clickable forensic dossiers showing uncropped bust images, FairFace model confidence scores, observation timelines (frames & duration), and multi-frame verification logs.
+| Track #27 (East Asian Male, 20–29, Grey Shirt) | Track #33 (White Female, 20–29, Green Shirt) |
+|---|---|
+| ![Track #27 Dossier](demo/images/v2_profile_track_27.png) | ![Track #33 Dossier](demo/images/v2_profile_track_33.png) |
+
+![Evidence Details & Verification Logs](demo/images/v2_profile_evidence_details.png)
 
 ---
 
@@ -63,11 +71,11 @@ flowchart TB
         direction LR
         subgraph density["Density Pipeline"]
             CM["crowd_monitor.py<br/><i>YOLOv8 · per-zone counting</i>"]
-            DS[("density_snapshot.json")]
+            DS[("density_snapshot.json<br/>density_history.json")]
             CM --> DS
         end
         subgraph demographics["Demographic Pipeline"]
-            GM["gender_monitor.py<br/><i>YOLOv8 + ByteTrack<br/>RetinaFace + FairFace</i>"]
+            GM["gender_monitor.py<br/><i>YOLOv8 + ByteTrack<br/>RetinaFace + FairFace + K-Means</i>"]
             PR[("person_records.json")]
             PC[("person_crops/")]
             GM --> PR
@@ -75,10 +83,10 @@ flowchart TB
         end
     end
 
-    subgraph dashboard["CrowdSense Dashboard"]
+    subgraph dashboard["CrowdSense Dashboard V2"]
         direction LR
-        API["FastAPI Backend<br/><i>/api/density · /api/search<br/>/api/persons/:id</i>"]
-        UI["React Frontend<br/><i>DensityPanel · SearchPanel<br/>PersonProfile</i>"]
+        API["FastAPI Backend<br/><i>/api/overview · /api/regions/density<br/>/api/density/history · /api/people/summary<br/>/api/persons/:id/crop</i>"]
+        UI["React Frontend V2<br/><i>OverviewPanel · DensityPanel<br/>SearchPanel · PersonProfile · TrendChart</i>"]
         API --> UI
     end
 
@@ -109,11 +117,12 @@ flowchart TB
 - Incremental saves every 500 frames + crash-safe `atexit` handler
 - Smart crop selection: minimum bbox size, continuous upgrade to best available frame
 
-### 📊 CrowdSense Dashboard
-- **Split / Density / People** view modes for flexible presentation
-- **Density panel** — live trend chart with annotated HIGH threshold line, per-region sparklines, peak tracking, smart status states (`Live` / `Run stopped` / `Video complete`)
-- **People search** — free-text attribute search (e.g., *"tall young man in a red shirt"*), quality filter tabs (Confirmed / Best available / Low-quality guess)
-- **Person profiles** — clickable evidence modal with all attributes labeled as model estimates, confidence bar, detection timeline, and raw attempt history
+### 📊 CrowdSense Dashboard V2
+- **Overview landing console** — Executive operations dashboard with explicit pipeline status (`Live` / `Run completed` / `Paused`), 4 hero KPIs, multi-zone status cards, session trend preview, and demographic distribution bars.
+- **Spatial density monitor V2** — Multi-zone interactive SVG trend chart with Total vs. By Region comparison, interactive frame tooltips, danger threshold lines, directional trend indicators (`Rising ▲` / `Falling ▼` / `Stable ▬`), and rolling sparklines.
+- **People explorer V2** — Natural language query parsing, multi-attribute dropdown filters (Gender, Age, Appearance Group, Shirt Color), Cards vs. Table view toggle, and one-click `📥 CSV` / `📥 JSON` dataset export.
+- **Evidence dossiers** — Forensic inspection modals displaying uncropped 1:1 bust crops, FairFace confidence bars, observation windows in frames and seconds, task-optimized source video attribution, and multi-frame verification logs.
+- **Disambiguated split view** — Side-by-side operations console with independent module source labels (`sample_crowd.mp4` vs. `close_range_crowd.mp4`) and quick navigation links.
 
 ### 🔬 Research-Backed UI Design
 - [IBM Carbon](https://carbondesignsystem.com/data-visualization/dashboards/) — KPI hierarchy and threshold annotations
