@@ -50,18 +50,24 @@ from fastapi.responses import FileResponse
 from pydantic import BaseModel
 
 HERE = Path(__file__).parent
-
-# --- Point this at your cloned pipeline repo root ------------------------
-REPO_ROOT = HERE / "pipeline_repo"  # <-- clone/symlink the real repo here
+PROJECT_ROOT = HERE.parent.parent  # Repository root when running in monolithic repo
+REPO_ROOT = HERE / "pipeline_repo"  # Standalone mount / symlink
 SAMPLE_ROOT = HERE / "sample_data"
 
-ACTIVE_ROOT = REPO_ROOT if (REPO_ROOT / "person_records.json").exists() else SAMPLE_ROOT
+if (PROJECT_ROOT / "person_records.json").exists():
+    ACTIVE_ROOT = PROJECT_ROOT
+elif (REPO_ROOT / "person_records.json").exists():
+    ACTIVE_ROOT = REPO_ROOT
+elif (PROJECT_ROOT / "sample_data" / "person_records.json").exists():
+    ACTIVE_ROOT = PROJECT_ROOT / "sample_data"
+else:
+    ACTIVE_ROOT = SAMPLE_ROOT
 
 PERSON_RECORDS_PATH = ACTIVE_ROOT / "person_records.json"
 CROPS_ROOT = ACTIVE_ROOT  # crop_path in each record is already relative to repo root
-REGIONS_PATH = ACTIVE_ROOT / "regions.json"
-DENSITY_SNAPSHOT_PATH = ACTIVE_ROOT / "density_snapshot.json"
-DENSITY_HISTORY_PATH = ACTIVE_ROOT / "density_history.json"
+REGIONS_PATH = ACTIVE_ROOT / "regions.json" if (ACTIVE_ROOT / "regions.json").exists() else (SAMPLE_ROOT / "regions.json")
+DENSITY_SNAPSHOT_PATH = ACTIVE_ROOT / "density_snapshot.json" if (ACTIVE_ROOT / "density_snapshot.json").exists() else (PROJECT_ROOT / "density_snapshot.json")
+DENSITY_HISTORY_PATH = ACTIVE_ROOT / "density_history.json" if (ACTIVE_ROOT / "density_history.json").exists() else (PROJECT_ROOT / "density_history.json")
 # -------------------------------------------------------------------------
 
 app = FastAPI(title="CrowdSense API")
@@ -313,6 +319,12 @@ def get_person_crop(person_id: str):
     if not crop_path_str:
         raise HTTPException(status_code=404, detail="no crop_path on this record yet (still detecting)")
     crop_path = CROPS_ROOT / crop_path_str
+    if not crop_path.exists():
+        for fallback_dir in [PROJECT_ROOT, SAMPLE_ROOT, HERE / "sample_data" / "person_crops", PROJECT_ROOT / "person_crops"]:
+            candidate = fallback_dir / crop_path_str if (fallback_dir / crop_path_str).exists() else fallback_dir / Path(crop_path_str).name
+            if candidate.exists():
+                crop_path = candidate
+                break
     if not crop_path.exists():
         raise HTTPException(status_code=404, detail="crop image not found on disk")
     return FileResponse(crop_path)

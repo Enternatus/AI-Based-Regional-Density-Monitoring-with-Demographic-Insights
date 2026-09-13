@@ -1,602 +1,4074 @@
 {
   "1": {
-    "gender": "Female",
-    "gender_conf": 62.3,
-    "age": "10-19",
-    "race": "East Asian",
-    "clothing_color": "red",
-    "height_bucket": "short",
-    "first_seen_frame": 1498,
-    "last_seen_frame": 1816,
-    "locked": true,
-    "confirmed": true,
-    "source": "settled",
-    "crop_path": "person_crops/person_1.jpg"
+    "gender": "Male",
+    "gender_conf": 99.9,
+    "age": "30-39",
+    "race": "White",
+    "clothing_color": "black",
+    "height_bucket": null,
+    "crop_path": "person_crops/person_1.jpg",
+    "first_seen_frame": 31,
+    "last_seen_frame": 205,
+    "settle_start_frame": null,
+    "locked": false,
+    "confirmed": false,
+    "source": "last_resort",
+    "raw_attempts": [],
+    "low_quality_attempts": [
+      {
+        "frame": 87,
+        "gender": "Male",
+        "gender_conf": 99.7,
+        "age": "20-29",
+        "age_conf": 41.4,
+        "race": "White",
+        "race_conf": 81.4,
+        "accepted": false,
+        "sharpness": 3.0,
+        "pose_offset": 0.05
+      },
+      {
+        "frame": 90,
+        "gender": "Male",
+        "gender_conf": 92.8,
+        "age": "20-29",
+        "age_conf": 52.8,
+        "race": "White",
+        "race_conf": 88.3,
+        "accepted": false,
+        "sharpness": 3.5,
+        "pose_offset": 0.05
+      },
+      {
+        "frame": 93,
+        "gender": "Male",
+        "gender_conf": 99.5,
+        "age": "20-29",
+        "age_conf": 36.2,
+        "race": "White",
+        "race_conf": 97.5,
+        "accepted": false,
+        "sharpness": 3.7,
+        "pose_offset": 0.01
+      },
+      {
+        "frame": 96,
+        "gender": "Male",
+        "gender_conf": 92.4,
+        "age": "40-49",
+        "age_conf": 29.8,
+        "race": "Middle Eastern",
+        "race_conf": 53.1,
+        "accepted": false,
+        "sharpness": 3.9,
+        "pose_offset": 0.01
+      },
+      {
+        "frame": 99,
+        "gender": "Male",
+        "gender_conf": 99.9,
+        "age": "30-39",
+        "age_conf": 34.8,
+        "race": "White",
+        "race_conf": 92.8,
+        "accepted": false,
+        "sharpness": 3.6,
+        "pose_offset": 0.04
+      },
+      {
+        "frame": 100,
+        "gender": "Male",
+        "gender_conf": 99.8,
+        "age": "20-29",
+        "age_conf": 47.1,
+        "race": "White",
+        "race_conf": 71.3,
+        "accepted": false,
+        "sharpness": 2.9,
+        "pose_offset": 0.05
+      },
+      {
+        "frame": 102,
+        "gender": "Male",
+        "gender_conf": 98.1,
+        "age": "20-29",
+        "age_conf": 37.0,
+        "race": "Middle Eastern",
+        "race_conf": 55.6,
+        "accepted": false,
+        "sharpness": 2.7,
+        "pose_offset": 0.01
+      },
+      {
+        "frame": 105,
+        "gender": "Male",
+        "gender_conf": 67.9,
+        "age": "40-49",
+        "age_conf": 29.3,
+        "race": "Black",
+        "race_conf": 65.5,
+        "accepted": false,
+        "sharpness": 2.2,
+        "pose_offset": 0.01
+      },
+      {
+        "frame": 108,
+        "gender": "Male",
+        "gender_conf": 74.0,
+        "age": "50-59",
+        "age_conf": 30.6,
+        "race": "White",
+        "race_conf": 28.5,
+        "accepted": false,
+        "sharpness": 1.7,
+        "pose_offset": 0.04
+      },
+      {
+        "frame": 111,
+        "gender": "Female",
+        "gender_conf": 53.0,
+        "age": "40-49",
+        "age_conf": 28.4,
+        "race": "Black",
+        "race_conf": 27.4,
+        "accepted": false,
+        "sharpness": 1.8,
+        "pose_offset": 0.08
+      },
+      {
+        "frame": 114,
+        "gender": "Male",
+        "gender_conf": 56.1,
+        "age": "30-39",
+        "age_conf": 37.7,
+        "race": "Black",
+        "race_conf": 25.7,
+        "accepted": false,
+        "sharpness": 1.6,
+        "pose_offset": 0.01
+      },
+      {
+        "frame": 117,
+        "gender": "Male",
+        "gender_conf": 73.1,
+        "age": "30-39",
+        "age_conf": 38.3,
+        "race": "Middle Eastern",
+        "race_conf": 50.7,
+        "accepted": false,
+        "sharpness": 1.6,
+        "pose_offset": 0.04
+      },
+      {
+        "frame": 120,
+        "gender": "Female",
+        "gender_conf": 57.7,
+        "age": "20-29",
+        "age_conf": 43.3,
+        "race": "Middle Eastern",
+        "race_conf": 32.1,
+        "accepted": false,
+        "sharpness": 1.5,
+        "pose_offset": 0.07
+      },
+      {
+        "frame": 123,
+        "gender": "Male",
+        "gender_conf": 84.1,
+        "age": "30-39",
+        "age_conf": 38.0,
+        "race": "East Asian",
+        "race_conf": 68.1,
+        "accepted": false,
+        "sharpness": 1.9,
+        "pose_offset": 0.2
+      },
+      {
+        "frame": 126,
+        "gender": "Male",
+        "gender_conf": 62.5,
+        "age": "30-39",
+        "age_conf": 36.6,
+        "race": "Middle Eastern",
+        "race_conf": 46.7,
+        "accepted": false,
+        "sharpness": 1.8,
+        "pose_offset": 0.27
+      },
+      {
+        "frame": 129,
+        "gender": "Female",
+        "gender_conf": 66.5,
+        "age": "20-29",
+        "age_conf": 43.3,
+        "race": "East Asian",
+        "race_conf": 65.3,
+        "accepted": false,
+        "sharpness": 2.0,
+        "pose_offset": 0.1
+      },
+      {
+        "frame": 132,
+        "gender": "Male",
+        "gender_conf": 70.1,
+        "age": "30-39",
+        "age_conf": 41.4,
+        "race": "Middle Eastern",
+        "race_conf": 45.2,
+        "accepted": false,
+        "sharpness": 2.4,
+        "pose_offset": 0.05
+      },
+      {
+        "frame": 135,
+        "gender": "Female",
+        "gender_conf": 53.1,
+        "age": "30-39",
+        "age_conf": 31.7,
+        "race": "Black",
+        "race_conf": 45.2,
+        "accepted": false,
+        "sharpness": 2.0,
+        "pose_offset": 0.21
+      },
+      {
+        "frame": 138,
+        "gender": "Male",
+        "gender_conf": 79.8,
+        "age": "30-39",
+        "age_conf": 41.7,
+        "race": "East Asian",
+        "race_conf": 62.1,
+        "accepted": false,
+        "sharpness": 2.1,
+        "pose_offset": 0.3
+      },
+      {
+        "frame": 140,
+        "gender": "Male",
+        "gender_conf": 69.3,
+        "age": "20-29",
+        "age_conf": 56.0,
+        "race": "East Asian",
+        "race_conf": 68.3,
+        "accepted": false,
+        "sharpness": 2.2,
+        "pose_offset": 0.32
+      },
+      {
+        "frame": 141,
+        "gender": "Male",
+        "gender_conf": 84.7,
+        "age": "20-29",
+        "age_conf": 63.5,
+        "race": "East Asian",
+        "race_conf": 66.5,
+        "accepted": false,
+        "sharpness": 2.2,
+        "pose_offset": 0.38
+      },
+      {
+        "frame": 144,
+        "gender": "Male",
+        "gender_conf": 61.6,
+        "age": "20-29",
+        "age_conf": 39.1,
+        "race": "White",
+        "race_conf": 47.2,
+        "accepted": false,
+        "sharpness": 2.5,
+        "pose_offset": 0.42
+      },
+      {
+        "frame": 147,
+        "gender": "Male",
+        "gender_conf": 55.5,
+        "age": "20-29",
+        "age_conf": 46.4,
+        "race": "White",
+        "race_conf": 38.7,
+        "accepted": false,
+        "sharpness": 2.3,
+        "pose_offset": 0.38
+      },
+      {
+        "frame": 150,
+        "gender": "Male",
+        "gender_conf": 99.0,
+        "age": "20-29",
+        "age_conf": 60.8,
+        "race": "White",
+        "race_conf": 97.8,
+        "accepted": false,
+        "sharpness": 2.7,
+        "pose_offset": 0.34
+      },
+      {
+        "frame": 153,
+        "gender": "Male",
+        "gender_conf": 98.7,
+        "age": "20-29",
+        "age_conf": 77.0,
+        "race": "White",
+        "race_conf": 72.7,
+        "accepted": false,
+        "sharpness": 2.9,
+        "pose_offset": 0.45
+      },
+      {
+        "frame": 156,
+        "gender": "Male",
+        "gender_conf": 97.0,
+        "age": "30-39",
+        "age_conf": 47.1,
+        "race": "White",
+        "race_conf": 72.1,
+        "accepted": false,
+        "sharpness": 2.9,
+        "pose_offset": 0.5
+      },
+      {
+        "frame": 159,
+        "gender": "Female",
+        "gender_conf": 61.6,
+        "age": "20-29",
+        "age_conf": 55.8,
+        "race": "Middle Eastern",
+        "race_conf": 51.5,
+        "accepted": false,
+        "sharpness": 2.7,
+        "pose_offset": 0.44
+      },
+      {
+        "frame": 160,
+        "gender": "Male",
+        "gender_conf": 98.9,
+        "age": "20-29",
+        "age_conf": 51.1,
+        "race": "White",
+        "race_conf": 64.6,
+        "accepted": false,
+        "sharpness": 2.9,
+        "pose_offset": 0.44
+      },
+      {
+        "frame": 162,
+        "gender": "Male",
+        "gender_conf": 96.0,
+        "age": "30-39",
+        "age_conf": 48.1,
+        "race": "Middle Eastern",
+        "race_conf": 86.1,
+        "accepted": false,
+        "sharpness": 2.5,
+        "pose_offset": 0.47
+      },
+      {
+        "frame": 165,
+        "gender": "Male",
+        "gender_conf": 99.2,
+        "age": "30-39",
+        "age_conf": 65.1,
+        "race": "Middle Eastern",
+        "race_conf": 82.8,
+        "accepted": false,
+        "sharpness": 2.5,
+        "pose_offset": 0.42
+      },
+      {
+        "frame": 168,
+        "gender": "Male",
+        "gender_conf": 99.9,
+        "age": "30-39",
+        "age_conf": 68.0,
+        "race": "Middle Eastern",
+        "race_conf": 55.2,
+        "accepted": false,
+        "sharpness": 2.5,
+        "pose_offset": 0.56
+      },
+      {
+        "frame": 171,
+        "gender": "Male",
+        "gender_conf": 96.7,
+        "age": "30-39",
+        "age_conf": 52.9,
+        "race": "Middle Eastern",
+        "race_conf": 73.5,
+        "accepted": false,
+        "sharpness": 2.2,
+        "pose_offset": 0.58
+      },
+      {
+        "frame": 174,
+        "gender": "Male",
+        "gender_conf": 97.6,
+        "age": "30-39",
+        "age_conf": 42.6,
+        "race": "White",
+        "race_conf": 89.1,
+        "accepted": false,
+        "sharpness": 2.4,
+        "pose_offset": 0.65
+      },
+      {
+        "frame": 177,
+        "gender": "Male",
+        "gender_conf": 99.1,
+        "age": "30-39",
+        "age_conf": 48.3,
+        "race": "White",
+        "race_conf": 73.9,
+        "accepted": false,
+        "sharpness": 2.0,
+        "pose_offset": 1.05
+      },
+      {
+        "frame": 180,
+        "gender": "Male",
+        "gender_conf": 91.1,
+        "age": "30-39",
+        "age_conf": 40.2,
+        "race": "White",
+        "race_conf": 78.9,
+        "accepted": false,
+        "sharpness": 5.0,
+        "pose_offset": 1.72
+      },
+      {
+        "frame": 183,
+        "gender": "Male",
+        "gender_conf": 85.6,
+        "age": "40-49",
+        "age_conf": 27.0,
+        "race": "Middle Eastern",
+        "race_conf": 69.1,
+        "accepted": false,
+        "sharpness": 4.0,
+        "pose_offset": 2.18
+      },
+      {
+        "frame": 186,
+        "gender": "Male",
+        "gender_conf": 95.5,
+        "age": "30-39",
+        "age_conf": 45.3,
+        "race": "Middle Eastern",
+        "race_conf": 92.7,
+        "accepted": false,
+        "sharpness": 2.1,
+        "pose_offset": 7.4
+      },
+      {
+        "frame": 189,
+        "gender": "Male",
+        "gender_conf": 84.9,
+        "age": "30-39",
+        "age_conf": 47.9,
+        "race": "White",
+        "race_conf": 50.4,
+        "accepted": false,
+        "sharpness": 2.5,
+        "pose_offset": 6.97
+      },
+      {
+        "frame": 192,
+        "gender": "Male",
+        "gender_conf": 98.4,
+        "age": "30-39",
+        "age_conf": 42.2,
+        "race": "Middle Eastern",
+        "race_conf": 68.0,
+        "accepted": false,
+        "sharpness": 3.7,
+        "pose_offset": 2.18
+      },
+      {
+        "frame": 195,
+        "gender": "Male",
+        "gender_conf": 99.0,
+        "age": "30-39",
+        "age_conf": 43.1,
+        "race": "Middle Eastern",
+        "race_conf": 92.2,
+        "accepted": false,
+        "sharpness": 2.7,
+        "pose_offset": 4.67
+      }
+    ],
+    "gate_log": [
+      {
+        "frame": 160,
+        "stage": "quality_rejected",
+        "sharpness": 2.9,
+        "pose_offset": 0.44
+      },
+      {
+        "frame": 160,
+        "stage": "predicted_low_quality",
+        "gender": "Male",
+        "gender_conf": 98.9,
+        "sharpness": 2.9
+      },
+      {
+        "frame": 162,
+        "stage": "quality_rejected",
+        "sharpness": 2.5,
+        "pose_offset": 0.47
+      },
+      {
+        "frame": 162,
+        "stage": "predicted_low_quality",
+        "gender": "Male",
+        "gender_conf": 96.0,
+        "sharpness": 2.5
+      },
+      {
+        "frame": 165,
+        "stage": "quality_rejected",
+        "sharpness": 2.5,
+        "pose_offset": 0.42
+      },
+      {
+        "frame": 165,
+        "stage": "predicted_low_quality",
+        "gender": "Male",
+        "gender_conf": 99.2,
+        "sharpness": 2.5
+      },
+      {
+        "frame": 168,
+        "stage": "quality_rejected",
+        "sharpness": 2.5,
+        "pose_offset": 0.56
+      },
+      {
+        "frame": 168,
+        "stage": "predicted_low_quality",
+        "gender": "Male",
+        "gender_conf": 99.9,
+        "sharpness": 2.5
+      },
+      {
+        "frame": 171,
+        "stage": "quality_rejected",
+        "sharpness": 2.2,
+        "pose_offset": 0.58
+      },
+      {
+        "frame": 171,
+        "stage": "predicted_low_quality",
+        "gender": "Male",
+        "gender_conf": 96.7,
+        "sharpness": 2.2
+      },
+      {
+        "frame": 174,
+        "stage": "quality_rejected",
+        "sharpness": 2.4,
+        "pose_offset": 0.65
+      },
+      {
+        "frame": 174,
+        "stage": "predicted_low_quality",
+        "gender": "Male",
+        "gender_conf": 97.6,
+        "sharpness": 2.4
+      },
+      {
+        "frame": 177,
+        "stage": "quality_rejected",
+        "sharpness": 2.0,
+        "pose_offset": 1.05
+      },
+      {
+        "frame": 177,
+        "stage": "predicted_low_quality",
+        "gender": "Male",
+        "gender_conf": 99.1,
+        "sharpness": 2.0
+      },
+      {
+        "frame": 180,
+        "stage": "quality_rejected",
+        "sharpness": 5.0,
+        "pose_offset": 1.72
+      },
+      {
+        "frame": 180,
+        "stage": "predicted_low_quality",
+        "gender": "Male",
+        "gender_conf": 91.1,
+        "sharpness": 5.0
+      },
+      {
+        "frame": 183,
+        "stage": "quality_rejected",
+        "sharpness": 4.0,
+        "pose_offset": 2.18
+      },
+      {
+        "frame": 183,
+        "stage": "predicted_low_quality",
+        "gender": "Male",
+        "gender_conf": 85.6,
+        "sharpness": 4.0
+      },
+      {
+        "frame": 186,
+        "stage": "quality_rejected",
+        "sharpness": 2.1,
+        "pose_offset": 7.4
+      },
+      {
+        "frame": 186,
+        "stage": "predicted_low_quality",
+        "gender": "Male",
+        "gender_conf": 95.5,
+        "sharpness": 2.1
+      },
+      {
+        "frame": 189,
+        "stage": "quality_rejected",
+        "sharpness": 2.5,
+        "pose_offset": 6.97
+      },
+      {
+        "frame": 189,
+        "stage": "predicted_low_quality",
+        "gender": "Male",
+        "gender_conf": 84.9,
+        "sharpness": 2.5
+      },
+      {
+        "frame": 192,
+        "stage": "quality_rejected",
+        "sharpness": 3.7,
+        "pose_offset": 2.18
+      },
+      {
+        "frame": 192,
+        "stage": "predicted_low_quality",
+        "gender": "Male",
+        "gender_conf": 98.4,
+        "sharpness": 3.7
+      },
+      {
+        "frame": 195,
+        "stage": "quality_rejected",
+        "sharpness": 2.7,
+        "pose_offset": 4.67
+      },
+      {
+        "frame": 195,
+        "stage": "predicted_low_quality",
+        "gender": "Male",
+        "gender_conf": 99.0,
+        "sharpness": 2.7
+      },
+      {
+        "frame": 198,
+        "stage": "not_well_positioned",
+        "box_center_x_ratio": 0.24,
+        "box_height_ratio": 0.77
+      },
+      {
+        "frame": 200,
+        "stage": "not_well_positioned",
+        "box_center_x_ratio": 0.23,
+        "box_height_ratio": 0.76
+      },
+      {
+        "frame": 201,
+        "stage": "not_well_positioned",
+        "box_center_x_ratio": 0.22,
+        "box_height_ratio": 0.75
+      },
+      {
+        "frame": 204,
+        "stage": "not_well_positioned",
+        "box_center_x_ratio": 0.18,
+        "box_height_ratio": 0.74
+      }
+    ]
   },
   "2": {
     "gender": "Male",
-    "gender_conf": 62.3,
-    "age": "0-2",
-    "race": "White",
-    "clothing_color": "grey",
-    "height_bucket": "average",
-    "first_seen_frame": 2258,
-    "last_seen_frame": 2495,
+    "gender_conf": 98.53700796763103,
+    "age": "20-29",
+    "race": "East Asian",
+    "clothing_color": "black",
+    "height_bucket": null,
+    "crop_path": "person_crops/person_2.jpg",
+    "first_seen_frame": 122,
+    "last_seen_frame": 195,
+    "settle_start_frame": 126,
     "locked": true,
     "confirmed": true,
     "source": "settled",
-    "crop_path": "person_crops/person_2.jpg"
+    "raw_attempts": [
+      {
+        "frame": 126,
+        "gender": "Male",
+        "gender_conf": 99.8,
+        "age": "20-29",
+        "age_conf": 55.9,
+        "race": "East Asian",
+        "race_conf": 94.5,
+        "accepted": true
+      },
+      {
+        "frame": 140,
+        "gender": "Male",
+        "gender_conf": 95.8,
+        "age": "20-29",
+        "age_conf": 48.9,
+        "race": "East Asian",
+        "race_conf": 94.9,
+        "accepted": true
+      },
+      {
+        "frame": 160,
+        "gender": "Male",
+        "gender_conf": 100.0,
+        "age": "20-29",
+        "age_conf": 70.6,
+        "race": "East Asian",
+        "race_conf": 94.3,
+        "accepted": true
+      }
+    ],
+    "low_quality_attempts": [],
+    "gate_log": [
+      {
+        "frame": 123,
+        "stage": "not_well_positioned",
+        "box_center_x_ratio": 0.75,
+        "box_height_ratio": 0.73
+      },
+      {
+        "frame": 126,
+        "stage": "predicted",
+        "gender": "Male",
+        "gender_conf": 99.8,
+        "accepted": true
+      },
+      {
+        "frame": 140,
+        "stage": "predicted",
+        "gender": "Male",
+        "gender_conf": 95.8,
+        "accepted": true
+      },
+      {
+        "frame": 160,
+        "stage": "predicted",
+        "gender": "Male",
+        "gender_conf": 100.0,
+        "accepted": true
+      }
+    ]
   },
   "3": {
     "gender": "Male",
-    "gender_conf": 81.7,
-    "age": "20-29",
-    "race": "Indian",
-    "clothing_color": "red",
-    "height_bucket": "average",
-    "first_seen_frame": 906,
-    "last_seen_frame": 949,
+    "gender_conf": 97.6916491985321,
+    "age": "40-49",
+    "race": "Middle Eastern",
+    "clothing_color": "grey",
+    "height_bucket": null,
+    "crop_path": "person_crops/person_3.jpg",
+    "first_seen_frame": 248,
+    "last_seen_frame": 306,
+    "settle_start_frame": 249,
     "locked": true,
     "confirmed": true,
     "source": "settled",
-    "crop_path": "person_crops/person_3.jpg"
-  },
-  "4": {
-    "gender": "Male",
-    "gender_conf": 67.0,
-    "age": "30-39",
-    "race": "East Asian",
-    "clothing_color": "black",
-    "height_bucket": "average",
-    "first_seen_frame": 2295,
-    "last_seen_frame": 2664,
-    "locked": true,
-    "confirmed": true,
-    "source": "settled",
-    "crop_path": "person_crops/person_4.jpg"
+    "raw_attempts": [
+      {
+        "frame": 249,
+        "gender": "Male",
+        "gender_conf": 95.4,
+        "age": "30-39",
+        "age_conf": 40.2,
+        "race": "White",
+        "race_conf": 64.0,
+        "accepted": true
+      },
+      {
+        "frame": 280,
+        "gender": "Male",
+        "gender_conf": 100.0,
+        "age": "40-49",
+        "age_conf": 70.4,
+        "race": "Middle Eastern",
+        "race_conf": 98.5,
+        "accepted": true
+      }
+    ],
+    "low_quality_attempts": [
+      {
+        "frame": 260,
+        "gender": "Male",
+        "gender_conf": 89.1,
+        "age": "50-59",
+        "age_conf": 25.3,
+        "race": "White",
+        "race_conf": 56.3,
+        "accepted": false,
+        "sharpness": 5.2,
+        "pose_offset": 0.02
+      }
+    ],
+    "gate_log": [
+      {
+        "frame": 249,
+        "stage": "predicted",
+        "gender": "Male",
+        "gender_conf": 95.4,
+        "accepted": true
+      },
+      {
+        "frame": 260,
+        "stage": "quality_rejected",
+        "sharpness": 5.2,
+        "pose_offset": 0.02
+      },
+      {
+        "frame": 260,
+        "stage": "predicted_low_quality",
+        "gender": "Male",
+        "gender_conf": 89.1,
+        "sharpness": 5.2
+      },
+      {
+        "frame": 280,
+        "stage": "predicted",
+        "gender": "Male",
+        "gender_conf": 100.0,
+        "accepted": true
+      }
+    ]
   },
   "5": {
     "gender": "Male",
-    "gender_conf": 80.7,
-    "age": "40-49",
+    "gender_conf": 99.96124108632405,
+    "age": "30-39",
     "race": "White",
-    "clothing_color": "blue",
-    "height_bucket": "average",
-    "first_seen_frame": 2034,
-    "last_seen_frame": 2402,
+    "clothing_color": "yellow",
+    "height_bucket": null,
+    "crop_path": "person_crops/person_5.jpg",
+    "first_seen_frame": 321,
+    "last_seen_frame": 405,
+    "settle_start_frame": 321,
     "locked": true,
     "confirmed": true,
     "source": "settled",
-    "crop_path": "person_crops/person_5.jpg"
+    "raw_attempts": [
+      {
+        "frame": 321,
+        "gender": "Male",
+        "gender_conf": 99.9,
+        "age": "20-29",
+        "age_conf": 45.2,
+        "race": "White",
+        "race_conf": 98.1,
+        "accepted": true
+      },
+      {
+        "frame": 340,
+        "gender": "Male",
+        "gender_conf": 100.0,
+        "age": "30-39",
+        "age_conf": 51.2,
+        "race": "White",
+        "race_conf": 64.4,
+        "accepted": true
+      },
+      {
+        "frame": 360,
+        "gender": "Male",
+        "gender_conf": 100.0,
+        "age": "30-39",
+        "age_conf": 62.5,
+        "race": "White",
+        "race_conf": 89.6,
+        "accepted": true
+      }
+    ],
+    "low_quality_attempts": [],
+    "gate_log": [
+      {
+        "frame": 321,
+        "stage": "predicted",
+        "gender": "Male",
+        "gender_conf": 99.9,
+        "accepted": true
+      },
+      {
+        "frame": 340,
+        "stage": "predicted",
+        "gender": "Male",
+        "gender_conf": 100.0,
+        "accepted": true
+      },
+      {
+        "frame": 360,
+        "stage": "predicted",
+        "gender": "Male",
+        "gender_conf": 100.0,
+        "accepted": true
+      }
+    ]
   },
   "6": {
-    "gender": "Female",
-    "gender_conf": 90.4,
-    "age": "60-69",
-    "race": "Southeast Asian",
-    "clothing_color": "orange",
-    "height_bucket": "average",
-    "first_seen_frame": 737,
-    "last_seen_frame": 1114,
+    "gender": "Male",
+    "gender_conf": 98.4218458334605,
+    "age": "40-49",
+    "race": "White",
+    "clothing_color": "white",
+    "height_bucket": null,
+    "crop_path": "person_crops/person_6.jpg",
+    "first_seen_frame": 421,
+    "last_seen_frame": 493,
+    "settle_start_frame": 423,
     "locked": true,
     "confirmed": true,
     "source": "settled",
-    "crop_path": "person_crops/person_6.jpg"
-  },
-  "7": {
-    "gender": "Male",
-    "gender_conf": 98.2,
-    "age": "30-39",
-    "race": "Southeast Asian",
-    "clothing_color": "orange",
-    "height_bucket": "tall",
-    "first_seen_frame": 1180,
-    "last_seen_frame": 1511,
-    "locked": false,
-    "confirmed": false,
-    "source": "best_raw",
-    "crop_path": "person_crops/person_7.jpg"
+    "raw_attempts": [
+      {
+        "frame": 423,
+        "gender": "Male",
+        "gender_conf": 95.4,
+        "age": "30-39",
+        "age_conf": 42.8,
+        "race": "White",
+        "race_conf": 68.3,
+        "accepted": true
+      },
+      {
+        "frame": 440,
+        "gender": "Male",
+        "gender_conf": 99.9,
+        "age": "40-49",
+        "age_conf": 46.4,
+        "race": "White",
+        "race_conf": 97.6,
+        "accepted": true
+      },
+      {
+        "frame": 460,
+        "gender": "Male",
+        "gender_conf": 100.0,
+        "age": "40-49",
+        "age_conf": 75.4,
+        "race": "White",
+        "race_conf": 93.2,
+        "accepted": true
+      }
+    ],
+    "low_quality_attempts": [],
+    "gate_log": [
+      {
+        "frame": 423,
+        "stage": "predicted",
+        "gender": "Male",
+        "gender_conf": 95.4,
+        "accepted": true
+      },
+      {
+        "frame": 440,
+        "stage": "predicted",
+        "gender": "Male",
+        "gender_conf": 99.9,
+        "accepted": true
+      },
+      {
+        "frame": 460,
+        "stage": "predicted",
+        "gender": "Male",
+        "gender_conf": 100.0,
+        "accepted": true
+      }
+    ]
   },
   "8": {
-    "gender": "Male",
-    "gender_conf": 61.5,
-    "age": "70+",
-    "race": "East Asian",
-    "clothing_color": "black",
-    "height_bucket": "tall",
-    "first_seen_frame": 2003,
-    "last_seen_frame": 2238,
+    "gender": "Female",
+    "gender_conf": 76.96882486343384,
+    "age": "20-29",
+    "race": "Middle Eastern",
+    "clothing_color": "red",
+    "height_bucket": null,
+    "crop_path": "person_crops/person_8.jpg",
+    "first_seen_frame": 507,
+    "last_seen_frame": 556,
+    "settle_start_frame": 507,
     "locked": true,
     "confirmed": true,
     "source": "settled",
-    "crop_path": "person_crops/person_8.jpg"
+    "raw_attempts": [
+      {
+        "frame": 507,
+        "gender": "Female",
+        "gender_conf": 90.5,
+        "age": "30-39",
+        "age_conf": 42.9,
+        "race": "Middle Eastern",
+        "race_conf": 37.6,
+        "accepted": true
+      },
+      {
+        "frame": 520,
+        "gender": "Female",
+        "gender_conf": 56.0,
+        "age": "20-29",
+        "age_conf": 38.9,
+        "race": "Middle Eastern",
+        "race_conf": 48.2,
+        "accepted": true
+      },
+      {
+        "frame": 540,
+        "gender": "Female",
+        "gender_conf": 84.4,
+        "age": "20-29",
+        "age_conf": 53.5,
+        "race": "Latino_Hispanic",
+        "race_conf": 38.6,
+        "accepted": true
+      }
+    ],
+    "low_quality_attempts": [],
+    "gate_log": [
+      {
+        "frame": 507,
+        "stage": "predicted",
+        "gender": "Female",
+        "gender_conf": 90.5,
+        "accepted": true
+      },
+      {
+        "frame": 520,
+        "stage": "predicted",
+        "gender": "Female",
+        "gender_conf": 56.0,
+        "accepted": true
+      },
+      {
+        "frame": 540,
+        "stage": "predicted",
+        "gender": "Female",
+        "gender_conf": 84.4,
+        "accepted": true
+      }
+    ]
   },
   "9": {
     "gender": "Male",
-    "gender_conf": 91.1,
-    "age": "70+",
-    "race": "Southeast Asian",
-    "clothing_color": "yellow",
-    "height_bucket": "average",
-    "first_seen_frame": 2035,
-    "last_seen_frame": 2351,
+    "gender_conf": 99.9983270963033,
+    "age": "20-29",
+    "race": "Indian",
+    "clothing_color": "black",
+    "height_bucket": null,
+    "crop_path": "person_crops/person_9.jpg",
+    "first_seen_frame": 577,
+    "last_seen_frame": 649,
+    "settle_start_frame": 603,
     "locked": true,
     "confirmed": true,
     "source": "settled",
-    "crop_path": "person_crops/person_9.jpg"
+    "raw_attempts": [
+      {
+        "frame": 603,
+        "gender": "Male",
+        "gender_conf": 100.0,
+        "age": "20-29",
+        "age_conf": 68.9,
+        "race": "Indian",
+        "race_conf": 56.7,
+        "accepted": true
+      },
+      {
+        "frame": 620,
+        "gender": "Male",
+        "gender_conf": 100.0,
+        "age": "20-29",
+        "age_conf": 81.7,
+        "race": "Indian",
+        "race_conf": 84.6,
+        "accepted": true
+      },
+      {
+        "frame": 640,
+        "gender": "Male",
+        "gender_conf": 100.0,
+        "age": "20-29",
+        "age_conf": 73.7,
+        "race": "Indian",
+        "race_conf": 60.7,
+        "accepted": true
+      }
+    ],
+    "low_quality_attempts": [
+      {
+        "frame": 579,
+        "gender": "Male",
+        "gender_conf": 100.0,
+        "age": "20-29",
+        "age_conf": 65.9,
+        "race": "White",
+        "race_conf": 92.2,
+        "accepted": false,
+        "sharpness": 4.0,
+        "pose_offset": 0.19
+      },
+      {
+        "frame": 580,
+        "gender": "Male",
+        "gender_conf": 100.0,
+        "age": "20-29",
+        "age_conf": 69.0,
+        "race": "White",
+        "race_conf": 61.9,
+        "accepted": false,
+        "sharpness": 3.9,
+        "pose_offset": 0.2
+      },
+      {
+        "frame": 582,
+        "gender": "Male",
+        "gender_conf": 100.0,
+        "age": "20-29",
+        "age_conf": 79.8,
+        "race": "Indian",
+        "race_conf": 84.5,
+        "accepted": false,
+        "sharpness": 3.9,
+        "pose_offset": 0.18
+      },
+      {
+        "frame": 585,
+        "gender": "Male",
+        "gender_conf": 100.0,
+        "age": "20-29",
+        "age_conf": 74.6,
+        "race": "Indian",
+        "race_conf": 88.2,
+        "accepted": false,
+        "sharpness": 5.0,
+        "pose_offset": 0.16
+      },
+      {
+        "frame": 588,
+        "gender": "Male",
+        "gender_conf": 100.0,
+        "age": "20-29",
+        "age_conf": 80.4,
+        "race": "Indian",
+        "race_conf": 72.8,
+        "accepted": false,
+        "sharpness": 5.1,
+        "pose_offset": 0.15
+      },
+      {
+        "frame": 591,
+        "gender": "Male",
+        "gender_conf": 100.0,
+        "age": "20-29",
+        "age_conf": 80.9,
+        "race": "Indian",
+        "race_conf": 98.5,
+        "accepted": false,
+        "sharpness": 5.8,
+        "pose_offset": 0.13
+      },
+      {
+        "frame": 594,
+        "gender": "Male",
+        "gender_conf": 100.0,
+        "age": "20-29",
+        "age_conf": 61.6,
+        "race": "Indian",
+        "race_conf": 93.0,
+        "accepted": false,
+        "sharpness": 5.5,
+        "pose_offset": 0.1
+      },
+      {
+        "frame": 597,
+        "gender": "Male",
+        "gender_conf": 100.0,
+        "age": "20-29",
+        "age_conf": 84.5,
+        "race": "Indian",
+        "race_conf": 94.3,
+        "accepted": false,
+        "sharpness": 6.4,
+        "pose_offset": 0.07
+      },
+      {
+        "frame": 600,
+        "gender": "Male",
+        "gender_conf": 100.0,
+        "age": "20-29",
+        "age_conf": 61.9,
+        "race": "Indian",
+        "race_conf": 49.1,
+        "accepted": false,
+        "sharpness": 5.6,
+        "pose_offset": 0.09
+      }
+    ],
+    "gate_log": [
+      {
+        "frame": 579,
+        "stage": "quality_rejected",
+        "sharpness": 4.0,
+        "pose_offset": 0.19
+      },
+      {
+        "frame": 579,
+        "stage": "predicted_low_quality",
+        "gender": "Male",
+        "gender_conf": 100.0,
+        "sharpness": 4.0
+      },
+      {
+        "frame": 580,
+        "stage": "quality_rejected",
+        "sharpness": 3.9,
+        "pose_offset": 0.2
+      },
+      {
+        "frame": 580,
+        "stage": "predicted_low_quality",
+        "gender": "Male",
+        "gender_conf": 100.0,
+        "sharpness": 3.9
+      },
+      {
+        "frame": 582,
+        "stage": "quality_rejected",
+        "sharpness": 3.9,
+        "pose_offset": 0.18
+      },
+      {
+        "frame": 582,
+        "stage": "predicted_low_quality",
+        "gender": "Male",
+        "gender_conf": 100.0,
+        "sharpness": 3.9
+      },
+      {
+        "frame": 585,
+        "stage": "quality_rejected",
+        "sharpness": 5.0,
+        "pose_offset": 0.16
+      },
+      {
+        "frame": 585,
+        "stage": "predicted_low_quality",
+        "gender": "Male",
+        "gender_conf": 100.0,
+        "sharpness": 5.0
+      },
+      {
+        "frame": 588,
+        "stage": "quality_rejected",
+        "sharpness": 5.1,
+        "pose_offset": 0.15
+      },
+      {
+        "frame": 588,
+        "stage": "predicted_low_quality",
+        "gender": "Male",
+        "gender_conf": 100.0,
+        "sharpness": 5.1
+      },
+      {
+        "frame": 591,
+        "stage": "quality_rejected",
+        "sharpness": 5.8,
+        "pose_offset": 0.13
+      },
+      {
+        "frame": 591,
+        "stage": "predicted_low_quality",
+        "gender": "Male",
+        "gender_conf": 100.0,
+        "sharpness": 5.8
+      },
+      {
+        "frame": 594,
+        "stage": "quality_rejected",
+        "sharpness": 5.5,
+        "pose_offset": 0.1
+      },
+      {
+        "frame": 594,
+        "stage": "predicted_low_quality",
+        "gender": "Male",
+        "gender_conf": 100.0,
+        "sharpness": 5.5
+      },
+      {
+        "frame": 597,
+        "stage": "quality_rejected",
+        "sharpness": 6.4,
+        "pose_offset": 0.07
+      },
+      {
+        "frame": 597,
+        "stage": "predicted_low_quality",
+        "gender": "Male",
+        "gender_conf": 100.0,
+        "sharpness": 6.4
+      },
+      {
+        "frame": 600,
+        "stage": "quality_rejected",
+        "sharpness": 5.6,
+        "pose_offset": 0.09
+      },
+      {
+        "frame": 600,
+        "stage": "predicted_low_quality",
+        "gender": "Male",
+        "gender_conf": 100.0,
+        "sharpness": 5.6
+      },
+      {
+        "frame": 603,
+        "stage": "predicted",
+        "gender": "Male",
+        "gender_conf": 100.0,
+        "accepted": true
+      },
+      {
+        "frame": 620,
+        "stage": "predicted",
+        "gender": "Male",
+        "gender_conf": 100.0,
+        "accepted": true
+      },
+      {
+        "frame": 640,
+        "stage": "predicted",
+        "gender": "Male",
+        "gender_conf": 100.0,
+        "accepted": true
+      }
+    ]
   },
   "10": {
     "gender": "Male",
-    "gender_conf": 72.1,
-    "age": "3-9",
-    "race": "Latino_Hispanic",
-    "clothing_color": "orange",
-    "height_bucket": "average",
-    "first_seen_frame": 2995,
-    "last_seen_frame": 3374,
+    "gender_conf": 99.96158480644226,
+    "age": "30-39",
+    "race": "Middle Eastern",
+    "clothing_color": "blue",
+    "height_bucket": null,
+    "crop_path": "person_crops/person_10.jpg",
+    "first_seen_frame": 662,
+    "last_seen_frame": 727,
+    "settle_start_frame": 663,
     "locked": true,
     "confirmed": true,
     "source": "settled",
-    "crop_path": "person_crops/person_10.jpg"
+    "raw_attempts": [
+      {
+        "frame": 663,
+        "gender": "Male",
+        "gender_conf": 99.9,
+        "age": "40-49",
+        "age_conf": 43.5,
+        "race": "Middle Eastern",
+        "race_conf": 95.2,
+        "accepted": true
+      },
+      {
+        "frame": 680,
+        "gender": "Male",
+        "gender_conf": 100.0,
+        "age": "30-39",
+        "age_conf": 52.0,
+        "race": "Middle Eastern",
+        "race_conf": 99.5,
+        "accepted": true
+      },
+      {
+        "frame": 700,
+        "gender": "Male",
+        "gender_conf": 100.0,
+        "age": "30-39",
+        "age_conf": 60.7,
+        "race": "Middle Eastern",
+        "race_conf": 86.9,
+        "accepted": true
+      }
+    ],
+    "low_quality_attempts": [],
+    "gate_log": [
+      {
+        "frame": 663,
+        "stage": "predicted",
+        "gender": "Male",
+        "gender_conf": 99.9,
+        "accepted": true
+      },
+      {
+        "frame": 680,
+        "stage": "predicted",
+        "gender": "Male",
+        "gender_conf": 100.0,
+        "accepted": true
+      },
+      {
+        "frame": 700,
+        "stage": "predicted",
+        "gender": "Male",
+        "gender_conf": 100.0,
+        "accepted": true
+      }
+    ]
   },
   "11": {
-    "gender": "Female",
-    "gender_conf": 66.6,
-    "age": "30-39",
-    "race": "Indian",
-    "clothing_color": "grey",
-    "height_bucket": "tall",
-    "first_seen_frame": 1892,
-    "last_seen_frame": 2093,
-    "locked": true,
-    "confirmed": true,
-    "source": "settled",
-    "crop_path": "person_crops/person_11.jpg"
+    "gender": "Male",
+    "gender_conf": 100.0,
+    "age": "20-29",
+    "race": "East Asian",
+    "clothing_color": "black",
+    "height_bucket": null,
+    "crop_path": "person_crops/person_11.jpg",
+    "first_seen_frame": 745,
+    "last_seen_frame": 805,
+    "settle_start_frame": 768,
+    "locked": false,
+    "confirmed": false,
+    "source": "best_raw",
+    "raw_attempts": [
+      {
+        "frame": 768,
+        "gender": "Male",
+        "gender_conf": 100.0,
+        "age": "20-29",
+        "age_conf": 65.9,
+        "race": "East Asian",
+        "race_conf": 93.8,
+        "accepted": true
+      },
+      {
+        "frame": 780,
+        "gender": "Male",
+        "gender_conf": 100.0,
+        "age": "20-29",
+        "age_conf": 83.7,
+        "race": "East Asian",
+        "race_conf": 93.7,
+        "accepted": true
+      }
+    ],
+    "low_quality_attempts": [
+      {
+        "frame": 747,
+        "gender": "Male",
+        "gender_conf": 99.2,
+        "age": "20-29",
+        "age_conf": 72.7,
+        "race": "East Asian",
+        "race_conf": 85.9,
+        "accepted": false,
+        "sharpness": 5.7,
+        "pose_offset": 0.17
+      },
+      {
+        "frame": 750,
+        "gender": "Male",
+        "gender_conf": 100.0,
+        "age": "20-29",
+        "age_conf": 77.6,
+        "race": "White",
+        "race_conf": 68.7,
+        "accepted": false,
+        "sharpness": 5.0,
+        "pose_offset": 0.16
+      },
+      {
+        "frame": 753,
+        "gender": "Male",
+        "gender_conf": 99.6,
+        "age": "20-29",
+        "age_conf": 76.2,
+        "race": "White",
+        "race_conf": 80.6,
+        "accepted": false,
+        "sharpness": 4.1,
+        "pose_offset": 0.14
+      },
+      {
+        "frame": 756,
+        "gender": "Male",
+        "gender_conf": 100.0,
+        "age": "20-29",
+        "age_conf": 77.7,
+        "race": "East Asian",
+        "race_conf": 76.8,
+        "accepted": false,
+        "sharpness": 3.6,
+        "pose_offset": 0.11
+      },
+      {
+        "frame": 759,
+        "gender": "Male",
+        "gender_conf": 100.0,
+        "age": "20-29",
+        "age_conf": 70.2,
+        "race": "East Asian",
+        "race_conf": 96.3,
+        "accepted": false,
+        "sharpness": 3.1,
+        "pose_offset": 0.07
+      },
+      {
+        "frame": 760,
+        "gender": "Male",
+        "gender_conf": 100.0,
+        "age": "20-29",
+        "age_conf": 77.1,
+        "race": "East Asian",
+        "race_conf": 95.5,
+        "accepted": false,
+        "sharpness": 2.8,
+        "pose_offset": 0.06
+      },
+      {
+        "frame": 762,
+        "gender": "Male",
+        "gender_conf": 100.0,
+        "age": "20-29",
+        "age_conf": 65.6,
+        "race": "East Asian",
+        "race_conf": 97.2,
+        "accepted": false,
+        "sharpness": 3.6,
+        "pose_offset": 0.08
+      },
+      {
+        "frame": 765,
+        "gender": "Male",
+        "gender_conf": 100.0,
+        "age": "20-29",
+        "age_conf": 71.7,
+        "race": "East Asian",
+        "race_conf": 93.2,
+        "accepted": false,
+        "sharpness": 4.2,
+        "pose_offset": 0.09
+      }
+    ],
+    "gate_log": [
+      {
+        "frame": 747,
+        "stage": "quality_rejected",
+        "sharpness": 5.7,
+        "pose_offset": 0.17
+      },
+      {
+        "frame": 747,
+        "stage": "predicted_low_quality",
+        "gender": "Male",
+        "gender_conf": 99.2,
+        "sharpness": 5.7
+      },
+      {
+        "frame": 750,
+        "stage": "quality_rejected",
+        "sharpness": 5.0,
+        "pose_offset": 0.16
+      },
+      {
+        "frame": 750,
+        "stage": "predicted_low_quality",
+        "gender": "Male",
+        "gender_conf": 100.0,
+        "sharpness": 5.0
+      },
+      {
+        "frame": 753,
+        "stage": "quality_rejected",
+        "sharpness": 4.1,
+        "pose_offset": 0.14
+      },
+      {
+        "frame": 753,
+        "stage": "predicted_low_quality",
+        "gender": "Male",
+        "gender_conf": 99.6,
+        "sharpness": 4.1
+      },
+      {
+        "frame": 756,
+        "stage": "quality_rejected",
+        "sharpness": 3.6,
+        "pose_offset": 0.11
+      },
+      {
+        "frame": 756,
+        "stage": "predicted_low_quality",
+        "gender": "Male",
+        "gender_conf": 100.0,
+        "sharpness": 3.6
+      },
+      {
+        "frame": 759,
+        "stage": "quality_rejected",
+        "sharpness": 3.1,
+        "pose_offset": 0.07
+      },
+      {
+        "frame": 759,
+        "stage": "predicted_low_quality",
+        "gender": "Male",
+        "gender_conf": 100.0,
+        "sharpness": 3.1
+      },
+      {
+        "frame": 760,
+        "stage": "quality_rejected",
+        "sharpness": 2.8,
+        "pose_offset": 0.06
+      },
+      {
+        "frame": 760,
+        "stage": "predicted_low_quality",
+        "gender": "Male",
+        "gender_conf": 100.0,
+        "sharpness": 2.8
+      },
+      {
+        "frame": 762,
+        "stage": "quality_rejected",
+        "sharpness": 3.6,
+        "pose_offset": 0.08
+      },
+      {
+        "frame": 762,
+        "stage": "predicted_low_quality",
+        "gender": "Male",
+        "gender_conf": 100.0,
+        "sharpness": 3.6
+      },
+      {
+        "frame": 765,
+        "stage": "quality_rejected",
+        "sharpness": 4.2,
+        "pose_offset": 0.09
+      },
+      {
+        "frame": 765,
+        "stage": "predicted_low_quality",
+        "gender": "Male",
+        "gender_conf": 100.0,
+        "sharpness": 4.2
+      },
+      {
+        "frame": 768,
+        "stage": "predicted",
+        "gender": "Male",
+        "gender_conf": 100.0,
+        "accepted": true
+      },
+      {
+        "frame": 780,
+        "stage": "predicted",
+        "gender": "Male",
+        "gender_conf": 100.0,
+        "accepted": true
+      },
+      {
+        "frame": 800,
+        "stage": "no_face_detected"
+      }
+    ]
   },
   "12": {
     "gender": "Male",
-    "gender_conf": 75.2,
-    "age": "60-69",
+    "gender_conf": 92.78110265731812,
+    "age": "30-39",
     "race": "White",
-    "clothing_color": "white",
-    "height_bucket": "tall",
-    "first_seen_frame": 1015,
-    "last_seen_frame": 1238,
+    "clothing_color": "grey",
+    "height_bucket": null,
+    "crop_path": "person_crops/person_12.jpg",
+    "first_seen_frame": 825,
+    "last_seen_frame": 901,
+    "settle_start_frame": 828,
     "locked": true,
     "confirmed": true,
     "source": "settled",
-    "crop_path": "person_crops/person_12.jpg"
-  },
-  "13": {
-    "gender": "Female",
-    "gender_conf": 93.7,
-    "age": "3-9",
-    "race": "Black",
-    "clothing_color": "orange",
-    "height_bucket": "average",
-    "first_seen_frame": 561,
-    "last_seen_frame": 801,
-    "locked": true,
-    "confirmed": true,
-    "source": "settled",
-    "crop_path": "person_crops/person_13.jpg"
+    "raw_attempts": [
+      {
+        "frame": 828,
+        "gender": "Male",
+        "gender_conf": 78.4,
+        "age": "20-29",
+        "age_conf": 39.3,
+        "race": "White",
+        "race_conf": 56.7,
+        "accepted": true
+      },
+      {
+        "frame": 840,
+        "gender": "Male",
+        "gender_conf": 100.0,
+        "age": "30-39",
+        "age_conf": 65.3,
+        "race": "Middle Eastern",
+        "race_conf": 69.0,
+        "accepted": true
+      },
+      {
+        "frame": 860,
+        "gender": "Male",
+        "gender_conf": 100.0,
+        "age": "30-39",
+        "age_conf": 70.5,
+        "race": "White",
+        "race_conf": 98.9,
+        "accepted": true
+      }
+    ],
+    "low_quality_attempts": [],
+    "gate_log": [
+      {
+        "frame": 825,
+        "stage": "no_face_detected"
+      },
+      {
+        "frame": 828,
+        "stage": "predicted",
+        "gender": "Male",
+        "gender_conf": 78.4,
+        "accepted": true
+      },
+      {
+        "frame": 840,
+        "stage": "predicted",
+        "gender": "Male",
+        "gender_conf": 100.0,
+        "accepted": true
+      },
+      {
+        "frame": 860,
+        "stage": "predicted",
+        "gender": "Male",
+        "gender_conf": 100.0,
+        "accepted": true
+      }
+    ]
   },
   "14": {
-    "gender": "Female",
-    "gender_conf": 69.0,
-    "age": "50-59",
-    "race": "Latino_Hispanic",
-    "clothing_color": "grey",
-    "height_bucket": "tall",
-    "first_seen_frame": 722,
-    "last_seen_frame": 819,
+    "gender": "Male",
+    "gender_conf": 99.9951720237732,
+    "age": "20-29",
+    "race": "White",
+    "clothing_color": "black",
+    "height_bucket": null,
+    "crop_path": "person_crops/person_14.jpg",
+    "first_seen_frame": 925,
+    "last_seen_frame": 999,
+    "settle_start_frame": 927,
     "locked": true,
     "confirmed": true,
     "source": "settled",
-    "crop_path": "person_crops/person_14.jpg"
+    "raw_attempts": [
+      {
+        "frame": 927,
+        "gender": "Female",
+        "gender_conf": 74.4,
+        "age": "20-29",
+        "age_conf": 59.8,
+        "race": "White",
+        "race_conf": 99.9,
+        "accepted": true
+      },
+      {
+        "frame": 960,
+        "gender": "Male",
+        "gender_conf": 100.0,
+        "age": "20-29",
+        "age_conf": 83.2,
+        "race": "White",
+        "race_conf": 99.0,
+        "accepted": true
+      }
+    ],
+    "low_quality_attempts": [
+      {
+        "frame": 940,
+        "gender": "Male",
+        "gender_conf": 95.4,
+        "age": "20-29",
+        "age_conf": 61.5,
+        "race": "White",
+        "race_conf": 99.0,
+        "accepted": false,
+        "sharpness": 4.2,
+        "pose_offset": 0.07
+      }
+    ],
+    "gate_log": [
+      {
+        "frame": 927,
+        "stage": "predicted",
+        "gender": "Female",
+        "gender_conf": 74.4,
+        "accepted": true
+      },
+      {
+        "frame": 940,
+        "stage": "quality_rejected",
+        "sharpness": 4.2,
+        "pose_offset": 0.07
+      },
+      {
+        "frame": 940,
+        "stage": "predicted_low_quality",
+        "gender": "Male",
+        "gender_conf": 95.4,
+        "sharpness": 4.2
+      },
+      {
+        "frame": 960,
+        "stage": "predicted",
+        "gender": "Male",
+        "gender_conf": 100.0,
+        "accepted": true
+      }
+    ]
   },
   "15": {
     "gender": "Male",
-    "gender_conf": 74.4,
-    "age": "0-2",
-    "race": "East Asian",
+    "gender_conf": 100.0,
+    "age": "20-29",
+    "race": "Middle Eastern",
     "clothing_color": "black",
-    "height_bucket": "average",
-    "first_seen_frame": 1717,
-    "last_seen_frame": 2010,
-    "locked": true,
-    "confirmed": true,
-    "source": "settled",
-    "crop_path": "person_crops/person_15.jpg"
+    "height_bucket": null,
+    "crop_path": "person_crops/person_15.jpg",
+    "first_seen_frame": 1017,
+    "last_seen_frame": 1056,
+    "settle_start_frame": null,
+    "locked": false,
+    "confirmed": false,
+    "source": "last_resort",
+    "raw_attempts": [],
+    "low_quality_attempts": [
+      {
+        "frame": 1017,
+        "gender": "Male",
+        "gender_conf": 100.0,
+        "age": "20-29",
+        "age_conf": 64.4,
+        "race": "Middle Eastern",
+        "race_conf": 65.3,
+        "accepted": false,
+        "sharpness": 3.1,
+        "pose_offset": 0.24
+      },
+      {
+        "frame": 1020,
+        "gender": "Male",
+        "gender_conf": 100.0,
+        "age": "20-29",
+        "age_conf": 66.4,
+        "race": "White",
+        "race_conf": 45.7,
+        "accepted": false,
+        "sharpness": 3.7,
+        "pose_offset": 0.27
+      },
+      {
+        "frame": 1023,
+        "gender": "Male",
+        "gender_conf": 100.0,
+        "age": "20-29",
+        "age_conf": 45.6,
+        "race": "White",
+        "race_conf": 65.2,
+        "accepted": false,
+        "sharpness": 4.4,
+        "pose_offset": 0.31
+      },
+      {
+        "frame": 1026,
+        "gender": "Male",
+        "gender_conf": 100.0,
+        "age": "20-29",
+        "age_conf": 57.0,
+        "race": "White",
+        "race_conf": 52.1,
+        "accepted": false,
+        "sharpness": 4.8,
+        "pose_offset": 0.31
+      },
+      {
+        "frame": 1029,
+        "gender": "Male",
+        "gender_conf": 100.0,
+        "age": "20-29",
+        "age_conf": 66.5,
+        "race": "Middle Eastern",
+        "race_conf": 71.5,
+        "accepted": false,
+        "sharpness": 4.9,
+        "pose_offset": 0.31
+      },
+      {
+        "frame": 1032,
+        "gender": "Male",
+        "gender_conf": 100.0,
+        "age": "20-29",
+        "age_conf": 62.7,
+        "race": "Middle Eastern",
+        "race_conf": 44.7,
+        "accepted": false,
+        "sharpness": 3.6,
+        "pose_offset": 0.53
+      },
+      {
+        "frame": 1035,
+        "gender": "Male",
+        "gender_conf": 100.0,
+        "age": "20-29",
+        "age_conf": 74.2,
+        "race": "Middle Eastern",
+        "race_conf": 50.4,
+        "accepted": false,
+        "sharpness": 2.6,
+        "pose_offset": 1.15
+      },
+      {
+        "frame": 1038,
+        "gender": "Male",
+        "gender_conf": 100.0,
+        "age": "20-29",
+        "age_conf": 54.4,
+        "race": "Middle Eastern",
+        "race_conf": 49.4,
+        "accepted": false,
+        "sharpness": 1.8,
+        "pose_offset": 1.62
+      },
+      {
+        "frame": 1040,
+        "gender": "Male",
+        "gender_conf": 99.3,
+        "age": "20-29",
+        "age_conf": 46.8,
+        "race": "Middle Eastern",
+        "race_conf": 70.5,
+        "accepted": false,
+        "sharpness": 1.7,
+        "pose_offset": 3.0
+      },
+      {
+        "frame": 1041,
+        "gender": "Male",
+        "gender_conf": 99.1,
+        "age": "30-39",
+        "age_conf": 58.0,
+        "race": "Middle Eastern",
+        "race_conf": 79.1,
+        "accepted": false,
+        "sharpness": 1.9,
+        "pose_offset": 2.66
+      },
+      {
+        "frame": 1044,
+        "gender": "Male",
+        "gender_conf": 99.5,
+        "age": "20-29",
+        "age_conf": 60.5,
+        "race": "Middle Eastern",
+        "race_conf": 58.6,
+        "accepted": false,
+        "sharpness": 1.6,
+        "pose_offset": 2.94
+      },
+      {
+        "frame": 1047,
+        "gender": "Male",
+        "gender_conf": 85.9,
+        "age": "20-29",
+        "age_conf": 39.7,
+        "race": "White",
+        "race_conf": 39.2,
+        "accepted": false,
+        "sharpness": 1.6,
+        "pose_offset": 5.77
+      },
+      {
+        "frame": 1050,
+        "gender": "Male",
+        "gender_conf": 97.5,
+        "age": "20-29",
+        "age_conf": 36.2,
+        "race": "East Asian",
+        "race_conf": 18.2,
+        "accepted": false,
+        "sharpness": 1.3,
+        "pose_offset": 4.39
+      }
+    ],
+    "gate_log": [
+      {
+        "frame": 1017,
+        "stage": "quality_rejected",
+        "sharpness": 3.1,
+        "pose_offset": 0.24
+      },
+      {
+        "frame": 1017,
+        "stage": "predicted_low_quality",
+        "gender": "Male",
+        "gender_conf": 100.0,
+        "sharpness": 3.1
+      },
+      {
+        "frame": 1020,
+        "stage": "quality_rejected",
+        "sharpness": 3.7,
+        "pose_offset": 0.27
+      },
+      {
+        "frame": 1020,
+        "stage": "predicted_low_quality",
+        "gender": "Male",
+        "gender_conf": 100.0,
+        "sharpness": 3.7
+      },
+      {
+        "frame": 1023,
+        "stage": "quality_rejected",
+        "sharpness": 4.4,
+        "pose_offset": 0.31
+      },
+      {
+        "frame": 1023,
+        "stage": "predicted_low_quality",
+        "gender": "Male",
+        "gender_conf": 100.0,
+        "sharpness": 4.4
+      },
+      {
+        "frame": 1026,
+        "stage": "quality_rejected",
+        "sharpness": 4.8,
+        "pose_offset": 0.31
+      },
+      {
+        "frame": 1026,
+        "stage": "predicted_low_quality",
+        "gender": "Male",
+        "gender_conf": 100.0,
+        "sharpness": 4.8
+      },
+      {
+        "frame": 1029,
+        "stage": "quality_rejected",
+        "sharpness": 4.9,
+        "pose_offset": 0.31
+      },
+      {
+        "frame": 1029,
+        "stage": "predicted_low_quality",
+        "gender": "Male",
+        "gender_conf": 100.0,
+        "sharpness": 4.9
+      },
+      {
+        "frame": 1032,
+        "stage": "quality_rejected",
+        "sharpness": 3.6,
+        "pose_offset": 0.53
+      },
+      {
+        "frame": 1032,
+        "stage": "predicted_low_quality",
+        "gender": "Male",
+        "gender_conf": 100.0,
+        "sharpness": 3.6
+      },
+      {
+        "frame": 1035,
+        "stage": "quality_rejected",
+        "sharpness": 2.6,
+        "pose_offset": 1.15
+      },
+      {
+        "frame": 1035,
+        "stage": "predicted_low_quality",
+        "gender": "Male",
+        "gender_conf": 100.0,
+        "sharpness": 2.6
+      },
+      {
+        "frame": 1038,
+        "stage": "quality_rejected",
+        "sharpness": 1.8,
+        "pose_offset": 1.62
+      },
+      {
+        "frame": 1038,
+        "stage": "predicted_low_quality",
+        "gender": "Male",
+        "gender_conf": 100.0,
+        "sharpness": 1.8
+      },
+      {
+        "frame": 1040,
+        "stage": "quality_rejected",
+        "sharpness": 1.7,
+        "pose_offset": 3.0
+      },
+      {
+        "frame": 1040,
+        "stage": "predicted_low_quality",
+        "gender": "Male",
+        "gender_conf": 99.3,
+        "sharpness": 1.7
+      },
+      {
+        "frame": 1041,
+        "stage": "quality_rejected",
+        "sharpness": 1.9,
+        "pose_offset": 2.66
+      },
+      {
+        "frame": 1041,
+        "stage": "predicted_low_quality",
+        "gender": "Male",
+        "gender_conf": 99.1,
+        "sharpness": 1.9
+      },
+      {
+        "frame": 1044,
+        "stage": "quality_rejected",
+        "sharpness": 1.6,
+        "pose_offset": 2.94
+      },
+      {
+        "frame": 1044,
+        "stage": "predicted_low_quality",
+        "gender": "Male",
+        "gender_conf": 99.5,
+        "sharpness": 1.6
+      },
+      {
+        "frame": 1047,
+        "stage": "quality_rejected",
+        "sharpness": 1.6,
+        "pose_offset": 5.77
+      },
+      {
+        "frame": 1047,
+        "stage": "predicted_low_quality",
+        "gender": "Male",
+        "gender_conf": 85.9,
+        "sharpness": 1.6
+      },
+      {
+        "frame": 1050,
+        "stage": "quality_rejected",
+        "sharpness": 1.3,
+        "pose_offset": 4.39
+      },
+      {
+        "frame": 1050,
+        "stage": "predicted_low_quality",
+        "gender": "Male",
+        "gender_conf": 97.5,
+        "sharpness": 1.3
+      },
+      {
+        "frame": 1053,
+        "stage": "not_well_positioned",
+        "box_center_x_ratio": 0.23,
+        "box_height_ratio": 0.77
+      },
+      {
+        "frame": 1056,
+        "stage": "not_well_positioned",
+        "box_center_x_ratio": 0.17,
+        "box_height_ratio": 0.78
+      }
+    ]
   },
   "16": {
     "gender": "Female",
-    "gender_conf": 75.3,
-    "age": "10-19",
-    "race": "Indian",
-    "clothing_color": "red",
-    "height_bucket": "average",
-    "first_seen_frame": 2788,
-    "last_seen_frame": 3094,
+    "gender_conf": 99.9,
+    "age": "20-29",
+    "race": "East Asian",
+    "clothing_color": "black",
+    "height_bucket": null,
+    "crop_path": "person_crops/person_16.jpg",
+    "first_seen_frame": 1033,
+    "last_seen_frame": 1086,
+    "settle_start_frame": 1053,
     "locked": false,
     "confirmed": false,
     "source": "best_raw",
-    "crop_path": "person_crops/person_16.jpg"
+    "raw_attempts": [
+      {
+        "frame": 1053,
+        "gender": "Female",
+        "gender_conf": 99.7,
+        "age": "20-29",
+        "age_conf": 56.8,
+        "race": "East Asian",
+        "race_conf": 90.6,
+        "accepted": true
+      },
+      {
+        "frame": 1060,
+        "gender": "Female",
+        "gender_conf": 99.9,
+        "age": "20-29",
+        "age_conf": 74.0,
+        "race": "East Asian",
+        "race_conf": 90.8,
+        "accepted": true
+      },
+      {
+        "frame": 1080,
+        "gender": "Male",
+        "gender_conf": 53.9,
+        "age": "20-29",
+        "age_conf": 58.0,
+        "race": "East Asian",
+        "race_conf": 86.6,
+        "accepted": true
+      }
+    ],
+    "low_quality_attempts": [
+      {
+        "frame": 1035,
+        "gender": "Female",
+        "gender_conf": 99.9,
+        "age": "20-29",
+        "age_conf": 59.1,
+        "race": "East Asian",
+        "race_conf": 92.0,
+        "accepted": false,
+        "sharpness": 3.3,
+        "pose_offset": 0.14
+      },
+      {
+        "frame": 1038,
+        "gender": "Female",
+        "gender_conf": 99.9,
+        "age": "30-39",
+        "age_conf": 44.5,
+        "race": "East Asian",
+        "race_conf": 87.4,
+        "accepted": false,
+        "sharpness": 2.2,
+        "pose_offset": 0.08
+      },
+      {
+        "frame": 1040,
+        "gender": "Female",
+        "gender_conf": 99.9,
+        "age": "30-39",
+        "age_conf": 26.5,
+        "race": "East Asian",
+        "race_conf": 86.5,
+        "accepted": false,
+        "sharpness": 2.0,
+        "pose_offset": 0.05
+      },
+      {
+        "frame": 1041,
+        "gender": "Female",
+        "gender_conf": 99.9,
+        "age": "30-39",
+        "age_conf": 32.2,
+        "race": "East Asian",
+        "race_conf": 88.8,
+        "accepted": false,
+        "sharpness": 2.1,
+        "pose_offset": 0.05
+      },
+      {
+        "frame": 1044,
+        "gender": "Female",
+        "gender_conf": 100.0,
+        "age": "20-29",
+        "age_conf": 44.5,
+        "race": "East Asian",
+        "race_conf": 91.5,
+        "accepted": false,
+        "sharpness": 2.7,
+        "pose_offset": 0.04
+      },
+      {
+        "frame": 1047,
+        "gender": "Female",
+        "gender_conf": 99.7,
+        "age": "20-29",
+        "age_conf": 39.6,
+        "race": "East Asian",
+        "race_conf": 93.5,
+        "accepted": false,
+        "sharpness": 3.7,
+        "pose_offset": 0.0
+      },
+      {
+        "frame": 1050,
+        "gender": "Female",
+        "gender_conf": 99.7,
+        "age": "20-29",
+        "age_conf": 67.0,
+        "race": "East Asian",
+        "race_conf": 87.8,
+        "accepted": false,
+        "sharpness": 5.2,
+        "pose_offset": 0.0
+      }
+    ],
+    "gate_log": [
+      {
+        "frame": 1035,
+        "stage": "quality_rejected",
+        "sharpness": 3.3,
+        "pose_offset": 0.14
+      },
+      {
+        "frame": 1035,
+        "stage": "predicted_low_quality",
+        "gender": "Female",
+        "gender_conf": 99.9,
+        "sharpness": 3.3
+      },
+      {
+        "frame": 1038,
+        "stage": "quality_rejected",
+        "sharpness": 2.2,
+        "pose_offset": 0.08
+      },
+      {
+        "frame": 1038,
+        "stage": "predicted_low_quality",
+        "gender": "Female",
+        "gender_conf": 99.9,
+        "sharpness": 2.2
+      },
+      {
+        "frame": 1040,
+        "stage": "quality_rejected",
+        "sharpness": 2.0,
+        "pose_offset": 0.05
+      },
+      {
+        "frame": 1040,
+        "stage": "predicted_low_quality",
+        "gender": "Female",
+        "gender_conf": 99.9,
+        "sharpness": 2.0
+      },
+      {
+        "frame": 1041,
+        "stage": "quality_rejected",
+        "sharpness": 2.1,
+        "pose_offset": 0.05
+      },
+      {
+        "frame": 1041,
+        "stage": "predicted_low_quality",
+        "gender": "Female",
+        "gender_conf": 99.9,
+        "sharpness": 2.1
+      },
+      {
+        "frame": 1044,
+        "stage": "quality_rejected",
+        "sharpness": 2.7,
+        "pose_offset": 0.04
+      },
+      {
+        "frame": 1044,
+        "stage": "predicted_low_quality",
+        "gender": "Female",
+        "gender_conf": 100.0,
+        "sharpness": 2.7
+      },
+      {
+        "frame": 1047,
+        "stage": "quality_rejected",
+        "sharpness": 3.7,
+        "pose_offset": 0.0
+      },
+      {
+        "frame": 1047,
+        "stage": "predicted_low_quality",
+        "gender": "Female",
+        "gender_conf": 99.7,
+        "sharpness": 3.7
+      },
+      {
+        "frame": 1050,
+        "stage": "quality_rejected",
+        "sharpness": 5.2,
+        "pose_offset": 0.0
+      },
+      {
+        "frame": 1050,
+        "stage": "predicted_low_quality",
+        "gender": "Female",
+        "gender_conf": 99.7,
+        "sharpness": 5.2
+      },
+      {
+        "frame": 1053,
+        "stage": "predicted",
+        "gender": "Female",
+        "gender_conf": 99.7,
+        "accepted": true
+      },
+      {
+        "frame": 1060,
+        "stage": "predicted",
+        "gender": "Female",
+        "gender_conf": 99.9,
+        "accepted": true
+      },
+      {
+        "frame": 1080,
+        "stage": "predicted",
+        "gender": "Male",
+        "gender_conf": 53.9,
+        "accepted": true
+      }
+    ]
   },
   "17": {
-    "gender": "Female",
-    "gender_conf": 77.2,
-    "age": "50-59",
+    "gender": "Male",
+    "gender_conf": 99.88837838172913,
+    "age": "10-19",
     "race": "White",
-    "clothing_color": "orange",
-    "height_bucket": "average",
-    "first_seen_frame": 276,
-    "last_seen_frame": 402,
+    "clothing_color": "black",
+    "height_bucket": null,
+    "crop_path": "person_crops/person_17.jpg",
+    "first_seen_frame": 1103,
+    "last_seen_frame": 1154,
+    "settle_start_frame": 1104,
     "locked": true,
     "confirmed": true,
     "source": "settled",
-    "crop_path": "person_crops/person_17.jpg"
+    "raw_attempts": [
+      {
+        "frame": 1104,
+        "gender": "Male",
+        "gender_conf": 99.8,
+        "age": "20-29",
+        "age_conf": 50.3,
+        "race": "White",
+        "race_conf": 99.9,
+        "accepted": true
+      },
+      {
+        "frame": 1140,
+        "gender": "Male",
+        "gender_conf": 100.0,
+        "age": "10-19",
+        "age_conf": 59.5,
+        "race": "White",
+        "race_conf": 97.7,
+        "accepted": true
+      }
+    ],
+    "low_quality_attempts": [
+      {
+        "frame": 1120,
+        "gender": "Male",
+        "gender_conf": 99.5,
+        "age": "10-19",
+        "age_conf": 44.1,
+        "race": "White",
+        "race_conf": 95.0,
+        "accepted": false,
+        "sharpness": 7.6,
+        "pose_offset": 0.03
+      }
+    ],
+    "gate_log": [
+      {
+        "frame": 1104,
+        "stage": "predicted",
+        "gender": "Male",
+        "gender_conf": 99.8,
+        "accepted": true
+      },
+      {
+        "frame": 1120,
+        "stage": "quality_rejected",
+        "sharpness": 7.6,
+        "pose_offset": 0.03
+      },
+      {
+        "frame": 1120,
+        "stage": "predicted_low_quality",
+        "gender": "Male",
+        "gender_conf": 99.5,
+        "sharpness": 7.6
+      },
+      {
+        "frame": 1140,
+        "stage": "predicted",
+        "gender": "Male",
+        "gender_conf": 100.0,
+        "accepted": true
+      }
+    ]
   },
   "18": {
     "gender": "Male",
-    "gender_conf": 97.0,
-    "age": "40-49",
-    "race": "Southeast Asian",
-    "clothing_color": "red",
-    "height_bucket": "short",
-    "first_seen_frame": 2198,
-    "last_seen_frame": 2269,
+    "gender_conf": 91.05887810389201,
+    "age": "20-29",
+    "race": "East Asian",
+    "clothing_color": "blue",
+    "height_bucket": null,
+    "crop_path": "person_crops/person_18.jpg",
+    "first_seen_frame": 1168,
+    "last_seen_frame": 1223,
+    "settle_start_frame": 1170,
     "locked": true,
     "confirmed": true,
     "source": "settled",
-    "crop_path": "person_crops/person_18.jpg"
-  },
-  "19": {
-    "gender": "Male",
-    "gender_conf": 83.5,
-    "age": "3-9",
-    "race": "Middle Eastern",
-    "clothing_color": "white",
-    "height_bucket": "average",
-    "first_seen_frame": 1034,
-    "last_seen_frame": 1231,
-    "locked": true,
-    "confirmed": true,
-    "source": "settled",
-    "crop_path": "person_crops/person_19.jpg"
-  },
-  "20": {
-    "gender": "Female",
-    "gender_conf": 63.3,
-    "age": "3-9",
-    "race": "White",
-    "clothing_color": "orange",
-    "height_bucket": "tall",
-    "first_seen_frame": 1982,
-    "last_seen_frame": 2161,
-    "locked": true,
-    "confirmed": true,
-    "source": "settled",
-    "crop_path": "person_crops/person_20.jpg"
+    "raw_attempts": [
+      {
+        "frame": 1170,
+        "gender": "Male",
+        "gender_conf": 73.7,
+        "age": "30-39",
+        "age_conf": 39.4,
+        "race": "East Asian",
+        "race_conf": 80.4,
+        "accepted": true
+      },
+      {
+        "frame": 1180,
+        "gender": "Male",
+        "gender_conf": 99.5,
+        "age": "20-29",
+        "age_conf": 39.8,
+        "race": "East Asian",
+        "race_conf": 87.3,
+        "accepted": true
+      },
+      {
+        "frame": 1200,
+        "gender": "Male",
+        "gender_conf": 100.0,
+        "age": "20-29",
+        "age_conf": 69.0,
+        "race": "East Asian",
+        "race_conf": 51.7,
+        "accepted": true
+      }
+    ],
+    "low_quality_attempts": [],
+    "gate_log": [
+      {
+        "frame": 1170,
+        "stage": "predicted",
+        "gender": "Male",
+        "gender_conf": 73.7,
+        "accepted": true
+      },
+      {
+        "frame": 1180,
+        "stage": "predicted",
+        "gender": "Male",
+        "gender_conf": 99.5,
+        "accepted": true
+      },
+      {
+        "frame": 1200,
+        "stage": "predicted",
+        "gender": "Male",
+        "gender_conf": 100.0,
+        "accepted": true
+      }
+    ]
   },
   "21": {
     "gender": "Male",
-    "gender_conf": 68.0,
-    "age": "40-49",
-    "race": "Indian",
-    "clothing_color": "green",
-    "height_bucket": "average",
-    "first_seen_frame": 2115,
-    "last_seen_frame": 2146,
+    "gender_conf": 99.96213167905807,
+    "age": "20-29",
+    "race": "East Asian",
+    "clothing_color": "grey",
+    "height_bucket": null,
+    "crop_path": "person_crops/person_21.jpg",
+    "first_seen_frame": 1252,
+    "last_seen_frame": 1321,
+    "settle_start_frame": 1254,
     "locked": true,
     "confirmed": true,
     "source": "settled",
-    "crop_path": "person_crops/person_21.jpg"
+    "raw_attempts": [
+      {
+        "frame": 1254,
+        "gender": "Male",
+        "gender_conf": 99.9,
+        "age": "40-49",
+        "age_conf": 37.5,
+        "race": "East Asian",
+        "race_conf": 87.4,
+        "accepted": true
+      },
+      {
+        "frame": 1260,
+        "gender": "Male",
+        "gender_conf": 100.0,
+        "age": "30-39",
+        "age_conf": 38.8,
+        "race": "East Asian",
+        "race_conf": 54.1,
+        "accepted": true
+      },
+      {
+        "frame": 1280,
+        "gender": "Male",
+        "gender_conf": 100.0,
+        "age": "20-29",
+        "age_conf": 53.5,
+        "race": "White",
+        "race_conf": 61.5,
+        "accepted": true
+      },
+      {
+        "frame": 1300,
+        "gender": "Male",
+        "gender_conf": 100.0,
+        "age": "20-29",
+        "age_conf": 47.7,
+        "race": "East Asian",
+        "race_conf": 97.6,
+        "accepted": true
+      }
+    ],
+    "low_quality_attempts": [],
+    "gate_log": [
+      {
+        "frame": 1254,
+        "stage": "predicted",
+        "gender": "Male",
+        "gender_conf": 99.9,
+        "accepted": true
+      },
+      {
+        "frame": 1260,
+        "stage": "predicted",
+        "gender": "Male",
+        "gender_conf": 100.0,
+        "accepted": true
+      },
+      {
+        "frame": 1280,
+        "stage": "predicted",
+        "gender": "Male",
+        "gender_conf": 100.0,
+        "accepted": true
+      },
+      {
+        "frame": 1300,
+        "stage": "predicted",
+        "gender": "Male",
+        "gender_conf": 100.0,
+        "accepted": true
+      }
+    ]
   },
   "22": {
     "gender": "Female",
-    "gender_conf": 87.2,
-    "age": "10-19",
-    "race": "Indian",
+    "gender_conf": 100.0,
+    "age": "20-29",
+    "race": "East Asian",
     "clothing_color": "red",
-    "height_bucket": "tall",
-    "first_seen_frame": 2634,
-    "last_seen_frame": 2700,
-    "locked": true,
-    "confirmed": true,
-    "source": "settled",
-    "crop_path": "person_crops/person_22.jpg"
+    "height_bucket": null,
+    "crop_path": "person_crops/person_22.jpg",
+    "first_seen_frame": 1336,
+    "last_seen_frame": 1397,
+    "settle_start_frame": 1360,
+    "locked": false,
+    "confirmed": false,
+    "source": "best_raw",
+    "raw_attempts": [
+      {
+        "frame": 1360,
+        "gender": "Female",
+        "gender_conf": 99.9,
+        "age": "20-29",
+        "age_conf": 51.5,
+        "race": "Southeast Asian",
+        "race_conf": 58.6,
+        "accepted": true
+      },
+      {
+        "frame": 1380,
+        "gender": "Female",
+        "gender_conf": 100.0,
+        "age": "20-29",
+        "age_conf": 73.2,
+        "race": "East Asian",
+        "race_conf": 55.5,
+        "accepted": true
+      }
+    ],
+    "low_quality_attempts": [
+      {
+        "frame": 1338,
+        "gender": "Male",
+        "gender_conf": 95.5,
+        "age": "30-39",
+        "age_conf": 45.9,
+        "race": "East Asian",
+        "race_conf": 97.3,
+        "accepted": false,
+        "sharpness": 4.7,
+        "pose_offset": 0.21
+      },
+      {
+        "frame": 1340,
+        "gender": "Male",
+        "gender_conf": 73.4,
+        "age": "30-39",
+        "age_conf": 41.3,
+        "race": "East Asian",
+        "race_conf": 96.0,
+        "accepted": false,
+        "sharpness": 4.4,
+        "pose_offset": 0.14
+      },
+      {
+        "frame": 1341,
+        "gender": "Female",
+        "gender_conf": 60.5,
+        "age": "30-39",
+        "age_conf": 40.7,
+        "race": "East Asian",
+        "race_conf": 88.3,
+        "accepted": false,
+        "sharpness": 4.0,
+        "pose_offset": 0.16
+      },
+      {
+        "frame": 1344,
+        "gender": "Female",
+        "gender_conf": 92.2,
+        "age": "30-39",
+        "age_conf": 45.4,
+        "race": "East Asian",
+        "race_conf": 86.6,
+        "accepted": false,
+        "sharpness": 3.7,
+        "pose_offset": 0.13
+      },
+      {
+        "frame": 1347,
+        "gender": "Female",
+        "gender_conf": 99.3,
+        "age": "20-29",
+        "age_conf": 47.5,
+        "race": "East Asian",
+        "race_conf": 45.3,
+        "accepted": false,
+        "sharpness": 3.4,
+        "pose_offset": 0.08
+      },
+      {
+        "frame": 1350,
+        "gender": "Female",
+        "gender_conf": 98.5,
+        "age": "20-29",
+        "age_conf": 49.7,
+        "race": "East Asian",
+        "race_conf": 67.5,
+        "accepted": false,
+        "sharpness": 3.7,
+        "pose_offset": 0.04
+      },
+      {
+        "frame": 1353,
+        "gender": "Female",
+        "gender_conf": 99.8,
+        "age": "20-29",
+        "age_conf": 50.7,
+        "race": "East Asian",
+        "race_conf": 70.3,
+        "accepted": false,
+        "sharpness": 4.5,
+        "pose_offset": 0.01
+      },
+      {
+        "frame": 1356,
+        "gender": "Female",
+        "gender_conf": 99.9,
+        "age": "30-39",
+        "age_conf": 51.1,
+        "race": "East Asian",
+        "race_conf": 58.7,
+        "accepted": false,
+        "sharpness": 5.3,
+        "pose_offset": 0.06
+      },
+      {
+        "frame": 1359,
+        "gender": "Female",
+        "gender_conf": 99.9,
+        "age": "30-39",
+        "age_conf": 46.4,
+        "race": "Southeast Asian",
+        "race_conf": 50.9,
+        "accepted": false,
+        "sharpness": 7.2,
+        "pose_offset": 0.07
+      }
+    ],
+    "gate_log": [
+      {
+        "frame": 1338,
+        "stage": "quality_rejected",
+        "sharpness": 4.7,
+        "pose_offset": 0.21
+      },
+      {
+        "frame": 1338,
+        "stage": "predicted_low_quality",
+        "gender": "Male",
+        "gender_conf": 95.5,
+        "sharpness": 4.7
+      },
+      {
+        "frame": 1340,
+        "stage": "quality_rejected",
+        "sharpness": 4.4,
+        "pose_offset": 0.14
+      },
+      {
+        "frame": 1340,
+        "stage": "predicted_low_quality",
+        "gender": "Male",
+        "gender_conf": 73.4,
+        "sharpness": 4.4
+      },
+      {
+        "frame": 1341,
+        "stage": "quality_rejected",
+        "sharpness": 4.0,
+        "pose_offset": 0.16
+      },
+      {
+        "frame": 1341,
+        "stage": "predicted_low_quality",
+        "gender": "Female",
+        "gender_conf": 60.5,
+        "sharpness": 4.0
+      },
+      {
+        "frame": 1344,
+        "stage": "quality_rejected",
+        "sharpness": 3.7,
+        "pose_offset": 0.13
+      },
+      {
+        "frame": 1344,
+        "stage": "predicted_low_quality",
+        "gender": "Female",
+        "gender_conf": 92.2,
+        "sharpness": 3.7
+      },
+      {
+        "frame": 1347,
+        "stage": "quality_rejected",
+        "sharpness": 3.4,
+        "pose_offset": 0.08
+      },
+      {
+        "frame": 1347,
+        "stage": "predicted_low_quality",
+        "gender": "Female",
+        "gender_conf": 99.3,
+        "sharpness": 3.4
+      },
+      {
+        "frame": 1350,
+        "stage": "quality_rejected",
+        "sharpness": 3.7,
+        "pose_offset": 0.04
+      },
+      {
+        "frame": 1350,
+        "stage": "predicted_low_quality",
+        "gender": "Female",
+        "gender_conf": 98.5,
+        "sharpness": 3.7
+      },
+      {
+        "frame": 1353,
+        "stage": "quality_rejected",
+        "sharpness": 4.5,
+        "pose_offset": 0.01
+      },
+      {
+        "frame": 1353,
+        "stage": "predicted_low_quality",
+        "gender": "Female",
+        "gender_conf": 99.8,
+        "sharpness": 4.5
+      },
+      {
+        "frame": 1356,
+        "stage": "quality_rejected",
+        "sharpness": 5.3,
+        "pose_offset": 0.06
+      },
+      {
+        "frame": 1356,
+        "stage": "predicted_low_quality",
+        "gender": "Female",
+        "gender_conf": 99.9,
+        "sharpness": 5.3
+      },
+      {
+        "frame": 1359,
+        "stage": "quality_rejected",
+        "sharpness": 7.2,
+        "pose_offset": 0.07
+      },
+      {
+        "frame": 1359,
+        "stage": "predicted_low_quality",
+        "gender": "Female",
+        "gender_conf": 99.9,
+        "sharpness": 7.2
+      },
+      {
+        "frame": 1360,
+        "stage": "predicted",
+        "gender": "Female",
+        "gender_conf": 99.9,
+        "accepted": true
+      },
+      {
+        "frame": 1380,
+        "stage": "predicted",
+        "gender": "Female",
+        "gender_conf": 100.0,
+        "accepted": true
+      }
+    ]
   },
   "23": {
-    "gender": "Female",
-    "gender_conf": 72.9,
-    "age": "70+",
-    "race": "Latino_Hispanic",
-    "clothing_color": "black",
-    "height_bucket": "average",
-    "first_seen_frame": 2219,
-    "last_seen_frame": 2496,
+    "gender": "Male",
+    "gender_conf": 97.86236584186554,
+    "age": "30-39",
+    "race": "White",
+    "clothing_color": "grey",
+    "height_bucket": null,
+    "crop_path": "person_crops/person_23.jpg",
+    "first_seen_frame": 1412,
+    "last_seen_frame": 1483,
+    "settle_start_frame": 1413,
     "locked": true,
     "confirmed": true,
     "source": "settled",
-    "crop_path": "person_crops/person_23.jpg"
+    "raw_attempts": [
+      {
+        "frame": 1413,
+        "gender": "Male",
+        "gender_conf": 91.5,
+        "age": "30-39",
+        "age_conf": 47.8,
+        "race": "Middle Eastern",
+        "race_conf": 88.1,
+        "accepted": true
+      },
+      {
+        "frame": 1420,
+        "gender": "Male",
+        "gender_conf": 100.0,
+        "age": "20-29",
+        "age_conf": 53.8,
+        "race": "Middle Eastern",
+        "race_conf": 91.9,
+        "accepted": true
+      },
+      {
+        "frame": 1440,
+        "gender": "Male",
+        "gender_conf": 100.0,
+        "age": "30-39",
+        "age_conf": 58.6,
+        "race": "White",
+        "race_conf": 96.3,
+        "accepted": true
+      },
+      {
+        "frame": 1460,
+        "gender": "Male",
+        "gender_conf": 100.0,
+        "age": "30-39",
+        "age_conf": 50.5,
+        "race": "White",
+        "race_conf": 96.8,
+        "accepted": true
+      }
+    ],
+    "low_quality_attempts": [],
+    "gate_log": [
+      {
+        "frame": 1413,
+        "stage": "predicted",
+        "gender": "Male",
+        "gender_conf": 91.5,
+        "accepted": true
+      },
+      {
+        "frame": 1420,
+        "stage": "predicted",
+        "gender": "Male",
+        "gender_conf": 100.0,
+        "accepted": true
+      },
+      {
+        "frame": 1440,
+        "stage": "predicted",
+        "gender": "Male",
+        "gender_conf": 100.0,
+        "accepted": true
+      },
+      {
+        "frame": 1460,
+        "stage": "predicted",
+        "gender": "Male",
+        "gender_conf": 100.0,
+        "accepted": true
+      }
+    ]
   },
   "24": {
     "gender": "Male",
-    "gender_conf": 80.2,
+    "gender_conf": 98.54005873203278,
     "age": "20-29",
-    "race": "Middle Eastern",
-    "clothing_color": "white",
-    "height_bucket": "tall",
-    "first_seen_frame": 929,
-    "last_seen_frame": 1051,
-    "locked": false,
-    "confirmed": false,
-    "source": "best_raw",
-    "crop_path": "person_crops/person_24.jpg"
+    "race": "White",
+    "clothing_color": "black",
+    "height_bucket": null,
+    "crop_path": "person_crops/person_24.jpg",
+    "first_seen_frame": 1503,
+    "last_seen_frame": 1582,
+    "settle_start_frame": 1503,
+    "locked": true,
+    "confirmed": true,
+    "source": "settled",
+    "raw_attempts": [
+      {
+        "frame": 1503,
+        "gender": "Male",
+        "gender_conf": 97.1,
+        "age": "20-29",
+        "age_conf": 65.3,
+        "race": "White",
+        "race_conf": 92.1,
+        "accepted": true
+      },
+      {
+        "frame": 1540,
+        "gender": "Male",
+        "gender_conf": 100.0,
+        "age": "20-29",
+        "age_conf": 65.0,
+        "race": "White",
+        "race_conf": 88.1,
+        "accepted": true
+      }
+    ],
+    "low_quality_attempts": [
+      {
+        "frame": 1520,
+        "gender": "Male",
+        "gender_conf": 98.3,
+        "age": "20-29",
+        "age_conf": 73.8,
+        "race": "Middle Eastern",
+        "race_conf": 51.2,
+        "accepted": false,
+        "sharpness": 3.3,
+        "pose_offset": 0.07
+      }
+    ],
+    "gate_log": [
+      {
+        "frame": 1503,
+        "stage": "predicted",
+        "gender": "Male",
+        "gender_conf": 97.1,
+        "accepted": true
+      },
+      {
+        "frame": 1520,
+        "stage": "quality_rejected",
+        "sharpness": 3.3,
+        "pose_offset": 0.07
+      },
+      {
+        "frame": 1520,
+        "stage": "predicted_low_quality",
+        "gender": "Male",
+        "gender_conf": 98.3,
+        "sharpness": 3.3
+      },
+      {
+        "frame": 1540,
+        "stage": "predicted",
+        "gender": "Male",
+        "gender_conf": 100.0,
+        "accepted": true
+      }
+    ]
   },
   "25": {
     "gender": "Female",
-    "gender_conf": 77.4,
-    "age": "0-2",
-    "race": "White",
-    "clothing_color": "green",
-    "height_bucket": "average",
-    "first_seen_frame": 2479,
-    "last_seen_frame": 2675,
-    "locked": true,
-    "confirmed": true,
-    "source": "settled",
-    "crop_path": "person_crops/person_25.jpg"
+    "gender_conf": 99.9,
+    "age": "20-29",
+    "race": "East Asian",
+    "clothing_color": "white",
+    "height_bucket": null,
+    "crop_path": "person_crops/person_25.jpg",
+    "first_seen_frame": 1598,
+    "last_seen_frame": 1650,
+    "settle_start_frame": 1599,
+    "locked": false,
+    "confirmed": false,
+    "source": "best_raw",
+    "raw_attempts": [
+      {
+        "frame": 1599,
+        "gender": "Female",
+        "gender_conf": 99.5,
+        "age": "20-29",
+        "age_conf": 63.7,
+        "race": "East Asian",
+        "race_conf": 88.4,
+        "accepted": true
+      },
+      {
+        "frame": 1620,
+        "gender": "Female",
+        "gender_conf": 99.9,
+        "age": "20-29",
+        "age_conf": 75.9,
+        "race": "East Asian",
+        "race_conf": 96.3,
+        "accepted": true
+      }
+    ],
+    "low_quality_attempts": [
+      {
+        "frame": 1600,
+        "gender": "Female",
+        "gender_conf": 99.9,
+        "age": "20-29",
+        "age_conf": 70.7,
+        "race": "East Asian",
+        "race_conf": 90.9,
+        "accepted": false,
+        "sharpness": 4.6,
+        "pose_offset": 0.15
+      }
+    ],
+    "gate_log": [
+      {
+        "frame": 1599,
+        "stage": "predicted",
+        "gender": "Female",
+        "gender_conf": 99.5,
+        "accepted": true
+      },
+      {
+        "frame": 1600,
+        "stage": "quality_rejected",
+        "sharpness": 4.6,
+        "pose_offset": 0.15
+      },
+      {
+        "frame": 1600,
+        "stage": "predicted_low_quality",
+        "gender": "Female",
+        "gender_conf": 99.9,
+        "sharpness": 4.6
+      },
+      {
+        "frame": 1620,
+        "stage": "predicted",
+        "gender": "Female",
+        "gender_conf": 99.9,
+        "accepted": true
+      },
+      {
+        "frame": 1640,
+        "stage": "not_well_positioned",
+        "box_center_x_ratio": 0.44,
+        "box_height_ratio": 0.34
+      }
+    ]
   },
   "26": {
     "gender": "Female",
-    "gender_conf": 78.8,
-    "age": "40-49",
-    "race": "White",
-    "clothing_color": "white",
-    "height_bucket": "short",
-    "first_seen_frame": 1384,
-    "last_seen_frame": 1508,
-    "locked": true,
-    "confirmed": true,
-    "source": "settled",
-    "crop_path": "person_crops/person_26.jpg"
+    "gender_conf": 99.9,
+    "age": "30-39",
+    "race": "East Asian",
+    "clothing_color": "red",
+    "height_bucket": null,
+    "crop_path": "person_crops/person_26.jpg",
+    "first_seen_frame": 1664,
+    "last_seen_frame": 1711,
+    "settle_start_frame": 1680,
+    "locked": false,
+    "confirmed": false,
+    "source": "best_raw",
+    "raw_attempts": [
+      {
+        "frame": 1680,
+        "gender": "Female",
+        "gender_conf": 99.8,
+        "age": "30-39",
+        "age_conf": 36.8,
+        "race": "East Asian",
+        "race_conf": 96.6,
+        "accepted": true
+      },
+      {
+        "frame": 1700,
+        "gender": "Female",
+        "gender_conf": 99.9,
+        "age": "30-39",
+        "age_conf": 40.8,
+        "race": "East Asian",
+        "race_conf": 95.7,
+        "accepted": true
+      }
+    ],
+    "low_quality_attempts": [
+      {
+        "frame": 1665,
+        "gender": "Female",
+        "gender_conf": 56.4,
+        "age": "20-29",
+        "age_conf": 54.4,
+        "race": "East Asian",
+        "race_conf": 98.0,
+        "accepted": false,
+        "sharpness": 4.9,
+        "pose_offset": 0.32
+      },
+      {
+        "frame": 1668,
+        "gender": "Female",
+        "gender_conf": 95.0,
+        "age": "30-39",
+        "age_conf": 28.5,
+        "race": "East Asian",
+        "race_conf": 96.7,
+        "accepted": false,
+        "sharpness": 4.6,
+        "pose_offset": 0.27
+      },
+      {
+        "frame": 1671,
+        "gender": "Female",
+        "gender_conf": 99.3,
+        "age": "20-29",
+        "age_conf": 47.0,
+        "race": "East Asian",
+        "race_conf": 91.6,
+        "accepted": false,
+        "sharpness": 4.0,
+        "pose_offset": 0.17
+      },
+      {
+        "frame": 1674,
+        "gender": "Female",
+        "gender_conf": 98.1,
+        "age": "20-29",
+        "age_conf": 38.5,
+        "race": "East Asian",
+        "race_conf": 96.4,
+        "accepted": false,
+        "sharpness": 3.6,
+        "pose_offset": 0.2
+      },
+      {
+        "frame": 1677,
+        "gender": "Female",
+        "gender_conf": 99.4,
+        "age": "30-39",
+        "age_conf": 38.1,
+        "race": "East Asian",
+        "race_conf": 97.7,
+        "accepted": false,
+        "sharpness": 4.5,
+        "pose_offset": 0.18
+      }
+    ],
+    "gate_log": [
+      {
+        "frame": 1665,
+        "stage": "quality_rejected",
+        "sharpness": 4.9,
+        "pose_offset": 0.32
+      },
+      {
+        "frame": 1665,
+        "stage": "predicted_low_quality",
+        "gender": "Female",
+        "gender_conf": 56.4,
+        "sharpness": 4.9
+      },
+      {
+        "frame": 1668,
+        "stage": "quality_rejected",
+        "sharpness": 4.6,
+        "pose_offset": 0.27
+      },
+      {
+        "frame": 1668,
+        "stage": "predicted_low_quality",
+        "gender": "Female",
+        "gender_conf": 95.0,
+        "sharpness": 4.6
+      },
+      {
+        "frame": 1671,
+        "stage": "quality_rejected",
+        "sharpness": 4.0,
+        "pose_offset": 0.17
+      },
+      {
+        "frame": 1671,
+        "stage": "predicted_low_quality",
+        "gender": "Female",
+        "gender_conf": 99.3,
+        "sharpness": 4.0
+      },
+      {
+        "frame": 1674,
+        "stage": "quality_rejected",
+        "sharpness": 3.6,
+        "pose_offset": 0.2
+      },
+      {
+        "frame": 1674,
+        "stage": "predicted_low_quality",
+        "gender": "Female",
+        "gender_conf": 98.1,
+        "sharpness": 3.6
+      },
+      {
+        "frame": 1677,
+        "stage": "quality_rejected",
+        "sharpness": 4.5,
+        "pose_offset": 0.18
+      },
+      {
+        "frame": 1677,
+        "stage": "predicted_low_quality",
+        "gender": "Female",
+        "gender_conf": 99.4,
+        "sharpness": 4.5
+      },
+      {
+        "frame": 1680,
+        "stage": "predicted",
+        "gender": "Female",
+        "gender_conf": 99.8,
+        "accepted": true
+      },
+      {
+        "frame": 1700,
+        "stage": "predicted",
+        "gender": "Female",
+        "gender_conf": 99.9,
+        "accepted": true
+      }
+    ]
   },
   "27": {
     "gender": "Male",
-    "gender_conf": 95.5,
-    "age": "60-69",
-    "race": "Indian",
-    "clothing_color": "yellow",
-    "height_bucket": "tall",
-    "first_seen_frame": 2706,
-    "last_seen_frame": 2787,
+    "gender_conf": 97.8519082069397,
+    "age": "20-29",
+    "race": "East Asian",
+    "clothing_color": "grey",
+    "height_bucket": null,
+    "crop_path": "person_crops/person_27.jpg",
+    "first_seen_frame": 1725,
+    "last_seen_frame": 1791,
+    "settle_start_frame": 1725,
     "locked": true,
     "confirmed": true,
     "source": "settled",
-    "crop_path": "person_crops/person_27.jpg"
+    "raw_attempts": [
+      {
+        "frame": 1725,
+        "gender": "Male",
+        "gender_conf": 96.4,
+        "age": "40-49",
+        "age_conf": 33.9,
+        "race": "East Asian",
+        "race_conf": 83.2,
+        "accepted": true
+      },
+      {
+        "frame": 1740,
+        "gender": "Male",
+        "gender_conf": 99.4,
+        "age": "20-29",
+        "age_conf": 67.4,
+        "race": "East Asian",
+        "race_conf": 90.2,
+        "accepted": true
+      },
+      {
+        "frame": 1760,
+        "gender": "Male",
+        "gender_conf": 97.7,
+        "age": "20-29",
+        "age_conf": 63.1,
+        "race": "East Asian",
+        "race_conf": 93.1,
+        "accepted": true
+      }
+    ],
+    "low_quality_attempts": [],
+    "gate_log": [
+      {
+        "frame": 1725,
+        "stage": "predicted",
+        "gender": "Male",
+        "gender_conf": 96.4,
+        "accepted": true
+      },
+      {
+        "frame": 1740,
+        "stage": "predicted",
+        "gender": "Male",
+        "gender_conf": 99.4,
+        "accepted": true
+      },
+      {
+        "frame": 1760,
+        "stage": "predicted",
+        "gender": "Male",
+        "gender_conf": 97.7,
+        "accepted": true
+      }
+    ]
   },
   "28": {
     "gender": "Male",
-    "gender_conf": 78.1,
-    "age": "60-69",
-    "race": "Black",
+    "gender_conf": 99.9776800473531,
+    "age": "30-39",
+    "race": "Indian",
     "clothing_color": "grey",
-    "height_bucket": "tall",
-    "first_seen_frame": 2957,
-    "last_seen_frame": 3179,
+    "height_bucket": null,
+    "crop_path": "person_crops/person_28.jpg",
+    "first_seen_frame": 1805,
+    "last_seen_frame": 1867,
+    "settle_start_frame": 1827,
     "locked": true,
     "confirmed": true,
     "source": "settled",
-    "crop_path": "person_crops/person_28.jpg"
+    "raw_attempts": [
+      {
+        "frame": 1827,
+        "gender": "Male",
+        "gender_conf": 100.0,
+        "age": "20-29",
+        "age_conf": 54.5,
+        "race": "Middle Eastern",
+        "race_conf": 75.8,
+        "accepted": true
+      },
+      {
+        "frame": 1840,
+        "gender": "Male",
+        "gender_conf": 100.0,
+        "age": "30-39",
+        "age_conf": 50.9,
+        "race": "Indian",
+        "race_conf": 56.2,
+        "accepted": true
+      },
+      {
+        "frame": 1860,
+        "gender": "Male",
+        "gender_conf": 100.0,
+        "age": "30-39",
+        "age_conf": 54.8,
+        "race": "White",
+        "race_conf": 85.2,
+        "accepted": true
+      }
+    ],
+    "low_quality_attempts": [
+      {
+        "frame": 1806,
+        "gender": "Male",
+        "gender_conf": 100.0,
+        "age": "30-39",
+        "age_conf": 46.5,
+        "race": "Indian",
+        "race_conf": 92.7,
+        "accepted": false,
+        "sharpness": 5.3,
+        "pose_offset": 0.21
+      },
+      {
+        "frame": 1809,
+        "gender": "Male",
+        "gender_conf": 100.0,
+        "age": "40-49",
+        "age_conf": 45.1,
+        "race": "Indian",
+        "race_conf": 80.8,
+        "accepted": false,
+        "sharpness": 5.1,
+        "pose_offset": 0.14
+      },
+      {
+        "frame": 1812,
+        "gender": "Male",
+        "gender_conf": 99.8,
+        "age": "40-49",
+        "age_conf": 47.0,
+        "race": "Middle Eastern",
+        "race_conf": 51.4,
+        "accepted": false,
+        "sharpness": 5.0,
+        "pose_offset": 0.12
+      },
+      {
+        "frame": 1815,
+        "gender": "Male",
+        "gender_conf": 99.9,
+        "age": "30-39",
+        "age_conf": 43.5,
+        "race": "Middle Eastern",
+        "race_conf": 81.8,
+        "accepted": false,
+        "sharpness": 3.8,
+        "pose_offset": 0.11
+      },
+      {
+        "frame": 1818,
+        "gender": "Male",
+        "gender_conf": 99.9,
+        "age": "30-39",
+        "age_conf": 34.5,
+        "race": "Middle Eastern",
+        "race_conf": 85.7,
+        "accepted": false,
+        "sharpness": 3.2,
+        "pose_offset": 0.12
+      },
+      {
+        "frame": 1820,
+        "gender": "Male",
+        "gender_conf": 99.7,
+        "age": "30-39",
+        "age_conf": 42.5,
+        "race": "White",
+        "race_conf": 76.9,
+        "accepted": false,
+        "sharpness": 3.1,
+        "pose_offset": 0.15
+      },
+      {
+        "frame": 1821,
+        "gender": "Male",
+        "gender_conf": 99.8,
+        "age": "30-39",
+        "age_conf": 40.6,
+        "race": "Middle Eastern",
+        "race_conf": 59.3,
+        "accepted": false,
+        "sharpness": 3.0,
+        "pose_offset": 0.13
+      },
+      {
+        "frame": 1824,
+        "gender": "Male",
+        "gender_conf": 98.8,
+        "age": "20-29",
+        "age_conf": 39.3,
+        "race": "Middle Eastern",
+        "race_conf": 80.0,
+        "accepted": false,
+        "sharpness": 5.0,
+        "pose_offset": 0.08
+      }
+    ],
+    "gate_log": [
+      {
+        "frame": 1806,
+        "stage": "quality_rejected",
+        "sharpness": 5.3,
+        "pose_offset": 0.21
+      },
+      {
+        "frame": 1806,
+        "stage": "predicted_low_quality",
+        "gender": "Male",
+        "gender_conf": 100.0,
+        "sharpness": 5.3
+      },
+      {
+        "frame": 1809,
+        "stage": "quality_rejected",
+        "sharpness": 5.1,
+        "pose_offset": 0.14
+      },
+      {
+        "frame": 1809,
+        "stage": "predicted_low_quality",
+        "gender": "Male",
+        "gender_conf": 100.0,
+        "sharpness": 5.1
+      },
+      {
+        "frame": 1812,
+        "stage": "quality_rejected",
+        "sharpness": 5.0,
+        "pose_offset": 0.12
+      },
+      {
+        "frame": 1812,
+        "stage": "predicted_low_quality",
+        "gender": "Male",
+        "gender_conf": 99.8,
+        "sharpness": 5.0
+      },
+      {
+        "frame": 1815,
+        "stage": "quality_rejected",
+        "sharpness": 3.8,
+        "pose_offset": 0.11
+      },
+      {
+        "frame": 1815,
+        "stage": "predicted_low_quality",
+        "gender": "Male",
+        "gender_conf": 99.9,
+        "sharpness": 3.8
+      },
+      {
+        "frame": 1818,
+        "stage": "quality_rejected",
+        "sharpness": 3.2,
+        "pose_offset": 0.12
+      },
+      {
+        "frame": 1818,
+        "stage": "predicted_low_quality",
+        "gender": "Male",
+        "gender_conf": 99.9,
+        "sharpness": 3.2
+      },
+      {
+        "frame": 1820,
+        "stage": "quality_rejected",
+        "sharpness": 3.1,
+        "pose_offset": 0.15
+      },
+      {
+        "frame": 1820,
+        "stage": "predicted_low_quality",
+        "gender": "Male",
+        "gender_conf": 99.7,
+        "sharpness": 3.1
+      },
+      {
+        "frame": 1821,
+        "stage": "quality_rejected",
+        "sharpness": 3.0,
+        "pose_offset": 0.13
+      },
+      {
+        "frame": 1821,
+        "stage": "predicted_low_quality",
+        "gender": "Male",
+        "gender_conf": 99.8,
+        "sharpness": 3.0
+      },
+      {
+        "frame": 1824,
+        "stage": "quality_rejected",
+        "sharpness": 5.0,
+        "pose_offset": 0.08
+      },
+      {
+        "frame": 1824,
+        "stage": "predicted_low_quality",
+        "gender": "Male",
+        "gender_conf": 98.8,
+        "sharpness": 5.0
+      },
+      {
+        "frame": 1827,
+        "stage": "predicted",
+        "gender": "Male",
+        "gender_conf": 100.0,
+        "accepted": true
+      },
+      {
+        "frame": 1840,
+        "stage": "predicted",
+        "gender": "Male",
+        "gender_conf": 100.0,
+        "accepted": true
+      },
+      {
+        "frame": 1860,
+        "stage": "predicted",
+        "gender": "Male",
+        "gender_conf": 100.0,
+        "accepted": true
+      }
+    ]
   },
   "29": {
     "gender": "Male",
-    "gender_conf": 65.7,
-    "age": "10-19",
-    "race": "Black",
+    "gender_conf": 99.97851451237996,
+    "age": "20-29",
+    "race": "Indian",
     "clothing_color": "black",
-    "height_bucket": "short",
-    "first_seen_frame": 1907,
-    "last_seen_frame": 2262,
+    "height_bucket": null,
+    "crop_path": "person_crops/person_29.jpg",
+    "first_seen_frame": 1886,
+    "last_seen_frame": 1954,
+    "settle_start_frame": 1887,
     "locked": true,
     "confirmed": true,
     "source": "settled",
-    "crop_path": "person_crops/person_29.jpg"
-  },
-  "30": {
-    "gender": "Female",
-    "gender_conf": 64.0,
-    "age": "40-49",
-    "race": "Black",
-    "clothing_color": "black",
-    "height_bucket": "short",
-    "first_seen_frame": 2976,
-    "last_seen_frame": 3328,
-    "locked": false,
-    "confirmed": false,
-    "source": "best_raw",
-    "crop_path": "person_crops/person_30.jpg"
+    "raw_attempts": [
+      {
+        "frame": 1887,
+        "gender": "Male",
+        "gender_conf": 100.0,
+        "age": "20-29",
+        "age_conf": 68.0,
+        "race": "Indian",
+        "race_conf": 67.2,
+        "accepted": true
+      },
+      {
+        "frame": 1900,
+        "gender": "Male",
+        "gender_conf": 100.0,
+        "age": "20-29",
+        "age_conf": 41.7,
+        "race": "Indian",
+        "race_conf": 86.5,
+        "accepted": true
+      },
+      {
+        "frame": 1920,
+        "gender": "Male",
+        "gender_conf": 99.9,
+        "age": "10-19",
+        "age_conf": 63.1,
+        "race": "Indian",
+        "race_conf": 86.9,
+        "accepted": true
+      }
+    ],
+    "low_quality_attempts": [],
+    "gate_log": [
+      {
+        "frame": 1887,
+        "stage": "predicted",
+        "gender": "Male",
+        "gender_conf": 100.0,
+        "accepted": true
+      },
+      {
+        "frame": 1900,
+        "stage": "predicted",
+        "gender": "Male",
+        "gender_conf": 100.0,
+        "accepted": true
+      },
+      {
+        "frame": 1920,
+        "stage": "predicted",
+        "gender": "Male",
+        "gender_conf": 99.9,
+        "accepted": true
+      }
+    ]
   },
   "31": {
     "gender": "Male",
-    "gender_conf": 71.4,
-    "age": "50-59",
-    "race": "Middle Eastern",
-    "clothing_color": "white",
-    "height_bucket": "tall",
-    "first_seen_frame": 1032,
-    "last_seen_frame": 1160,
+    "gender_conf": 97.92357236146927,
+    "age": "30-39",
+    "race": "White",
+    "clothing_color": "black",
+    "height_bucket": null,
+    "crop_path": "person_crops/person_31.jpg",
+    "first_seen_frame": 1975,
+    "last_seen_frame": 2037,
+    "settle_start_frame": 1977,
     "locked": true,
     "confirmed": true,
     "source": "settled",
-    "crop_path": "person_crops/person_31.jpg"
+    "raw_attempts": [
+      {
+        "frame": 1977,
+        "gender": "Male",
+        "gender_conf": 99.7,
+        "age": "40-49",
+        "age_conf": 45.7,
+        "race": "White",
+        "race_conf": 96.2,
+        "accepted": true
+      },
+      {
+        "frame": 1980,
+        "gender": "Male",
+        "gender_conf": 98.5,
+        "age": "30-39",
+        "age_conf": 48.6,
+        "race": "White",
+        "race_conf": 99.0,
+        "accepted": true
+      },
+      {
+        "frame": 2000,
+        "gender": "Male",
+        "gender_conf": 93.5,
+        "age": "3-9",
+        "age_conf": 45.5,
+        "race": "White",
+        "race_conf": 99.3,
+        "accepted": true
+      },
+      {
+        "frame": 2020,
+        "gender": "Male",
+        "gender_conf": 100.0,
+        "age": "30-39",
+        "age_conf": 63.5,
+        "race": "White",
+        "race_conf": 93.1,
+        "accepted": true
+      }
+    ],
+    "low_quality_attempts": [],
+    "gate_log": [
+      {
+        "frame": 1977,
+        "stage": "predicted",
+        "gender": "Male",
+        "gender_conf": 99.7,
+        "accepted": true
+      },
+      {
+        "frame": 1980,
+        "stage": "predicted",
+        "gender": "Male",
+        "gender_conf": 98.5,
+        "accepted": true
+      },
+      {
+        "frame": 2000,
+        "stage": "predicted",
+        "gender": "Male",
+        "gender_conf": 93.5,
+        "accepted": true
+      },
+      {
+        "frame": 2020,
+        "stage": "predicted",
+        "gender": "Male",
+        "gender_conf": 100.0,
+        "accepted": true
+      }
+    ]
   },
   "32": {
     "gender": "Male",
-    "gender_conf": 85.8,
+    "gender_conf": 93.33534240722656,
     "age": "40-49",
-    "race": "Latino_Hispanic",
-    "clothing_color": "grey",
-    "height_bucket": "tall",
-    "first_seen_frame": 1450,
-    "last_seen_frame": 1704,
+    "race": "White",
+    "clothing_color": "white",
+    "height_bucket": null,
+    "crop_path": "person_crops/person_32.jpg",
+    "first_seen_frame": 2052,
+    "last_seen_frame": 2110,
+    "settle_start_frame": 2052,
     "locked": true,
     "confirmed": true,
     "source": "settled",
-    "crop_path": "person_crops/person_32.jpg"
+    "raw_attempts": [
+      {
+        "frame": 2052,
+        "gender": "Male",
+        "gender_conf": 73.4,
+        "age": "30-39",
+        "age_conf": 39.3,
+        "race": "White",
+        "race_conf": 61.4,
+        "accepted": true
+      },
+      {
+        "frame": 2060,
+        "gender": "Male",
+        "gender_conf": 99.9,
+        "age": "40-49",
+        "age_conf": 38.9,
+        "race": "Middle Eastern",
+        "race_conf": 77.3,
+        "accepted": true
+      },
+      {
+        "frame": 2080,
+        "gender": "Male",
+        "gender_conf": 100.0,
+        "age": "30-39",
+        "age_conf": 48.3,
+        "race": "Middle Eastern",
+        "race_conf": 59.5,
+        "accepted": true
+      },
+      {
+        "frame": 2100,
+        "gender": "Male",
+        "gender_conf": 100.0,
+        "age": "40-49",
+        "age_conf": 77.1,
+        "race": "White",
+        "race_conf": 90.1,
+        "accepted": true
+      }
+    ],
+    "low_quality_attempts": [],
+    "gate_log": [
+      {
+        "frame": 2052,
+        "stage": "predicted",
+        "gender": "Male",
+        "gender_conf": 73.4,
+        "accepted": true
+      },
+      {
+        "frame": 2060,
+        "stage": "predicted",
+        "gender": "Male",
+        "gender_conf": 99.9,
+        "accepted": true
+      },
+      {
+        "frame": 2080,
+        "stage": "predicted",
+        "gender": "Male",
+        "gender_conf": 100.0,
+        "accepted": true
+      },
+      {
+        "frame": 2100,
+        "stage": "predicted",
+        "gender": "Male",
+        "gender_conf": 100.0,
+        "accepted": true
+      }
+    ]
   },
   "33": {
     "gender": "Female",
-    "gender_conf": 83.7,
-    "age": "70+",
-    "race": "Black",
-    "clothing_color": "black",
-    "height_bucket": "average",
-    "first_seen_frame": 1803,
-    "last_seen_frame": 1916,
-    "locked": true,
-    "confirmed": true,
-    "source": "settled",
-    "crop_path": "person_crops/person_33.jpg"
-  },
-  "34": {
-    "gender": "Male",
-    "gender_conf": 86.6,
-    "age": "10-19",
-    "race": "Black",
-    "clothing_color": "orange",
-    "height_bucket": "average",
-    "first_seen_frame": 253,
-    "last_seen_frame": 439,
-    "locked": true,
-    "confirmed": true,
-    "source": "settled",
-    "crop_path": "person_crops/person_34.jpg"
-  },
-  "35": {
-    "gender": "Female",
-    "gender_conf": 77.6,
-    "age": "3-9",
-    "race": "Southeast Asian",
-    "clothing_color": "red",
-    "height_bucket": "short",
-    "first_seen_frame": 401,
-    "last_seen_frame": 680,
-    "locked": true,
-    "confirmed": true,
-    "source": "settled",
-    "crop_path": "person_crops/person_35.jpg"
-  },
-  "36": {
-    "gender": "Male",
-    "gender_conf": 87.0,
-    "age": "3-9",
-    "race": "East Asian",
-    "clothing_color": "yellow",
-    "height_bucket": "average",
-    "first_seen_frame": 2098,
-    "last_seen_frame": 2220,
-    "locked": true,
-    "confirmed": true,
-    "source": "settled",
-    "crop_path": "person_crops/person_36.jpg"
-  },
-  "37": {
-    "gender": "Female",
-    "gender_conf": 96.0,
-    "age": "70+",
-    "race": "Southeast Asian",
-    "clothing_color": "orange",
-    "height_bucket": "average",
-    "first_seen_frame": 2144,
-    "last_seen_frame": 2296,
-    "locked": true,
-    "confirmed": true,
-    "source": "settled",
-    "crop_path": "person_crops/person_37.jpg"
-  },
-  "38": {
-    "gender": "Male",
-    "gender_conf": 69.4,
-    "age": "60-69",
-    "race": "Black",
-    "clothing_color": "grey",
-    "height_bucket": "short",
-    "first_seen_frame": 298,
-    "last_seen_frame": 661,
-    "locked": true,
-    "confirmed": true,
-    "source": "settled",
-    "crop_path": "person_crops/person_38.jpg"
-  },
-  "39": {
-    "gender": "Male",
-    "gender_conf": 85.1,
+    "gender_conf": 98.99049699306488,
     "age": "20-29",
-    "race": "Indian",
-    "clothing_color": "green",
-    "height_bucket": "tall",
-    "first_seen_frame": 633,
-    "last_seen_frame": 1019,
-    "locked": false,
-    "confirmed": false,
-    "source": "best_raw",
-    "crop_path": "person_crops/person_39.jpg"
-  },
-  "40": {
-    "gender": "Female",
-    "gender_conf": 94.5,
-    "age": "10-19",
-    "race": "Latino_Hispanic",
-    "clothing_color": "black",
-    "height_bucket": "tall",
-    "first_seen_frame": 386,
-    "last_seen_frame": 609,
-    "locked": true,
-    "confirmed": true,
-    "source": "settled",
-    "crop_path": "person_crops/person_40.jpg"
-  },
-  "41": {
-    "gender": "Male",
-    "gender_conf": 73.9,
-    "age": "20-29",
-    "race": "Black",
-    "clothing_color": "grey",
-    "height_bucket": "tall",
-    "first_seen_frame": 1726,
-    "last_seen_frame": 1846,
-    "locked": true,
-    "confirmed": true,
-    "source": "settled",
-    "crop_path": "person_crops/person_41.jpg"
-  },
-  "42": {
-    "gender": "Male",
-    "gender_conf": 72.9,
-    "age": "40-49",
     "race": "White",
-    "clothing_color": "yellow",
-    "height_bucket": "average",
-    "first_seen_frame": 75,
-    "last_seen_frame": 291,
+    "clothing_color": "green",
+    "height_bucket": null,
+    "crop_path": "person_crops/person_33.jpg",
+    "first_seen_frame": 2125,
+    "last_seen_frame": 2185,
+    "settle_start_frame": 2127,
     "locked": true,
     "confirmed": true,
     "source": "settled",
-    "crop_path": "person_crops/person_42.jpg"
-  },
-  "43": {
-    "gender": "Detecting...",
-    "gender_conf": 0,
-    "age": "",
-    "race": "",
-    "first_seen_frame": 3800,
-    "last_seen_frame": 3820,
-    "locked": false,
-    "confirmed": false,
-    "source": null,
-    "crop_path": null
+    "raw_attempts": [
+      {
+        "frame": 2127,
+        "gender": "Female",
+        "gender_conf": 98.0,
+        "age": "30-39",
+        "age_conf": 44.0,
+        "race": "Middle Eastern",
+        "race_conf": 45.4,
+        "accepted": true
+      },
+      {
+        "frame": 2160,
+        "gender": "Female",
+        "gender_conf": 99.9,
+        "age": "20-29",
+        "age_conf": 65.2,
+        "race": "White",
+        "race_conf": 73.2,
+        "accepted": true
+      }
+    ],
+    "low_quality_attempts": [
+      {
+        "frame": 2140,
+        "gender": "Female",
+        "gender_conf": 99.9,
+        "age": "20-29",
+        "age_conf": 71.7,
+        "race": "Middle Eastern",
+        "race_conf": 69.8,
+        "accepted": false,
+        "sharpness": 3.8,
+        "pose_offset": 0.1
+      }
+    ],
+    "gate_log": [
+      {
+        "frame": 2127,
+        "stage": "predicted",
+        "gender": "Female",
+        "gender_conf": 98.0,
+        "accepted": true
+      },
+      {
+        "frame": 2140,
+        "stage": "quality_rejected",
+        "sharpness": 3.8,
+        "pose_offset": 0.1
+      },
+      {
+        "frame": 2140,
+        "stage": "predicted_low_quality",
+        "gender": "Female",
+        "gender_conf": 99.9,
+        "sharpness": 3.8
+      },
+      {
+        "frame": 2160,
+        "stage": "predicted",
+        "gender": "Female",
+        "gender_conf": 99.9,
+        "accepted": true
+      }
+    ]
   }
 }
