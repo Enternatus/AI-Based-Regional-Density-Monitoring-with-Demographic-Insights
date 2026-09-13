@@ -1,58 +1,17 @@
-import React, { useEffect, useState, useMemo } from "react";
+import React, { useMemo } from "react";
 import StatusPill from "./common/StatusPill.jsx";
 import DataSourceBadge from "./common/DataSourceBadge.jsx";
 import MetricCard from "./common/MetricCard.jsx";
 import RegionCard from "./common/RegionCard.jsx";
 import TrendChart from "./common/TrendChart.jsx";
-import { getDensityHistory } from "../api/crowdsense.js";
 
 function regionLabel(id = "") {
   return id.replace(/_/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());
 }
 
-export default function DensityPanel({ data, connected }) {
-  const [historyList, setHistoryList] = useState([]);
-  const [historyLoaded, setHistoryLoaded] = useState(false);
-
-  // Load actual session history from backend on mount
-  useEffect(() => {
-    let active = true;
-    async function initHistory() {
-      try {
-        const res = await getDensityHistory(40);
-        if (active && res?.history) {
-          setHistoryList(res.history);
-          setHistoryLoaded(true);
-        }
-      } catch (err) {
-        console.warn("Could not load backend history, falling back to live snapshots", err);
-      }
-    }
-    initHistory();
-    return () => {
-      active = false;
-    };
-  }, []);
-
-  // When new live snapshot arrives, update historyList if new frame/timestamp
-  useEffect(() => {
-    if (!data || !data.updated_at) return;
-    setHistoryList((prev) => {
-      const last = prev[prev.length - 1];
-      if (last && last.frame_index === data.frame_index && last.updated_at === data.updated_at) {
-        return prev;
-      }
-      const nextItem = {
-        updated_at: data.updated_at,
-        frame_index: data.frame_index,
-        run_status: data.run_status,
-        regions: data.regions ?? [],
-        total: data.current_total ?? (data.regions ?? []).reduce((acc, r) => acc + r.count, 0),
-      };
-      const updated = [...prev, nextItem];
-      return updated.length > 50 ? updated.slice(updated.length - 50) : updated;
-    });
-  }, [data]);
+export default function DensityPanel({ data, historyProp = [], connected }) {
+  // Use history passed directly from central App state; fallback to data.history if provided
+  const historyList = historyProp && historyProp.length > 0 ? historyProp : (data?.history ?? []);
 
   const regions = data?.regions ?? [];
   const thresholds = data?.thresholds ?? { low: 3, high: 8 };
@@ -62,10 +21,10 @@ export default function DensityPanel({ data, connected }) {
   const busiestZone = useMemo(() => {
     if (!regions.length) return "--";
     const best = regions.reduce((max, r) => (r.count > (max?.count ?? -1) ? r : max), null);
-    return best ? regionLabel(best.name || best.region_id) : "--";
+    return best ? regionLabel(best.display_name || best.name || best.region_id) : "--";
   }, [regions]);
 
-  // Session peak calculation from combined backend history
+  // Session peak calculation from history
   const peakSeen = useMemo(() => {
     if (historyList.length > 0) {
       const totals = historyList.map((h) =>
@@ -83,10 +42,12 @@ export default function DensityPanel({ data, connected }) {
   const regionSparklines = useMemo(() => {
     const spark = {};
     for (const r of regions) {
-      spark[r.region_id] = historyList.map((h) => {
-        const found = (h.regions ?? []).find((reg) => reg.region_id === r.region_id);
-        return found ? found.count : 0;
-      }).slice(-12);
+      spark[r.region_id] = historyList
+        .map((h) => {
+          const found = (h.regions ?? []).find((reg) => reg.region_id === r.region_id);
+          return found ? found.count : 0;
+        })
+        .slice(-12);
     }
     return spark;
   }, [regions, historyList]);
@@ -129,7 +90,7 @@ export default function DensityPanel({ data, connected }) {
         <MetricCard
           label="Busiest Zone"
           value={busiestZone}
-          subtext="Highest concentration right now"
+          subtext="Zone with highest immediate density"
         />
 
         <MetricCard
@@ -179,7 +140,7 @@ export default function DensityPanel({ data, connected }) {
             </span>
           </div>
           <span className="section-status">
-            {connected ? "Live polling active (5s)" : "Offline / Stored data"}
+            {connected ? "Live telemetry synced (5s)" : "Offline / Stored data"}
           </span>
         </div>
 

@@ -1,17 +1,6 @@
 import React, { useMemo, useState } from "react";
 
-const REGION_COLORS = {
-  left_walkway: "#38bdf8", // cyan
-  central_plaza: "#a855f7", // purple
-  right_walkway: "#f59e0b", // amber
-  default: "#10b981", // emerald
-};
-
-function getRegionColor(id, idx) {
-  if (REGION_COLORS[id]) return REGION_COLORS[id];
-  const palette = ["#38bdf8", "#a855f7", "#f59e0b", "#10b981", "#ec4899", "#6366f1"];
-  return palette[idx % palette.length];
-}
+const PALETTE = ["#38bdf8", "#a855f7", "#f59e0b", "#10b981", "#ec4899", "#6366f1"];
 
 function formatSnapshotTime(isoString, frameIndex) {
   if (frameIndex != null) return `Frame ${frameIndex}`;
@@ -36,7 +25,7 @@ export default function TrendChart({
 
   const highThresh = thresholds?.high ?? 8;
 
-  // Process data points
+  // Process data points and establish unified color map
   const chartData = useMemo(() => {
     if (!history || history.length === 0) return null;
 
@@ -47,6 +36,9 @@ export default function TrendChart({
 
     // Extract all unique regions across history
     const allRegionIds = new Set();
+    const regionColorMap = {};
+    const regionNameMap = {};
+
     const snapshots = history.map((item, idx) => {
       const regionsList = item.regions ?? [];
       const byRegion = {};
@@ -55,6 +47,12 @@ export default function TrendChart({
         byRegion[r.region_id] = r.count;
         total += r.count;
         allRegionIds.add(r.region_id);
+        if (r.accent && !regionColorMap[r.region_id]) {
+          regionColorMap[r.region_id] = r.accent;
+        }
+        if (r.display_name && !regionNameMap[r.region_id]) {
+          regionNameMap[r.region_id] = r.display_name;
+        }
       }
       return {
         idx,
@@ -66,6 +64,16 @@ export default function TrendChart({
     });
 
     const regionIds = Array.from(allRegionIds);
+
+    // Fallback assignment for any missing colors or display names
+    regionIds.forEach((rid, idx) => {
+      if (!regionColorMap[rid]) {
+        regionColorMap[rid] = PALETTE[idx % PALETTE.length];
+      }
+      if (!regionNameMap[rid]) {
+        regionNameMap[rid] = rid.replace(/_/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());
+      }
+    });
 
     // Compute max value for Y scale
     let maxVal = highThresh + 2;
@@ -102,9 +110,10 @@ export default function TrendChart({
       totalAreaPath = `${totalLinePath} L ${lastP.x.toFixed(1)} ${baseY} L ${firstP.x.toFixed(1)} ${baseY} Z`;
     }
 
-    // By region paths
-    const regionTraces = regionIds.map((rid, rIdx) => {
-      const color = getRegionColor(rid, rIdx);
+    // By region paths using consistent color map
+    const regionTraces = regionIds.map((rid) => {
+      const color = regionColorMap[rid];
+      const name = regionNameMap[rid];
       const points = snapshots.map((s, i) => {
         const val = s.byRegion[rid] ?? 0;
         return {
@@ -117,7 +126,7 @@ export default function TrendChart({
       const path = points.map((p, i) => `${i === 0 ? "M" : "L"} ${p.x.toFixed(1)} ${p.y.toFixed(1)}`).join(" ");
       return {
         regionId: rid,
-        name: rid.replace(/_/g, " "),
+        name,
         color,
         points,
         path,
@@ -134,6 +143,8 @@ export default function TrendChart({
       maxVal,
       snapshots,
       regionIds,
+      regionColorMap,
+      regionNameMap,
       totalPoints,
       totalLinePath,
       totalAreaPath,
@@ -151,8 +162,9 @@ export default function TrendChart({
     );
   }
 
-  const activeSnapshot = hoverIndex != null ? chartData.snapshots[hoverIndex] : chartData.snapshots[chartData.snapshots.length - 1];
-  const activePoint = hoverIndex != null ? chartData.totalPoints[hoverIndex] : chartData.totalPoints[chartData.totalPoints.length - 1];
+  const latestSnapshot = chartData.snapshots[chartData.snapshots.length - 1];
+  const activeSnapshot = hoverIndex != null ? chartData.snapshots[hoverIndex] : null;
+  const activePoint = hoverIndex != null ? chartData.totalPoints[hoverIndex] : null;
 
   return (
     <div className="trend-chart-container">
@@ -162,7 +174,11 @@ export default function TrendChart({
             {mode === "total" ? "Total Area Occupancy Trend" : "Multi-Zone Regional Comparison"}
           </div>
           <div className="trend-chart-subtitle">
-            Showing {chartData.snapshots.length} historical snapshot(s) · Hover points for details
+            {latestSnapshot && (
+              <span className="chart-latest-readout">
+                Latest: <strong>{latestSnapshot.total} people</strong> ({formatSnapshotTime(latestSnapshot.time, latestSnapshot.frame)}) · {chartData.snapshots.length} snapshots
+              </span>
+            )}
           </div>
         </div>
 
@@ -210,7 +226,7 @@ export default function TrendChart({
         >
           <defs>
             <linearGradient id="totalAreaGradient" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="0%" stopColor="#38bdf8" stopOpacity="0.4" />
+              <stop offset="0%" stopColor="#38bdf8" stopOpacity="0.35" />
               <stop offset="100%" stopColor="#38bdf8" stopOpacity="0.0" />
             </linearGradient>
           </defs>
@@ -262,7 +278,7 @@ export default function TrendChart({
                   className={`chart-data-point ${hoverIndex === i ? "hovered" : ""}`}
                   cx={pt.x}
                   cy={pt.y}
-                  r={hoverIndex === i ? 5 : 3.5}
+                  r={hoverIndex === i ? 5.5 : 3.5}
                   onMouseEnter={() => setHoverIndex(i)}
                 />
               ))}
@@ -277,7 +293,7 @@ export default function TrendChart({
                     className={`chart-data-point ${hoverIndex === i ? "hovered" : ""}`}
                     cx={pt.x}
                     cy={pt.y}
-                    r={hoverIndex === i ? 4.5 : 3}
+                    r={hoverIndex === i ? 5 : 3}
                     fill={trace.color}
                     onMouseEnter={() => setHoverIndex(i)}
                   />
@@ -286,7 +302,7 @@ export default function TrendChart({
             ))
           )}
 
-          {/* Vertical cursor guide when hovered */}
+          {/* Vertical cursor guide ONLY when hovered */}
           {activePoint && (
             <line
               className="chart-cursor-line"
@@ -298,7 +314,7 @@ export default function TrendChart({
           )}
         </svg>
 
-        {/* Hover Tooltip Overlay */}
+        {/* Hover Tooltip Overlay ONLY rendered when hovering over a point */}
         {activeSnapshot && (
           <div className="chart-interactive-tooltip">
             <div className="tooltip-header">
@@ -314,9 +330,9 @@ export default function TrendChart({
                 <span key={rid} className="tooltip-region-row">
                   <span
                     className="tooltip-dot"
-                    style={{ backgroundColor: getRegionColor(rid, 0) }}
+                    style={{ backgroundColor: chartData.regionColorMap[rid] || "#38bdf8" }}
                   />
-                  <span className="tooltip-name">{rid.replace(/_/g, " ")}:</span>
+                  <span className="tooltip-name">{chartData.regionNameMap[rid] || rid}:</span>
                   <strong className="tooltip-val">{count}</strong>
                 </span>
               ))}

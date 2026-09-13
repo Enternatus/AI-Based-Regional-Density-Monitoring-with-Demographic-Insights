@@ -337,8 +337,17 @@ export default function SearchPanel() {
         <>
           <div className="people-results-header">
             <div>
-              <strong>{visibleResults.length}</strong> record{visibleResults.length === 1 ? "" : "s"} shown
-              <span className="results-meta"> (out of {results.result_count} indexed)</span>
+              {filterGender !== "all" || filterAge !== "all" || filterRace !== "all" || filterColor !== "all" || qualityFilter !== "all" ? (
+                <>
+                  <strong>{visibleResults.length}</strong> shown after local filters
+                  <span className="results-meta"> (from {results.result_count} search match{results.result_count === 1 ? "" : "es"})</span>
+                </>
+              ) : (
+                <>
+                  <strong>{visibleResults.length}</strong> record{visibleResults.length === 1 ? "" : "s"} matched
+                  <span className="results-meta"> (out of {results.result_count} indexed)</span>
+                </>
+              )}
             </div>
             <div className="quality-filters" aria-label="Filter records by quality">
               {[

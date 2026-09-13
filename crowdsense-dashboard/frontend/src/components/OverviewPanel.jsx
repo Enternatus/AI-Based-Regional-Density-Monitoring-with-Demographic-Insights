@@ -1,68 +1,49 @@
-import React, { useEffect, useState } from "react";
+import React from "react";
 import StatusPill from "./common/StatusPill.jsx";
 import DataSourceBadge from "./common/DataSourceBadge.jsx";
 import MetricCard from "./common/MetricCard.jsx";
 import RegionCard from "./common/RegionCard.jsx";
 import TrendChart from "./common/TrendChart.jsx";
-import { getOverview, getDensityHistory, getPeopleSummary } from "../api/crowdsense.js";
+import DensityZoneMap from "./common/DensityZoneMap.jsx";
 
 function regionLabel(id = "") {
   return id.replace(/_/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());
 }
 
-export default function OverviewPanel({ onNavigate, connected }) {
-  const [overview, setOverview] = useState(null);
-  const [history, setHistory] = useState([]);
-  const [demographics, setDemographics] = useState(null);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    let active = true;
-
-    async function fetchData() {
-      try {
-        const [ovData, histData, demoData] = await Promise.all([
-          getOverview().catch(() => null),
-          getDensityHistory(25).catch(() => null),
-          getPeopleSummary().catch(() => null),
-        ]);
-
-        if (active) {
-          if (ovData) setOverview(ovData);
-          if (histData?.history) setHistory(histData.history);
-          if (demoData) setDemographics(demoData);
-          setLoading(false);
-        }
-      } catch (err) {
-        console.error("Failed to load overview data:", err);
-        if (active) setLoading(false);
-      }
-    }
-
-    fetchData();
-    const interval = setInterval(fetchData, 6000);
-    return () => {
-      active = false;
-      clearInterval(interval);
-    };
-  }, []);
-
+export default function OverviewPanel({
+  overview,
+  demographics,
+  history = [],
+  connected,
+  loading,
+  onNavigate,
+}) {
   const density = overview?.density;
   const people = overview?.people;
   const thresholds = density?.thresholds ?? { low: 3, high: 8 };
   const regions = density?.regions ?? [];
 
+  const totalPeople = people?.total_records ?? "--";
+  const settledCount = people?.settled ?? "--";
+  const bestRawCount = people?.best_raw ?? "--";
+  const lastResortCount = people?.last_resort ?? "--";
+
+  const topGender = people?.top_demographics?.gender ?? "--";
+  const topAge = people?.top_demographics?.age ?? "--";
+  const topRace = people?.top_demographics?.race ?? "--";
+  const topColor = people?.top_demographics?.clothing_color ?? "--";
+
   return (
     <div className="panel overview-panel">
-      {/* Top Banner with Prototype Module Disambiguation */}
+      {/* Top Banner with Prototype Architecture Notice */}
       <div className="overview-notice-banner">
         <div className="notice-icon">ℹ️</div>
         <div className="notice-text">
-          <strong>CrowdSense Prototype Architecture:</strong> Spatial density monitoring and demographic profiling are operated as independent, task-optimized video modules. People detected in density zones are not 1:1 mapped to demographic face tracks.
+          <strong>CrowdSense Dual Architecture:</strong> Spatial density monitoring and demographic profiling are operated as independent, task-optimized video modules. People detected in density zones are not 1:1 mapped to demographic face tracks.
         </div>
       </div>
 
-      {/* Header */}
+      {/* Header with explicit StatusPill */}
       <div className="panel-header overview-header">
         <div>
           <span className="panel-kicker">Unified Operational Console</span>
@@ -76,7 +57,7 @@ export default function OverviewPanel({ onNavigate, connected }) {
         </div>
       </div>
 
-      {/* Primary KPI Row */}
+      {/* 1. Primary KPI Row */}
       <div className="overview-hero-grid">
         <MetricCard
           label="Current Occupancy"
@@ -101,46 +82,54 @@ export default function OverviewPanel({ onNavigate, connected }) {
 
         <MetricCard
           label="People Analyzed"
-          value={people?.total_records ?? 27}
+          value={totalPeople}
           subtext="Demographic person profiles indexed"
           badge="Corridor Feed"
           onClick={() => onNavigate && onNavigate("people")}
         />
       </div>
 
-      {/* Regional Status Summary */}
-      <div className="overview-section">
-        <div className="overview-section-header">
-          <div>
-            <h2 className="section-title">Regional Density Status</h2>
-            <span className="section-subtitle">Real-time occupancy vs established safety thresholds</span>
-          </div>
-          <button
-            type="button"
-            className="section-nav-link"
-            onClick={() => onNavigate && onNavigate("density")}
-          >
-            Open Full Density View &rarr;
-          </button>
+      {/* 2. Middle Row: Visual Density Map (Left) + Live Regional State (Right) */}
+      <div className="overview-spatial-row">
+        {/* Left: Interactive Perspective Floor Zone Map */}
+        <div className="spatial-col-map">
+          <DensityZoneMap regions={regions} thresholds={thresholds} />
         </div>
 
-        <div className="overview-regions-grid">
-          {regions.map((reg) => (
-            <RegionCard
-              key={reg.region_id}
-              region={reg}
-              thresholds={thresholds}
-            />
-          ))}
+        {/* Right: Live Regional State Cards */}
+        <div className="spatial-col-cards">
+          <div className="spatial-cards-header">
+            <div>
+              <h2 className="section-title">Live Regional State</h2>
+              <span className="section-subtitle">Real-time zone occupancy vs safety thresholds</span>
+            </div>
+            <button
+              type="button"
+              className="section-nav-link"
+              onClick={() => onNavigate && onNavigate("density")}
+            >
+              Full Density View &rarr;
+            </button>
+          </div>
+
+          <div className="spatial-region-cards-list">
+            {regions.map((reg) => (
+              <RegionCard
+                key={reg.region_id}
+                region={reg}
+                thresholds={thresholds}
+              />
+            ))}
+          </div>
         </div>
       </div>
 
-      {/* Interactive Trend Preview */}
+      {/* 3. Occupancy Trend Preview */}
       <div className="overview-section">
         <div className="overview-section-header">
           <div>
-            <h2 className="section-title">Session Density Trend</h2>
-            <span className="section-subtitle">Occupancy telemetry from active monitoring session</span>
+            <h2 className="section-title">Occupancy Trend</h2>
+            <span className="section-subtitle">Real-time telemetry from active monitoring session</span>
           </div>
           <button
             type="button"
@@ -155,20 +144,20 @@ export default function OverviewPanel({ onNavigate, connected }) {
           <TrendChart
             history={history}
             thresholds={thresholds}
-            height={200}
+            height={210}
             showModeToggle={false}
             initialMode="total"
           />
         </div>
       </div>
 
-      {/* Two-Column Bottom Grid: Demographic Insights & Record Quality */}
+      {/* 4. Bottom Row: Demographic Snapshot (Left) + Inference Quality (Right) */}
       <div className="overview-two-col">
         {/* Left Col: Demographic Distribution Snapshot */}
         <div className="overview-card demographic-summary-card">
           <div className="overview-card-header">
             <div>
-              <h3 className="card-title">Demographic Insights</h3>
+              <h3 className="card-title">Demographic Snapshot</h3>
               <span className="card-subtitle">Corridor face & clothing recognition overview</span>
             </div>
             <DataSourceBadge type="people" condensed={true} />
@@ -177,19 +166,19 @@ export default function OverviewPanel({ onNavigate, connected }) {
           <div className="demographic-stats-grid">
             <div className="stat-pill">
               <span className="stat-label">Predominant Gender</span>
-              <strong className="stat-value">{people?.top_demographics?.gender || "Male"}</strong>
+              <strong className="stat-value">{topGender}</strong>
             </div>
             <div className="stat-pill">
               <span className="stat-label">Primary Age Bracket</span>
-              <strong className="stat-value">{people?.top_demographics?.age || "20-29"}</strong>
+              <strong className="stat-value">{topAge}</strong>
             </div>
             <div className="stat-pill">
               <span className="stat-label">Appearance Group</span>
-              <strong className="stat-value">{people?.top_demographics?.race || "White"}</strong>
+              <strong className="stat-value">{topRace}</strong>
             </div>
             <div className="stat-pill">
               <span className="stat-label">Common Clothing Color</span>
-              <strong className="stat-value">{people?.top_demographics?.clothing_color || "Black"}</strong>
+              <strong className="stat-value">{topColor}</strong>
             </div>
           </div>
 
@@ -199,7 +188,8 @@ export default function OverviewPanel({ onNavigate, connected }) {
                 <span className="dist-title">Gender Distribution</span>
                 <div className="dist-bar-wrap">
                   {Object.entries(demographics.gender || {}).map(([key, count]) => {
-                    const pct = Math.round((count / (people?.total_records || 27)) * 100);
+                    const totalNum = typeof people?.total_records === "number" ? people.total_records : 0;
+                    const pct = totalNum > 0 ? Math.round((count / totalNum) * 100) : 0;
                     return (
                       <div
                         key={key}
@@ -245,7 +235,7 @@ export default function OverviewPanel({ onNavigate, connected }) {
               <h3 className="card-title">Inference Provenance & Quality</h3>
               <span className="card-subtitle">Multi-frame temporal verification metrics</span>
             </div>
-            <span className="badge badge-locked">27 Tracks Indexed</span>
+            <span className="badge badge-locked">{totalPeople !== "--" ? `${totalPeople} Tracks Indexed` : "Indexed Tracks"}</span>
           </div>
 
           <div className="quality-breakdown">
@@ -254,7 +244,7 @@ export default function OverviewPanel({ onNavigate, connected }) {
                 <span className="badge badge-settled">Confirmed (Settled)</span>
                 <span className="quality-desc">Passed all quality checks and multi-frame stability gates</span>
               </div>
-              <strong className="quality-num">{people?.settled ?? 20}</strong>
+              <strong className="quality-num">{settledCount}</strong>
             </div>
 
             <div className="quality-row quality-row-raw">
@@ -262,7 +252,7 @@ export default function OverviewPanel({ onNavigate, connected }) {
                 <span className="badge badge-raw">Best Available</span>
                 <span className="quality-desc">Acceptable sharpness but track departed before settling</span>
               </div>
-              <strong className="quality-num">{people?.best_raw ?? 5}</strong>
+              <strong className="quality-num">{bestRawCount}</strong>
             </div>
 
             <div className="quality-row quality-row-guess">
@@ -270,7 +260,7 @@ export default function OverviewPanel({ onNavigate, connected }) {
                 <span className="badge badge-guess">Low-Quality Guess</span>
                 <span className="quality-desc">Brief or partially occluded track; marked low confidence</span>
               </div>
-              <strong className="quality-num">{people?.last_resort ?? 2}</strong>
+              <strong className="quality-num">{lastResortCount}</strong>
             </div>
           </div>
 

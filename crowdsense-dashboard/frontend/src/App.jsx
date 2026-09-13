@@ -3,31 +3,55 @@ import OverviewPanel from "./components/OverviewPanel.jsx";
 import DensityPanel from "./components/DensityPanel.jsx";
 import SearchPanel from "./components/SearchPanel.jsx";
 import DataSourceBadge from "./components/common/DataSourceBadge.jsx";
-import { getDensity } from "./api/crowdsense.js";
+import { getOverview, getDensityHistory, getPeopleSummary } from "./api/crowdsense.js";
 
 export default function App() {
-  const [density, setDensity] = useState(null);
-  const [connected, setConnected] = useState(false);
+  const [dashboardState, setDashboardState] = useState({
+    overview: null,
+    density: null,
+    history: [],
+    demographics: null,
+    connected: false,
+    loading: true,
+  });
   const [clock, setClock] = useState(new Date());
   const [view, setView] = useState("overview"); // "overview" | "density" | "people" | "split"
 
+  // Centralized dashboard polling orchestrator: single periodic request stream
   useEffect(() => {
     let cancelled = false;
 
-    async function poll() {
+    async function pollDashboard() {
       try {
-        const data = await getDensity();
+        const [ovData, histData, demoData] = await Promise.all([
+          getOverview(),
+          getDensityHistory(30),
+          getPeopleSummary(),
+        ]);
         if (!cancelled) {
-          setDensity(data);
-          setConnected(true);
+          setDashboardState({
+            overview: ovData,
+            density: ovData?.density,
+            history: histData?.history || [],
+            demographics: demoData,
+            connected: true,
+            loading: false,
+          });
         }
-      } catch {
-        if (!cancelled) setConnected(false);
+      } catch (err) {
+        console.warn("Dashboard polling error:", err);
+        if (!cancelled) {
+          setDashboardState((prev) => ({
+            ...prev,
+            connected: false,
+            loading: false,
+          }));
+        }
       }
     }
 
-    poll();
-    const interval = setInterval(poll, 5000);
+    pollDashboard();
+    const interval = setInterval(pollDashboard, 5000);
     return () => {
       cancelled = true;
       clearInterval(interval);
@@ -39,13 +63,15 @@ export default function App() {
     return () => clearInterval(t);
   }, []);
 
+  const { overview, density, history, demographics, connected, loading } = dashboardState;
+
   return (
     <div className="console">
       {/* Top Navbar */}
       <header className="topbar">
         <div className="topbar-left">
           <span className="topbar-title">CROWDSENSE</span>
-          <span className="topbar-badge">v2.0</span>
+          <span className="topbar-badge">v2.1</span>
           <span className="topbar-subtitle">Operational Crowd & Demographic Intelligence</span>
         </div>
         <div className="topbar-right">
@@ -92,11 +118,22 @@ export default function App() {
       {/* Main View Port */}
       <main className={`main ${view === "split" ? "main-split" : "main-full"}`}>
         {view === "overview" && (
-          <OverviewPanel onNavigate={(dest) => setView(dest)} connected={connected} />
+          <OverviewPanel
+            overview={overview}
+            demographics={demographics}
+            history={history}
+            connected={connected}
+            loading={loading}
+            onNavigate={(dest) => setView(dest)}
+          />
         )}
 
         {view === "density" && (
-          <DensityPanel data={density} connected={connected} />
+          <DensityPanel
+            data={density}
+            historyProp={history}
+            connected={connected}
+          />
         )}
 
         {view === "people" && (
@@ -118,7 +155,11 @@ export default function App() {
                   Full Density &rarr;
                 </button>
               </div>
-              <DensityPanel data={density} connected={connected} />
+              <DensityPanel
+                data={density}
+                historyProp={history}
+                connected={connected}
+              />
             </div>
 
             {/* Right Module: Close-Range Demographic */}

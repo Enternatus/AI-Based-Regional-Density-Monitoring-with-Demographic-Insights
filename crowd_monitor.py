@@ -125,7 +125,7 @@ def main():
                     cv2.FONT_HERSHEY_SIMPLEX, 0.7, (255, 255, 255), 2)
  
         cv2.imshow("CrowdSense - Region Density Monitor", frame)
-        if cv2.waitKey(450) & 0xFF == ord('q'):
+        if cv2.waitKey(1) & 0xFF == ord('q'):
             stopped_early = True
             break
 

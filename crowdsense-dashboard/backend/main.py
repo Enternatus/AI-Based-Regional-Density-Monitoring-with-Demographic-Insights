@@ -72,6 +72,31 @@ DENSITY_HISTORY_PATH = ACTIVE_ROOT / "density_history.json" if (ACTIVE_ROOT / "d
 LOW_THRESHOLD = 3
 HIGH_THRESHOLD = 8
 DEFAULT_THRESHOLDS = {"low": LOW_THRESHOLD, "high": HIGH_THRESHOLD}
+
+REGION_ACCENTS = {
+    "left_walkway": "#38bdf8",
+    "central_plaza": "#a855f7",
+    "right_walkway": "#f59e0b",
+}
+DEFAULT_PALETTE = ["#38bdf8", "#a855f7", "#f59e0b", "#10b981", "#ec4899", "#6366f1"]
+
+
+def enrich_region(region_dict_or_id, index: int = 0) -> dict:
+    if isinstance(region_dict_or_id, str):
+        rid = region_dict_or_id
+        count = 0
+    else:
+        rid = region_dict_or_id.get("region_id", region_dict_or_id.get("name", ""))
+        count = region_dict_or_id.get("count", 0)
+    display_name = rid.replace("_", " ").title()
+    accent = REGION_ACCENTS.get(rid, DEFAULT_PALETTE[index % len(DEFAULT_PALETTE)])
+    return {
+        "region_id": rid,
+        "name": display_name,
+        "display_name": display_name,
+        "count": count,
+        "accent": accent,
+    }
 # -------------------------------------------------------------------------
 
 app = FastAPI(title="CrowdSense API")
@@ -103,7 +128,17 @@ def load_density_history() -> list[dict]:
     try:
         with open(DENSITY_HISTORY_PATH) as f:
             data = json.load(f)
-        return data if isinstance(data, list) else []
+        if not isinstance(data, list):
+            return []
+        enriched = []
+        for sample in data:
+            regions = [enrich_region(r, i) for i, r in enumerate(sample.get("regions", []))]
+            enriched.append({
+                **sample,
+                "regions": regions,
+                "total": sample.get("total", sum(r["count"] for r in regions)),
+            })
+        return enriched
     except json.JSONDecodeError:
         return []
 
@@ -359,7 +394,9 @@ def regions_density():
         data["source_video"] = "sample_crowd.mp4"
         data["video_fps"] = 30
         
-        current_regions = data.get("regions", [])
+        raw_regions = data.get("regions", [])
+        current_regions = [enrich_region(r, i) for i, r in enumerate(raw_regions)]
+        data["regions"] = current_regions
         current_total = sum(r.get("count", 0) for r in current_regions)
         data["current_total"] = current_total
         
@@ -383,11 +420,12 @@ def regions_density():
         with open(REGIONS_PATH) as f:
             region_names = list(json.load(f).keys())
 
+    enriched_empty = [enrich_region(name, i) for i, name in enumerate(region_names)]
     return {
         "updated_at": datetime.utcnow().isoformat(),
         "source": "no_live_snapshot_yet",
         "run_status": "idle",
-        "regions": [{"region_id": name, "name": name, "count": 0} for name in region_names],
+        "regions": enriched_empty,
         "current_total": 0,
         "trend_direction": "stable",
         "thresholds": DEFAULT_THRESHOLDS,
@@ -411,7 +449,7 @@ def get_overview():
     peak_session = max(totals_in_history, default=current_total)
     
     busiest = max(current_regions, key=lambda r: r.get("count", 0), default=None)
-    busiest_zone = busiest.get("name", busiest.get("region_id", "--")) if busiest else "--"
+    busiest_zone = busiest.get("display_name", busiest.get("name", "--")) if busiest else "--"
     
     records = load_records()
     total_records = len(records)

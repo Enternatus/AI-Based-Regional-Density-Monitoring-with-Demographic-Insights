@@ -2058,11 +2058,231 @@ body {
   .regions-grid {
     grid-template-columns: 1fr;
   }
-  .overview-two-col {
+  .overview-two-col,
+  .overview-spatial-row {
     grid-template-columns: 1fr;
   }
   .split-view-container {
     grid-template-columns: 1fr;
   }
 }
+
+/* ==========================================================================
+   DASHBOARD V2.1 POLISH: SPATIAL ZONE MAP & REFINED OVERVIEW
+   ========================================================================== */
+
+.overview-spatial-row {
+  display: grid;
+  grid-template-columns: 1.15fr 1fr;
+  gap: 20px;
+  align-items: stretch;
+}
+
+.spatial-col-map {
+  display: flex;
+}
+
+.spatial-col-cards {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.spatial-cards-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+}
+
+.spatial-region-cards-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  flex: 1;
+}
+
+/* Density Zone Map */
+.density-zone-map-card {
+  width: 100%;
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.zone-map-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+}
+
+.zone-map-kicker {
+  font-size: 10px;
+  text-transform: uppercase;
+  font-family: var(--font-mono);
+  letter-spacing: 0.05em;
+  color: var(--cyan);
+}
+
+.zone-map-title {
+  margin: 4px 0 0;
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--text);
+}
+
+.zone-map-badge {
+  font-size: 10px;
+  font-family: var(--font-mono);
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid var(--border);
+  padding: 2px 8px;
+  border-radius: 4px;
+  color: var(--text-dim);
+}
+
+.zone-map-canvas {
+  position: relative;
+  background: #0a0d13;
+  border: 1px solid var(--border-soft);
+  border-radius: 6px;
+  padding: 24px 16px 16px;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  overflow: hidden;
+  min-height: 220px;
+}
+
+.zone-grid-background {
+  position: absolute;
+  inset: 0;
+  background-image: 
+    linear-gradient(to right, rgba(255, 255, 255, 0.03) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(255, 255, 255, 0.03) 1px, transparent 1px);
+  background-size: 24px 24px;
+  transform: perspective(300px) rotateX(25deg);
+  transform-origin: bottom center;
+  opacity: 0.7;
+  pointer-events: none;
+}
+
+.zones-container {
+  position: relative;
+  z-index: 2;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 14px;
+  align-items: center;
+  margin: auto 0;
+}
+
+.zone-box {
+  background: rgba(22, 27, 36, 0.85);
+  border: 1.5px solid var(--border);
+  border-radius: 6px;
+  padding: 14px 10px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  backdrop-filter: blur(4px);
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.4);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.zone-box:hover {
+  transform: translateY(-2px);
+}
+
+.zone-box.zone-low {
+  box-shadow: 0 0 12px rgba(56, 189, 248, 0.15);
+}
+
+.zone-box.zone-medium {
+  box-shadow: 0 0 14px rgba(245, 158, 11, 0.2);
+}
+
+.zone-box.zone-high {
+  box-shadow: 0 0 16px rgba(226, 87, 76, 0.3);
+}
+
+.zone-box-label {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text-dim);
+  text-align: center;
+  white-space: nowrap;
+}
+
+.zone-box-count {
+  font-size: 26px;
+  font-weight: 700;
+  font-family: var(--font-mono);
+  color: #fff;
+  line-height: 1;
+}
+
+.zone-box-pill {
+  font-size: 9px;
+  font-weight: 700;
+  font-family: var(--font-mono);
+  letter-spacing: 0.05em;
+  padding: 2px 6px;
+  border-radius: 3px;
+}
+
+.pill-low {
+  background: rgba(56, 189, 248, 0.15);
+  color: #38bdf8;
+}
+
+.pill-medium {
+  background: rgba(245, 158, 11, 0.15);
+  color: #f59e0b;
+}
+
+.pill-high {
+  background: rgba(226, 87, 76, 0.2);
+  color: #e2574c;
+}
+
+.camera-projection-origin {
+  position: relative;
+  z-index: 2;
+  margin-top: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  border-top: 1px dashed rgba(255, 255, 255, 0.1);
+  padding-top: 8px;
+}
+
+.camera-icon {
+  font-size: 12px;
+}
+
+.camera-label {
+  font-size: 10px;
+  font-family: var(--font-mono);
+  color: var(--text-faint);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.chart-latest-readout {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--text-dim);
+}
+
+.chart-latest-readout strong {
+  color: #38bdf8;
+}
+
 
