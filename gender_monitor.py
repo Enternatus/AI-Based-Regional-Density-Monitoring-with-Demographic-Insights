@@ -250,9 +250,9 @@ def dominant_clothing_color(crop_bgr):
     if row_std > 18 and abs(c0['bright'] - c1['bright']) > 45:
         return "grey"
 
-    # 2. White (Person 6): bright, balanced channels, low saturation
+    # 2. White (Person 6, Person 25): bright, balanced channels, low saturation
     for c in [c0, c1]:
-        if c['bright'] > 185 and c['hsv'][1] < 32 and c['ratio'] > 0.25:
+        if c['bright'] > 165 and c['hsv'][1] < 35 and c['ratio'] > 0.18:
             return "white"
 
     # 3. Yellow / Cream (Person 5): high red and high green, close to each other
@@ -268,20 +268,27 @@ def dominant_clothing_color(crop_bgr):
         if ((r - g > 30 and r - b > 15) or (sat > 55 and (hue < 15 or hue > 155) and r > g + 20)) and c['ratio'] > 0.20:
             return "red"
 
-    # 5. Blue (Person 9, 10)
+    # 5. Teal / Turquoise / Sea Green (Person 33)
     for c in [c0, c1]:
         b, g, r = c['bgr']
         h, s, v = c['hsv']
-        if (80 <= h <= 135) and (b > r + 18 and b > g + 12) and s > 45 and c['ratio'] > 0.20:
+        if (85 <= h <= 105) and (g > r + 20 and b > r + 20 and abs(b - g) < 25) and c['ratio'] > 0.20:
+            return "green"
+
+    # 6. Blue (Person 9, 10)
+    for c in [c0, c1]:
+        b, g, r = c['bgr']
+        h, s, v = c['hsv']
+        if (80 <= h <= 135) and (b > r + 18 and b > g + 15) and s > 45 and c['ratio'] > 0.20:
             if c['bright'] < 75:
                 return "black"
             return "blue"
 
-    # 6. Green
+    # 7. Green
     for c in [c0, c1]:
         b, g, r = c['bgr']
         h, s, v = c['hsv']
-        if (35 <= h < 80) and (g > r + 15 and g > b + 12) and c['ratio'] > 0.25:
+        if (35 <= h < 85) and (g > r + 15 and g > b + 12) and c['ratio'] > 0.25:
             return "green"
 
     # 7. Neutrals (Black, Grey, White)
