@@ -46,3 +46,4 @@ person_records_backup_*.json
 *.jpg
 *.jpeg
 *.png
+!demo/images/*
