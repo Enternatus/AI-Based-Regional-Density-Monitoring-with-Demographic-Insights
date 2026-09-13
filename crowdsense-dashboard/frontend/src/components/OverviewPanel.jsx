@@ -6,6 +6,10 @@ import RegionCard from "./common/RegionCard.jsx";
 import TrendChart from "./common/TrendChart.jsx";
 import { getOverview, getDensityHistory, getPeopleSummary } from "../api/crowdsense.js";
 
+function regionLabel(id = "") {
+  return id.replace(/_/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());
+}
+
 export default function OverviewPanel({ onNavigate, connected }) {
   const [overview, setOverview] = useState(null);
   const [history, setHistory] = useState([]);
@@ -91,7 +95,7 @@ export default function OverviewPanel({ onNavigate, connected }) {
 
         <MetricCard
           label="Busiest Zone"
-          value={density?.busiest_zone ?? "--"}
+          value={density?.busiest_zone ? regionLabel(density.busiest_zone) : "--"}
           subtext="Zone with highest immediate density"
         />
 
