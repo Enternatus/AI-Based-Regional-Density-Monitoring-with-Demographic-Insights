@@ -68,6 +68,10 @@ CROPS_ROOT = ACTIVE_ROOT  # crop_path in each record is already relative to repo
 REGIONS_PATH = ACTIVE_ROOT / "regions.json" if (ACTIVE_ROOT / "regions.json").exists() else (SAMPLE_ROOT / "regions.json")
 DENSITY_SNAPSHOT_PATH = ACTIVE_ROOT / "density_snapshot.json" if (ACTIVE_ROOT / "density_snapshot.json").exists() else (PROJECT_ROOT / "density_snapshot.json")
 DENSITY_HISTORY_PATH = ACTIVE_ROOT / "density_history.json" if (ACTIVE_ROOT / "density_history.json").exists() else (PROJECT_ROOT / "density_history.json")
+
+LOW_THRESHOLD = 3
+HIGH_THRESHOLD = 8
+DEFAULT_THRESHOLDS = {"low": LOW_THRESHOLD, "high": HIGH_THRESHOLD}
 # -------------------------------------------------------------------------
 
 app = FastAPI(title="CrowdSense API")
@@ -333,28 +337,45 @@ def get_person_crop(person_id: str):
 @app.get("/api/regions/density")
 def regions_density():
     """
-    Reads the per-frame snapshot crowd_monitor.py should write (apply
-    crowd_monitor.patch.py). If no snapshot exists yet, returns the
-    regions from regions.json with zero counts rather than inventing
-    numbers from person_records.json — those records are from a
-    different video and would misrepresent live density.
+    Reads the per-frame snapshot crowd_monitor.py writes. If no snapshot exists yet,
+    returns configured regions with zero counts.
     """
+    history = load_density_history()
     if DENSITY_SNAPSHOT_PATH.exists():
         with open(DENSITY_SNAPSHOT_PATH) as f:
             data = json.load(f)
         data["source"] = "live_snapshot"
-        # Add staleness info so frontend can show stale vs live
         updated_at = data.get("updated_at", "")
         try:
             updated_dt = datetime.fromisoformat(updated_at)
-            age_seconds = (datetime.utcnow() - updated_dt).total_seconds()
+            now_dt = datetime.now(updated_dt.tzinfo) if updated_dt.tzinfo else datetime.utcnow()
+            age_seconds = (now_dt - updated_dt).total_seconds()
         except (ValueError, TypeError):
             age_seconds = 9999
         data["age_seconds"] = round(age_seconds)
         data["is_stale"] = age_seconds > 30
-        history = load_density_history()
+        data["thresholds"] = DEFAULT_THRESHOLDS
+        data["run_status"] = data.get("run_status", "stopped")
+        data["source_video"] = "sample_crowd.mp4"
+        data["video_fps"] = 30
+        
+        current_regions = data.get("regions", [])
+        current_total = sum(r.get("count", 0) for r in current_regions)
+        data["current_total"] = current_total
+        
+        if len(history) >= 2:
+            prev_total = sum(r.get("count", 0) for r in history[-2].get("regions", []))
+            if current_total > prev_total:
+                data["trend_direction"] = "rising"
+            elif current_total < prev_total:
+                data["trend_direction"] = "falling"
+            else:
+                data["trend_direction"] = "stable"
+        else:
+            data["trend_direction"] = "stable"
+
         data["history"] = history
-        data["summaries"] = density_summaries(history, data.get("regions", []))
+        data["summaries"] = density_summaries(history, current_regions)
         return data
 
     region_names: list[str] = []
@@ -365,9 +386,132 @@ def regions_density():
     return {
         "updated_at": datetime.utcnow().isoformat(),
         "source": "no_live_snapshot_yet",
+        "run_status": "idle",
         "regions": [{"region_id": name, "name": name, "count": 0} for name in region_names],
-        "history": [],
+        "current_total": 0,
+        "trend_direction": "stable",
+        "thresholds": DEFAULT_THRESHOLDS,
+        "source_video": "sample_crowd.mp4",
+        "video_fps": 30,
+        "history": history,
         "summaries": {},
+    }
+
+
+@app.get("/api/overview")
+def get_overview():
+    """Unified overview endpoint aggregating live density and demographic metrics."""
+    from collections import Counter
+    density_data = regions_density()
+    current_regions = density_data.get("regions", [])
+    current_total = sum(r.get("count", 0) for r in current_regions)
+    history = density_data.get("history", [])
+    
+    totals_in_history = [sum(r.get("count", 0) for r in h.get("regions", [])) for h in history]
+    peak_session = max(totals_in_history, default=current_total)
+    
+    busiest = max(current_regions, key=lambda r: r.get("count", 0), default=None)
+    busiest_zone = busiest.get("name", busiest.get("region_id", "--")) if busiest else "--"
+    
+    records = load_records()
+    total_records = len(records)
+    settled = sum(1 for r in records.values() if r.get("source") == "settled")
+    best_raw = sum(1 for r in records.values() if r.get("source") == "best_raw")
+    last_resort = sum(1 for r in records.values() if r.get("source") == "last_resort")
+    
+    genders = Counter(r.get("gender") for r in records.values() if r.get("gender") and r.get("gender") != "Detecting...")
+    ages = Counter(r.get("age") for r in records.values() if r.get("age"))
+    races = Counter((r.get("race") or "").replace("Latino_Hispanic", "Hispanic / Latino") for r in records.values() if r.get("race"))
+    colors = Counter(r.get("clothing_color") for r in records.values() if r.get("clothing_color"))
+    
+    return {
+        "density": {
+            "current_total": current_total,
+            "peak_session": peak_session,
+            "busiest_zone": busiest_zone,
+            "regions": current_regions,
+            "run_status": density_data.get("run_status", "stopped"),
+            "updated_at": density_data.get("updated_at"),
+            "thresholds": DEFAULT_THRESHOLDS,
+            "trend_direction": density_data.get("trend_direction", "stable"),
+            "source_video": "sample_crowd.mp4",
+            "video_fps": 30,
+        },
+        "people": {
+            "total_records": total_records,
+            "settled": settled,
+            "best_raw": best_raw,
+            "last_resort": last_resort,
+            "top_demographics": {
+                "gender": genders.most_common(1)[0][0] if genders else None,
+                "age": ages.most_common(1)[0][0] if ages else None,
+                "race": races.most_common(1)[0][0] if races else None,
+                "clothing_color": colors.most_common(1)[0][0] if colors else None,
+            },
+            "source_video": "close_range_crowd.mp4",
+            "video_fps": 30,
+        }
+    }
+
+
+@app.get("/api/density/history")
+def get_density_history(limit: Optional[int] = 30):
+    """Returns actual session history from the monitoring run."""
+    history = load_density_history()
+    if limit and limit > 0:
+        history = history[-limit:]
+    
+    totals = [sum(r.get("count", 0) for r in h.get("regions", [])) for h in history]
+    peak_session = max(totals, default=0)
+    current_total = totals[-1] if totals else 0
+
+    return {
+        "history": history,
+        "count": len(history),
+        "peak_session": peak_session,
+        "current_total": current_total,
+        "thresholds": DEFAULT_THRESHOLDS,
+    }
+
+
+@app.get("/api/people/summary")
+def get_people_summary():
+    """Aggregated demographic analytics across all tracked person records."""
+    from collections import Counter
+    records = load_records()
+    total_records = len(records)
+    
+    genders = Counter()
+    ages = Counter()
+    races = Counter()
+    clothing_colors = Counter()
+    source_types = Counter()
+    
+    for r in records.values():
+        g = r.get("gender")
+        if g and g != "Detecting...":
+            genders[g] += 1
+        a = r.get("age")
+        if a:
+            ages[a] += 1
+        rc = r.get("race")
+        if rc:
+            races[rc.replace("Latino_Hispanic", "Hispanic / Latino")] += 1
+        c = r.get("clothing_color")
+        if c:
+            clothing_colors[c] += 1
+        src = r.get("source", "unresolved")
+        source_types[src] += 1
+        
+    return {
+        "total_records": total_records,
+        "gender": dict(genders),
+        "age": dict(sorted(ages.items())),
+        "race": dict(races.most_common()),
+        "clothing_color": dict(clothing_colors.most_common()),
+        "source_type": dict(source_types),
+        "source_video": "close_range_crowd.mp4",
+        "video_fps": 30,
     }
 
 
