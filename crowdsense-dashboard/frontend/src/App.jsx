@@ -3,6 +3,7 @@ import OverviewPanel from "./components/OverviewPanel.jsx";
 import DensityPanel from "./components/DensityPanel.jsx";
 import SearchPanel from "./components/SearchPanel.jsx";
 import DataSourceBadge from "./components/common/DataSourceBadge.jsx";
+import ErrorBoundary from "./components/common/ErrorBoundary.jsx";
 import { getOverview, getDensityHistory, getPeopleSummary } from "./api/crowdsense.js";
 
 export default function App() {
@@ -16,6 +17,22 @@ export default function App() {
   });
   const [clock, setClock] = useState(new Date());
   const [view, setView] = useState("overview"); // "overview" | "density" | "people" | "split"
+  const [splitRatio, setSplitRatio] = useState(() => {
+    try {
+      return localStorage.getItem("crowdsense_split_ratio") || "focus";
+    } catch {
+      return "focus";
+    }
+  });
+
+  function handleSplitRatio(ratio) {
+    setSplitRatio(ratio);
+    try {
+      localStorage.setItem("crowdsense_split_ratio", ratio);
+    } catch {
+      /* ignore */
+    }
+  }
 
   // Centralized dashboard polling orchestrator: single periodic request stream
   useEffect(() => {
@@ -117,107 +134,109 @@ export default function App() {
 
       {/* Main View Port */}
       <main className={`main ${view === "split" ? "main-split" : "main-full"}`}>
-        {view === "overview" && (
-          <OverviewPanel
-            overview={overview}
-            demographics={demographics}
-            history={history}
-            connected={connected}
-            loading={loading}
-            onNavigate={(dest) => setView(dest)}
-          />
-        )}
+        <ErrorBoundary onReset={() => setView("overview")}>
+          {view === "overview" && (
+            <OverviewPanel
+              overview={overview}
+              demographics={demographics}
+              history={history}
+              connected={connected}
+              loading={loading}
+              onNavigate={(dest) => setView(dest)}
+            />
+          )}
 
-        {view === "density" && (
-          <DensityPanel
-            data={density}
-            historyProp={history}
-            connected={connected}
-          />
-        )}
+          {view === "density" && (
+            <DensityPanel
+              data={density}
+              historyProp={history}
+              connected={connected}
+            />
+          )}
 
-        {view === "people" && (
-          <SearchPanel />
-        )}
+          {view === "people" && (
+            <SearchPanel />
+          )}
 
-        {view === "split" && (
-          <div className="split-view-wrapper">
-            {/* Split Screen Allocation Toolbar */}
-            <div className="split-view-toolbar">
-              <div className="split-toolbar-info">
-                <span className="split-toolbar-badge">DUAL STREAM</span>
-                <span className="split-toolbar-title">
-                  Density Telemetry (Wide-Angle) + Gender &amp; Demographic Tracking (Close-Range)
-                </span>
-              </div>
-              <div className="split-ratio-controls" role="group" aria-label="Split Screen Allocation">
-                <span className="split-ratio-label">Screen Share:</span>
-                <button
-                  type="button"
-                  className={`split-ratio-btn ${splitRatio === "focus" ? "active" : ""}`}
-                  onClick={() => handleSplitRatio("focus")}
-                  title="Allocates ~70% screen to Gender Monitor & Demographics (Recommended)"
-                >
-                  Demographics Focus (30 / 70)
-                </button>
-                <button
-                  type="button"
-                  className={`split-ratio-btn ${splitRatio === "max" ? "active" : ""}`}
-                  onClick={() => handleSplitRatio("max")}
-                  title="Allocates ~80% screen to Gender Monitor & Demographics (Max Cards)"
-                >
-                  Demographics Max (20 / 80)
-                </button>
-                <button
-                  type="button"
-                  className={`split-ratio-btn ${splitRatio === "balanced" ? "active" : ""}`}
-                  onClick={() => handleSplitRatio("balanced")}
-                  title="Equal 50 / 50 split"
-                >
-                  Equal (50 / 50)
-                </button>
-              </div>
-            </div>
-
-            <div className={`split-view-container ratio-${splitRatio}`}>
-              {/* Left Module: Wide-Angle Density */}
-              <div className="split-column split-left-column">
-                <div className="split-column-header">
-                  <span className="split-column-tag">Spatial Density (Wide-Angle)</span>
+          {view === "split" && (
+            <div className="split-view-wrapper">
+              {/* Split Screen Allocation Toolbar */}
+              <div className="split-view-toolbar">
+                <div className="split-toolbar-info">
+                  <span className="split-toolbar-badge">DUAL STREAM</span>
+                  <span className="split-toolbar-title">
+                    Density Telemetry (Wide-Angle) + Gender &amp; Demographic Tracking (Close-Range)
+                  </span>
+                </div>
+                <div className="split-ratio-controls" role="group" aria-label="Split Screen Allocation">
+                  <span className="split-ratio-label">Screen Share:</span>
                   <button
                     type="button"
-                    className="split-nav-cta"
-                    onClick={() => setView("density")}
-                    title="Expand to full Density Monitor"
+                    className={`split-ratio-btn ${splitRatio === "focus" ? "active" : ""}`}
+                    onClick={() => handleSplitRatio("focus")}
+                    title="Allocates ~70% screen to Gender Monitor & Demographics (Recommended)"
                   >
-                    Full Density &rarr;
+                    Demographics Focus (30 / 70)
                   </button>
-                </div>
-                <DensityPanel
-                  data={density}
-                  historyProp={history}
-                  connected={connected}
-                />
-              </div>
-
-              {/* Right Module: Close-Range Demographic & Gender Monitor */}
-              <div className="split-column split-right-column">
-                <div className="split-column-header">
-                  <span className="split-column-tag tag-demo">Demographic &amp; Gender Monitor (Close-Range)</span>
                   <button
                     type="button"
-                    className="split-nav-cta"
-                    onClick={() => setView("people")}
-                    title="Expand to full Demographic & Gender Explorer"
+                    className={`split-ratio-btn ${splitRatio === "max" ? "active" : ""}`}
+                    onClick={() => handleSplitRatio("max")}
+                    title="Allocates ~80% screen to Gender Monitor & Demographics (Max Cards)"
                   >
-                    Full Explorer &rarr;
+                    Demographics Max (20 / 80)
+                  </button>
+                  <button
+                    type="button"
+                    className={`split-ratio-btn ${splitRatio === "balanced" ? "active" : ""}`}
+                    onClick={() => handleSplitRatio("balanced")}
+                    title="Equal 50 / 50 split"
+                  >
+                    Equal (50 / 50)
                   </button>
                 </div>
-                <SearchPanel />
+              </div>
+
+              <div className={`split-view-container ratio-${splitRatio}`}>
+                {/* Left Module: Wide-Angle Density */}
+                <div className="split-column split-left-column">
+                  <div className="split-column-header">
+                    <span className="split-column-tag">Spatial Density (Wide-Angle)</span>
+                    <button
+                      type="button"
+                      className="split-nav-cta"
+                      onClick={() => setView("density")}
+                      title="Expand to full Density Monitor"
+                    >
+                      Full Density &rarr;
+                    </button>
+                  </div>
+                  <DensityPanel
+                    data={density}
+                    historyProp={history}
+                    connected={connected}
+                  />
+                </div>
+
+                {/* Right Module: Close-Range Demographic & Gender Monitor */}
+                <div className="split-column split-right-column">
+                  <div className="split-column-header">
+                    <span className="split-column-tag tag-demo">Demographic &amp; Gender Monitor (Close-Range)</span>
+                    <button
+                      type="button"
+                      className="split-nav-cta"
+                      onClick={() => setView("people")}
+                      title="Expand to full Demographic & Gender Explorer"
+                    >
+                      Full Explorer &rarr;
+                    </button>
+                  </div>
+                  <SearchPanel />
+                </div>
               </div>
             </div>
-          </div>
-        )}
+          )}
+        </ErrorBoundary>
       </main>
     </div>
   );
