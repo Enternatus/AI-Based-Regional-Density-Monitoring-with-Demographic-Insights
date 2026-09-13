@@ -37,6 +37,24 @@ This project provides two independent video-analysis pipelines and a unified web
 
 ---
 
+## Product Showcase & Screenshots
+
+### 🖥️ Operational Console (Split View)
+Unified operational dashboard combining live regional crowd density on the left with real-time demographic person tracking on the right.
+![Operational Dashboard](demo/images/dashboard_split_view.png)
+
+### 📊 Live Regional Density Monitoring
+Real-time per-zone occupancy tracking across user-defined polygon regions with automated congestion threshold alerts and historical trend telemetry.
+![Density Monitoring](demo/images/dashboard_density_view.png)
+
+### 👤 Demographic Profiling & Natural Language Semantic Search
+Search and filter detected individuals by gender, age bracket, appearance group, and clothing color. All cards display unchopped, high-resolution representative crops.
+![Demographic People Search 1](demo/images/dashboard_people_search_1.png)
+![Demographic People Search 2](demo/images/dashboard_people_search_2.png)
+![Demographic People Search 3](demo/images/dashboard_people_search_3.png)
+
+---
+
 ## Architecture
 
 ```mermaid
@@ -280,6 +298,24 @@ python test_gender_monitor.py
 | **Per-run IDs only** | Tracker resets each execution; no cross-session re-identification |
 | **Attribute accuracy** | FairFace outputs are model estimates, not verified facts. Accuracy degrades on small/angled/blurred crops |
 | **Race classification** | Error rates vary by demographic group ([Gender Shades, 2018](https://proceedings.mlr.press/v81/buolamwini18a.html)). Confidence gating rejects uncertain reads |
+
+---
+
+## Engineering Deep-Dive: Color Constancy & Camera Perspective Geometry
+
+### 1. Illumination Invariance for Clothing Classification
+Surveillance footage in indoor corridors often exhibits strong illuminant bias (such as cool-white/blue fluorescent or warm tungsten lighting). Naive RGB distance metrics or simple thresholding misclassify dark or neutral fabrics as green or blue under cool illuminants.
+* **Torso ROI Isolation:** In close-range head-and-shoulder views, naive middle-third sampling captures the face and neck. The pipeline isolates the lower 30% (`0.70h` to `0.98h`) where clothing fabric resides.
+* **Multi-Cluster Separation:** A 2-cluster K-Means algorithm separates foreground clothing fabric from skin tone, necklines, and background shadows.
+* **Pattern & Stripe Detection:** Row-by-row brightness variance analysis (`std(row_means)`) dynamically identifies high-contrast horizontal striped garments (e.g. black-and-white striped polos).
+* **Future Work:** Offline background illuminant calibration and LAB color-space `(a*, b*)` chromatic clustering for zero-shot lighting invariance across varying facilities.
+
+### 2. Monocular Height Estimation vs. Perspective Geometry
+A single perspective surveillance camera cannot determine physical human stature from raw 2D bounding box heights, because bounding box pixel height is primarily a function of proximity to the lens (foreshortening).
+* **Current Solution:** In close-up bust framing where feet/ankles are not visible, pseudo-height metrics are deliberately omitted to preserve scientific integrity and prevent misleading classifications.
+* **Roadmap for Full-Body Feeds:** When foot-ground contact is visible, physical height can be calculated via:
+  $$\mathbf{H}_{\text{ground}}: \mathbf{x}_{\text{image}} \mapsto \mathbf{X}_{\text{world}}$$
+  combining a calibrated 4-point ground-plane homography with YOLOv8-pose keypoint vectors (head-to-ankle vertical projection).
 
 ---
 
