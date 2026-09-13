@@ -86,9 +86,9 @@ export default function PersonProfile({ person, onClose }) {
           <div className="profile-attrs-grid">
             <Attribute label="Gender estimate" value={data.gender} />
             <Attribute label="Age range estimate" value={data.age} />
-            <Attribute label="Appearance group estimate" value={data.race} />
+            <Attribute label="Appearance group estimate" value={data.race ? data.race.replace("Latino_Hispanic", "Hispanic / Latino") : ""} />
             <Attribute label="Shirt color estimate" value={data.clothing_color} />
-            <Attribute label="Height estimate" value={data.height_bucket} />
+            {data.height_bucket && <Attribute label="Height estimate" value={data.height_bucket} />}
           </div>
         </div>
 

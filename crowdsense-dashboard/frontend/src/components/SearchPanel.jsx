@@ -164,7 +164,7 @@ export default function SearchPanel() {
                     <div className="result-attrs">
                       <span className="attr-line"><span className="attr-label">Gender:</span> {record.gender === "Detecting..." ? <em className="no-estimate">No reliable estimate</em> : (record.gender || <em className="no-estimate">No reliable estimate</em>)}</span>
                       <span className="attr-line"><span className="attr-label">Age range:</span> {record.age || <em className="no-estimate">No reliable estimate</em>}</span>
-                      {record.race && <span className="attr-line"><span className="attr-label">Appearance group:</span> {record.race}</span>}
+                      {record.race && <span className="attr-line"><span className="attr-label">Appearance group:</span> {record.race.replace("Latino_Hispanic", "Hispanic / Latino")}</span>}
                       {(record.clothing_color || record.height_bucket) && <span className="attr-line attr-labeled">{record.clothing_color && <><span className="attr-label">Shirt:</span> {record.clothing_color}</>}{record.clothing_color && record.height_bucket && " / "}{record.height_bucket && <><span className="attr-label">Height:</span> {record.height_bucket}</>}</span>}
                     </div>
                     <span className="record-action">View evidence</span>

@@ -216,7 +216,10 @@ def score_record(record: dict, q: ParsedQuery) -> tuple[int, int]:
         if value is None:
             continue
         total_filters += 1
-        if record.get(field) == value:
+        rec_val = record.get(field)
+        if rec_val == value:
+            score += 1
+        elif field == "race" and {rec_val, value} <= {"Latino_Hispanic", "Hispanic / Latino"}:
             score += 1
     return score, total_filters
 

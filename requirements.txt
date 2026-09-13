@@ -1,8 +1,35 @@
-﻿ultralytics
-opencv-python
-numpy
-torch
-deepface
-onnxruntime
-uniface
-pytest
+# ==============================================================================
+# AI-Based Regional Density Monitoring — Python Dependencies
+# Tested with Python 3.13.5 on Windows 11
+# ==============================================================================
+
+# ---- Core detection & tracking ----
+ultralytics==8.4.125         # YOLOv8 person detection + ByteTrack
+opencv-python==5.0.0.93      # Video I/O, visualization, region drawing
+
+# ---- Face analysis ----
+deepface==0.0.100            # Face detection utilities
+uniface==4.0.0               # RetinaFace face detection + landmark alignment
+onnxruntime==1.29.0          # FairFace ONNX inference runtime
+
+# ---- PyTorch ----
+# CPU-only install (works on any machine):
+#   pip install torch==2.13.0 torchvision==0.28.0 --index-url https://download.pytorch.org/whl/cpu
+#
+# NVIDIA GPU (CUDA 12.x):
+#   pip install torch==2.13.0 torchvision==0.28.0 --index-url https://download.pytorch.org/whl/cu124
+#
+# Default (auto-selects based on system):
+torch==2.13.0
+torchvision==0.28.0
+
+# ---- Utilities ----
+numpy==2.4.2
+pillow==11.3.0
+
+# ---- Dashboard backend (also in crowdsense-dashboard/backend/requirements.txt) ----
+fastapi==0.141.1
+uvicorn==0.52.4
+
+# ---- Testing ----
+pytest                       # Not pinned — any recent version works

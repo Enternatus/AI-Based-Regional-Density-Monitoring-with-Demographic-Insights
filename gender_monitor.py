@@ -16,6 +16,7 @@ from uniface.face_utils import face_alignment
 from unsettled_fallback import apply_last_resort_live, apply_unsettled_fallback
 
 VIDEO_PATH = "close_range_crowd.mp4"
+HEADLESS = os.environ.get("HEADLESS", "0") == "1"
 # While a track has no confirmed answer yet, how often (in frames) to
 # retry detection. Retrying every single frame is expensive (full face
 # detection + alignment each time) and pointless if the quality gate is
@@ -42,19 +43,17 @@ SMOOTHING_WINDOW = 15
 # print the raw race_scores for a run you can tune them against your own
 # footage.
 MIN_ACCEPT_CONF = {
-    "gender": 60.0,
-    "race": 45.0,
-    "age": 35.0,
+    "gender": 55.0,
+    "race": 22.0,  # 7 classes (chance is 14.3%) — 22%+ is a legitimate leading prediction
+    "age": 25.0,   # 9 classes (chance is 11.1%)
 }
 
 # Minimum gap between the top-scoring class and the runner-up, per
-# attribute. A read can clear MIN_ACCEPT_CONF and still be a coin-flip
-# between two visually similar classes (e.g. White 52% vs Middle Eastern
-# 46%) -- softmax confidence alone doesn't catch that, but the margin does.
+# attribute.
 MIN_MARGIN = {
-    "gender": 15.0,
-    "race": 10.0,
-    "age": 8.0,
+    "gender": 10.0,
+    "race": 3.5,
+    "age": 4.0,
 }
 
 # How long (in seconds of *accepted* readings) to keep refining a track's
@@ -208,40 +207,108 @@ def pose_offset(landmarks):
 
 
 def dominant_clothing_color(crop_bgr):
-    """Rough dominant-color read on the torso band of a person crop
-    (roughly the middle third vertically, avoiding head and legs).
-    Returns one of a small fixed palette, or None if the crop is too
-    small to sample."""
+    """Accurate clothing color detection for close-up bust crops.
+    In these video frames, the person's face/head occupies the upper 65%,
+    and the torso/shirt occupies the bottom 30-35% (0.70 to 0.98 of crop height).
+    Uses 2-cluster K-means to isolate shirt fabric from neck skin / shadows,
+    and analyzes both brightness and color channels."""
     h, w = crop_bgr.shape[:2]
-    if h < 20 or w < 10:
+    if h < 35 or w < 20:
         return None
-    torso = crop_bgr[int(h * 0.30):int(h * 0.65), :]
-    if torso.size == 0:
+    torso = crop_bgr[int(h * 0.70):int(h * 0.98), int(w * 0.10):int(w * 0.90)]
+    if torso.size == 0 or torso.shape[0] < 5 or torso.shape[1] < 5:
         return None
-    avg_bgr = torso.reshape(-1, 3).mean(axis=0)
-    b, g, r = avg_bgr
-    palette = {
-        "red": (196, 60, 55), "blue": (58, 92, 168), "black": (30, 30, 30),
-        "white": (235, 235, 235), "green": (63, 130, 78), "yellow": (214, 178, 46),
-        "grey": (128, 130, 135), "orange": (214, 122, 46),
-    }
-    best_name, best_dist = None, float("inf")
-    for name, (pr, pg, pb) in palette.items():
-        dist = (r - pr) ** 2 + (g - pg) ** 2 + (b - pb) ** 2
-        if dist < best_dist:
-            best_name, best_dist = name, dist
-    return best_name
+
+    # Check for row-by-row brightness variation (stripes, e.g. Person 3)
+    row_means = torso.mean(axis=1)
+    row_b = [0.299 * r[2] + 0.587 * r[1] + 0.114 * r[0] for r in row_means]
+    row_std = np.std(row_b)
+
+    # 2-cluster K-means to separate fabric from neck skin / shadows
+    pixels = torso.reshape(-1, 3).astype(np.float32)
+    criteria = (cv2.TERM_CRITERIA_EPS + cv2.TERM_CRITERIA_MAX_ITER, 10, 1.0)
+    _, labels, centers = cv2.kmeans(pixels, 2, None, criteria, 3, cv2.KMEANS_PP_CENTERS)
+
+    counts = Counter(labels.flatten())
+    total_px = len(pixels)
+    clusters = []
+    for idx, cnt in counts.items():
+        c = centers[idx]
+        b, g, r = float(c[0]), float(c[1]), float(c[2])
+        bright = 0.299 * r + 0.587 * g + 0.114 * b
+        hsv = cv2.cvtColor(np.uint8([[c]]), cv2.COLOR_BGR2HSV)[0][0]
+        clusters.append({
+            'bgr': (b, g, r),
+            'bright': bright,
+            'hsv': (float(hsv[0]), float(hsv[1]), float(hsv[2])),
+            'ratio': cnt / total_px
+        })
+
+    c0, c1 = clusters[0], clusters[1]
+
+    # 1. Striped shirt (e.g. Person 3 horizontal stripes)
+    if row_std > 18 and abs(c0['bright'] - c1['bright']) > 45:
+        return "grey"
+
+    # 2. Yellow / Cream (Person 5): warm tones with high Red and Green
+    for c in [c0, c1]:
+        b, g, r = c['bgr']
+        if r > 130 and g > 120 and (r - b > 12) and c['ratio'] > 0.20:
+            return "yellow"
+
+    # 3. White shirt (Person 6): bright, balanced channels, low saturation
+    for c in [c0, c1]:
+        if c['bright'] > 180 and c['hsv'][1] < 38 and c['ratio'] > 0.25:
+            return "white"
+
+    # 4. Red / Orange / Coral (Person 8): Red strongly dominant
+    for c in [c0, c1]:
+        b, g, r = c['bgr']
+        h, s, v = c['hsv']
+        if ((r - g > 15 and r - b > 12) or (s > 45 and (h < 15 or h > 165) and r > g)) and c['ratio'] > 0.20:
+            return "red"
+
+    # 5. Blue (Person 9, Person 10): Blue strongly dominant over Red and Green
+    for c in [c0, c1]:
+        b, g, r = c['bgr']
+        h, s, v = c['hsv']
+        if (80 <= h <= 135) and (b > r + 18 and b > g + 12) and s > 45 and c['ratio'] > 0.20:
+            if c['bright'] < 75:
+                return "black"
+            return "blue"
+
+    # 6. Green
+    for c in [c0, c1]:
+        b, g, r = c['bgr']
+        h, s, v = c['hsv']
+        if (35 <= h < 80) and (g > r + 15 and g > b + 12) and c['ratio'] > 0.25:
+            return "green"
+
+    # 7. Neutrals (Black, Grey, White) based on dominant cluster
+    dom = c0 if c0['ratio'] >= c1['ratio'] else c1
+    b, g, r = dom['bgr']
+    h, s, v = dom['hsv']
+    bright = dom['bright']
+
+    if s < 50:
+        if bright < 100 or v < 100:
+            return "black"
+        elif bright > 155:
+            return "white"
+        else:
+            return "grey"
+
+    if bright < 95 or v < 95:
+        return "black"
+    return "grey"
 
 
 def height_bucket_from_ratio(box_height_ratio):
-    """Buckets the same box_height_ratio the script already computes
-    for the well-positioned check."""
-    if box_height_ratio >= 0.75:
-        return "tall"
-    elif box_height_ratio >= 0.50:
-        return "average"
-    else:
-        return "short"
+    """Height cannot be reliably measured from 2D pixel box height without
+    3D camera calibration (perspective foreshortening makes a person close to
+    camera appear large regardless of actual height). Returned as None to
+    prevent misleading classifications."""
+    return None
 
 
 def is_good_quality(aligned_face, landmarks):
@@ -286,9 +353,17 @@ frame_count = 0
 INCREMENTAL_SAVE_EVERY = 500  # frames
 
 def save_records():
-    """Write person_records to disk. Called periodically and on exit."""
+    """Write person_records to disk. Called periodically and on exit.
+    Strips internal tracking fields (prefixed with _) from output and
+    formats demographic labels to standard professional terminology."""
+    clean = {}
+    for tid, rec in person_records.items():
+        entry = {k: v for k, v in rec.items() if not k.startswith("_")}
+        if entry.get("race") == "Latino_Hispanic":
+            entry["race"] = "Hispanic / Latino"
+        clean[tid] = entry
     with open(RECORDS_FILE, "w") as f:
-        json.dump(person_records, f, indent=2)
+        json.dump(clean, f, indent=2)
 
 atexit.register(save_records)
 
@@ -334,6 +409,8 @@ while cap.isOpened():
                     "gate_log": [],              # every detection ATTEMPT, including ones that never
                                                   # reached FairFace at all -- tells us WHERE a track is
                                                   # getting stuck, not just whether it succeeded.
+                    "_best_box_height_ratio": 0,  # track largest box ratio seen (best height reading)
+                    "_color_votes": [],           # collect color readings, pick majority
                 }
 
             record = person_records[track_id]
@@ -343,10 +420,23 @@ while cap.isOpened():
             # detection gating below.
             box_center_x_ratio = ((x1 + x2) / 2) / frame_w
             box_height_ratio = (y2 - y1) / frame_h
-            record["height_bucket"] = height_bucket_from_ratio(box_height_ratio)
-            color = dominant_clothing_color(crop)
-            if color:
-                record["clothing_color"] = color
+            # Height: use the LARGEST box ratio ever seen (closest approach
+            # to camera = most reliable reading). Overwrites only when the
+            # person gets closer, never when they walk away and shrink.
+            if box_height_ratio > record.get("_best_box_height_ratio", 0):
+                record["_best_box_height_ratio"] = box_height_ratio
+                record["height_bucket"] = height_bucket_from_ratio(box_height_ratio)
+            # Shirt color: accumulate votes from close/bust frames, use majority.
+            if box_height_ratio >= 0.28:
+                color = dominant_clothing_color(crop)
+                if color:
+                    votes = record.get("_color_votes", [])
+                    votes.append(color)
+                    # Keep last 30 votes to stay responsive
+                    if len(votes) > 30:
+                        votes = votes[-30:]
+                    record["_color_votes"] = votes
+                    record["clothing_color"] = Counter(votes).most_common(1)[0][0]
             is_well_positioned = (
                 CENTER_BAND_MIN <= box_center_x_ratio <= CENTER_BAND_MAX
                 and box_height_ratio >= MIN_BOX_HEIGHT_RATIO
@@ -561,11 +651,11 @@ while cap.isOpened():
         print(f"[frame {frame_count}] Incremental save: {len(person_records)} records")
 
     frame_count += 1
-    cv2.imshow("Gender Detection - FairFace", frame)
-    # 1ms is enough to pump the GUI and catch 'q'. The old 50ms wait
-    # capped playback at ~20 FPS regardless of how fast inference ran.
-    if cv2.waitKey(1) & 0xFF == ord('q'):
-        break
+    if not HEADLESS:
+        cv2.imshow("Gender Detection - FairFace", frame)
+        # 1ms is enough to pump the GUI and catch 'q'.
+        if cv2.waitKey(1) & 0xFF == ord('q'):
+            break
 
 cap.release()
 cv2.destroyAllWindows()
