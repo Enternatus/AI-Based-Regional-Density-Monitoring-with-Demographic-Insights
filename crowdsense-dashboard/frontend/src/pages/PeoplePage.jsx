@@ -285,23 +285,30 @@ export default function PeoplePage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
 
-  async function fetchSearchResults(overrideQuery = query, mode = matchMode) {
-    setLoading(true);
+  async function fetchSearchResults(overrideQuery = query, mode = matchMode, showLoading = true) {
+    if (showLoading) setLoading(true);
     setError(null);
     try {
       const data = await getPeople(overrideQuery, { match_mode: mode });
       setRawResults(data.results || []);
     } catch (err) {
       console.error(err);
-      setError("Failed to fetch people records from backend.");
+      if (showLoading) setError("Failed to fetch people records from backend.");
     } finally {
-      setLoading(false);
+      if (showLoading) setLoading(false);
     }
   }
 
   useEffect(() => {
     fetchSearchResults();
-  }, []);
+    // Live spontaneous polling: auto-refresh people list every 1.5s if not actively filtering text
+    const interval = setInterval(() => {
+      if (!query.trim()) {
+        fetchSearchResults(query, matchMode, false);
+      }
+    }, 1500);
+    return () => clearInterval(interval);
+  }, [query, matchMode]);
 
   function handleSearchSubmit(e) {
     if (e) e.preventDefault();

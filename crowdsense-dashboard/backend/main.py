@@ -820,6 +820,18 @@ def get_people_summary():
         src = r.get("source", "unresolved")
         source_types[src] += 1
         
+    recent = []
+    for pid, r in records.items():
+        recent.append(record_with_id(pid, r))
+    # Sort by last_seen_frame descending, then numeric person_id descending
+    recent.sort(
+        key=lambda x: (
+            x.get("last_seen_frame") or 0,
+            int(x.get("person_id", 0)) if str(x.get("person_id", "0")).isdigit() else 0,
+        ),
+        reverse=True,
+    )
+
     return {
         "total_records": total_records,
         "gender": dict(genders),
@@ -827,6 +839,7 @@ def get_people_summary():
         "race": dict(races.most_common()),
         "clothing_color": dict(clothing_colors.most_common()),
         "source_type": dict(source_types),
+        "recent_persons": recent[:18],
         "source_video": "close_range_crowd.mp4",
         "video_fps": 30,
     }

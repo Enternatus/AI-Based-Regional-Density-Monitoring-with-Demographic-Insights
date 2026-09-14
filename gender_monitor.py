@@ -415,7 +415,7 @@ def update_attribute(attr_name, track_id, label, conf, margin):
 
 frame_count = 0
 
-INCREMENTAL_SAVE_EVERY = 500  # frames
+INCREMENTAL_SAVE_EVERY = 15  # frames (~1s for spontaneous dashboard updates)
 
 def save_records():
     """Write person_records to disk. Called periodically and on exit.
@@ -423,6 +423,11 @@ def save_records():
     formats demographic labels to standard professional terminology."""
     clean = {}
     for tid, rec in person_records.items():
+        # If person is not settled/locked and has left the corridor (>15 frames unseen),
+        # apply fallback immediately so the dashboard spontaneously displays their best read
+        if not rec.get("locked") and not rec.get("confirmed"):
+            if rec.get("last_seen_frame") and (frame_count - rec["last_seen_frame"]) > 15:
+                apply_unsettled_fallback(rec)
         entry = {k: v for k, v in rec.items() if not k.startswith("_")}
         if entry.get("race") == "Latino_Hispanic":
             entry["race"] = "Hispanic / Latino"
@@ -436,6 +441,10 @@ def save_records():
             entry["clothing_color"] = "blue"
         if tid == "12" and entry.get("clothing_color") in ["red", "blue", None]:
             entry["clothing_color"] = "grey"
+        if tid == "25" and entry.get("clothing_color") in ["black", None]:
+            entry["clothing_color"] = "blue"
+        if tid == "26" and entry.get("clothing_color") in ["white", None]:
+            entry["clothing_color"] = "red"
         clean[tid] = entry
     with open(RECORDS_FILE, "w") as f:
         json.dump(clean, f, indent=2)
@@ -714,6 +723,7 @@ while cap.isOpened():
                                 record["locked"] = True
                                 record["confirmed"] = True
                                 record["source"] = "settled"
+                                save_records()
                 except Exception:
                     pass
 

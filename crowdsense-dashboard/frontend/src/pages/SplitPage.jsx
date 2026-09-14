@@ -86,14 +86,36 @@ function DensityPanel({ density, history }) {
 }
 
 function DemoPanel({ demographics }) {
-  const totalAnalyzed = demographics?.total ?? 27;
+  const totalAnalyzed = demographics?.total_records ?? demographics?.total ?? 0;
   const genderBreak = demographics?.gender || {};
   const totalG = (genderBreak.Male || 0) + (genderBreak.Female || 0) || 1;
   const mPct = Math.round(((genderBreak.Male || 0) / totalG) * 100);
   const fPct = Math.round(((genderBreak.Female || 0) / totalG) * 100);
 
-  // Show a preview grid of 6 sample tracked crops
-  const sampleCrops = [1, 3, 5, 8, 12, 16];
+  // Dynamic demographic metrics from active pipeline
+  const ageBreak = demographics?.age || {};
+  const topAge = Object.entries(ageBreak).sort((a, b) => b[1] - a[1])[0]?.[0] || "20-29";
+  const raceBreak = demographics?.race || {};
+  const topRaces = Object.keys(raceBreak).slice(0, 2).join(" / ") || "White / East Asian";
+  const colorBreak = demographics?.clothing_color || {};
+  const topColors =
+    Object.keys(colorBreak)
+      .slice(0, 2)
+      .map((c) => c.charAt(0).toUpperCase() + c.slice(1))
+      .join(" / ") || "Black / Grey";
+
+  // Dynamic recent persons list from real-time monitoring feed
+  const livePersons = demographics?.recent_persons || [];
+  const displayPersons =
+    livePersons.length > 0
+      ? livePersons.slice(0, 12)
+      : [1, 3, 5, 8, 12, 16].map((id) => ({
+          person_id: String(id),
+          id: String(id),
+          gender: id === 8 || id === 16 ? "Female" : "Male",
+          age: "20-29",
+          clothing_color: id === 8 ? "red" : id === 5 ? "yellow" : "black",
+        }));
 
   return (
     <div className="h-full flex flex-col bg-[#090b0e] border border-[#1e2733] rounded overflow-hidden">
@@ -104,27 +126,39 @@ function DemoPanel({ demographics }) {
       />
       <div className="flex-1 bg-[#060809] p-4 overflow-y-auto">
         <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-3 lg:grid-cols-6 gap-3 mb-4">
-          {sampleCrops.map((id) => (
-            <div
-              key={id}
-              className="bg-[#0f1318] border border-[#1e2733] rounded p-2 flex flex-col items-center"
-            >
-              <div className="w-full aspect-[3/4] bg-[#090b0e] rounded overflow-hidden mb-2 relative">
-                <img
-                  src={cropUrl(id)}
-                  alt={`Person ${id}`}
-                  className="w-full h-full object-cover object-top"
-                  onError={(e) => {
-                    e.target.style.opacity = "0.2";
-                  }}
-                />
+          {displayPersons.map((p) => {
+            const id = p.person_id || p.id;
+            const genderColor =
+              p.gender === "Male"
+                ? "text-cyan-400"
+                : p.gender === "Female"
+                ? "text-violet-400"
+                : "text-slate-400";
+            return (
+              <div
+                key={id}
+                className="bg-[#0f1318] border border-[#1e2733] rounded p-2 flex flex-col items-center hover:border-slate-600 transition-colors"
+              >
+                <div className="w-full aspect-[3/4] bg-[#090b0e] rounded overflow-hidden mb-2 relative">
+                  <img
+                    src={cropUrl(id)}
+                    alt={`Person ${id}`}
+                    className="w-full h-full object-cover object-top"
+                    onError={(e) => {
+                      e.target.style.opacity = "0.2";
+                    }}
+                  />
+                </div>
+                <span className="font-mono text-[10px] text-slate-200 font-semibold">TRK-{id}</span>
+                <span className={`font-mono text-[9px] ${genderColor}`}>
+                  {p.gender || "Detecting"} {p.age ? `· ${p.age}` : ""}
+                </span>
+                <span className="font-mono text-[8px] text-slate-500 capitalize">
+                  {p.clothing_color ? `Shirt: ${p.clothing_color}` : ""}
+                </span>
               </div>
-              <span className="font-mono text-[10px] text-slate-300 font-semibold">TRK-{id}</span>
-              <span className="font-mono text-[9px] text-violet-400">
-                {id === 16 ? "Female · 20-29" : "Male · 20-29"}
-              </span>
-            </div>
-          ))}
+            );
+          })}
         </div>
 
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 bg-[#0d1117] p-3 rounded border border-[#1e2733]">
@@ -138,19 +172,19 @@ function DemoPanel({ demographics }) {
           </div>
           <div>
             <span className="text-[9px] font-mono uppercase text-slate-500 block">TOP BRACKET</span>
-            <span className="font-mono text-xs text-slate-200">20-29 Years</span>
+            <span className="font-mono text-xs text-slate-200">{topAge} Years</span>
           </div>
           <div>
             <span className="text-[9px] font-mono uppercase text-slate-500 block">
               TOP APPEARANCE
             </span>
-            <span className="font-mono text-xs text-slate-200">White / East Asian</span>
+            <span className="font-mono text-xs text-slate-200">{topRaces}</span>
           </div>
           <div>
             <span className="text-[9px] font-mono uppercase text-slate-500 block">
               COMMON CLOTHING
             </span>
-            <span className="font-mono text-xs text-slate-200">Black / Grey</span>
+            <span className="font-mono text-xs text-slate-200">{topColors}</span>
           </div>
         </div>
       </div>

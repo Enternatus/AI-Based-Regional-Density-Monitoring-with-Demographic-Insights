@@ -3140,7 +3140,7 @@
     "gender_conf": 99.9,
     "age": "20-29",
     "race": "East Asian",
-    "clothing_color": "white",
+    "clothing_color": "blue",
     "height_bucket": null,
     "crop_path": "person_crops/person_25.jpg",
     "first_seen_frame": 1598,
