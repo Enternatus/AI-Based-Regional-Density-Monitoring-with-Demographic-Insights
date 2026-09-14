@@ -54,7 +54,7 @@ export async function getPerson(personId) {
 }
 
 export function cropUrl(personId) {
-  return `${BASE_URL}/api/persons/${personId}/crop`;
+  return `${BASE_URL}/api/persons/${personId}/crop?v=2.2`;
 }
 
 export async function getHealth() {

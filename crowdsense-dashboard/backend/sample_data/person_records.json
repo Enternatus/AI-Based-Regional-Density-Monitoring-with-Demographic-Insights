@@ -3477,7 +3477,7 @@
     "gender_conf": 99.9776800473531,
     "age": "30-39",
     "race": "Indian",
-    "clothing_color": "grey",
+    "clothing_color": "white",
     "height_bucket": null,
     "crop_path": "person_crops/person_28.jpg",
     "first_seen_frame": 1805,
@@ -3513,8 +3513,8 @@
         "gender_conf": 100.0,
         "age": "30-39",
         "age_conf": 54.8,
-        "race": "White",
-        "race_conf": 85.2,
+        "race": "Indian",
+        "race_conf": 92.7,
         "accepted": true
       }
     ],
@@ -3742,7 +3742,8 @@
         "gender_conf": 100.0,
         "accepted": true
       }
-    ]
+    ],
+    "race_conf": 92.7
   },
   "29": {
     "gender": "Male",

@@ -431,7 +431,14 @@ def get_person_crop(person_id: str):
 
     if not crop_path.exists():
         raise HTTPException(status_code=404, detail="crop image not found on disk")
-    return FileResponse(crop_path)
+    return FileResponse(
+        crop_path,
+        headers={
+            "Cache-Control": "no-cache, no-store, must-revalidate",
+            "Pragma": "no-cache",
+            "Expires": "0",
+        },
+    )
 
 
 def compute_run_metadata(snapshot_data: Optional[dict], history: list) -> dict:
