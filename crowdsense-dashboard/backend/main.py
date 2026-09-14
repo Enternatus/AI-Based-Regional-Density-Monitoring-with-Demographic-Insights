@@ -671,7 +671,7 @@ def generate_raw_density_stream():
                     b"--frame\r\n"
                     b"Content-Type: image/jpeg\r\n\r\n" + buffer.tobytes() + b"\r\n"
                 )
-            time.sleep(0.066)  # 15 FPS
+            time.sleep(0.1)  # ~10 FPS
     finally:
         cap.release()
 
@@ -749,7 +749,7 @@ def generate_annotated_density_stream():
                         b"--frame\r\n"
                         b"Content-Type: image/jpeg\r\n\r\n" + buffer.tobytes() + b"\r\n"
                     )
-            time.sleep(0.04)  # ~25 FPS
+            time.sleep(0.1)  # ~10 FPS
     finally:
         if cap is not None:
             cap.release()

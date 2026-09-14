@@ -437,6 +437,19 @@ def save_records():
 
 atexit.register(save_records)
 
+
+def extract_bust_or_full_crop(crop_bgr):
+    """If the crop is a tall vertical full-body bbox (aspect ratio > 1.8),
+    focus on the upper 62% so the person's head and face remain clearly visible
+    and centered in dashboard thumbnails."""
+    if crop_bgr is None or crop_bgr.size == 0:
+        return crop_bgr
+    ch, cw = crop_bgr.shape[:2]
+    if ch / max(1, cw) > 1.8:
+        return crop_bgr[:int(ch * 0.62), :]
+    return crop_bgr
+
+
 print("Running. Press 'q' to quit.")
 
 while cap.isOpened():
@@ -454,10 +467,14 @@ while cap.isOpened():
         boxes = results[0].boxes.xyxy.tolist()
         track_ids = results[0].boxes.id.int().tolist()
 
+        # Clean unannotated copy of the frame for cropping, attribute analysis,
+        # and saving thumbnails, preventing bounding boxes from bleeding into crops.
+        clean_frame = frame.copy()
+
         for box, track_id in zip(boxes, track_ids):
             track_id = str(track_id)  # keep keys consistent with JSON (always string keys)
             x1, y1, x2, y2 = map(int, box)
-            crop = frame[y1:y2, x1:x2]
+            crop = clean_frame[y1:y2, x1:x2]
 
             if track_id not in person_records:
                 person_records[track_id] = {
@@ -522,14 +539,14 @@ while cap.isOpened():
                     # First usable crop
                     crop_path = f"person_crops/person_{track_id}.jpg"
                     os.makedirs("person_crops", exist_ok=True)
-                    cv2.imwrite(crop_path, crop)
+                    cv2.imwrite(crop_path, extract_bust_or_full_crop(crop))
                     record["crop_path"] = crop_path
                     record["_best_crop_area"] = crop_area
                 elif is_well_positioned and crop_area > record.get("_best_crop_area", 0):
                     # Better crop available (larger, well-positioned)
                     crop_path = f"person_crops/person_{track_id}.jpg"
                     os.makedirs("person_crops", exist_ok=True)
-                    cv2.imwrite(crop_path, crop)
+                    cv2.imwrite(crop_path, extract_bust_or_full_crop(crop))
                     record["_best_crop_area"] = crop_area
 
             # Run periodically until this person has a confirmed answer,
@@ -667,7 +684,7 @@ while cap.isOpened():
                                 if g_conf > best_conf_seen.get(track_id, -1):
                                     crop_path = f"person_crops/person_{track_id}.jpg"
                                     os.makedirs("person_crops", exist_ok=True)
-                                    cv2.imwrite(crop_path, crop)
+                                    cv2.imwrite(crop_path, extract_bust_or_full_crop(crop))
                                     record["crop_path"] = crop_path
                                     best_conf_seen[track_id] = g_conf
 

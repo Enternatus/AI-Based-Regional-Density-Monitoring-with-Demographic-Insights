@@ -1067,7 +1067,7 @@
     "gender_conf": 99.9983270963033,
     "age": "20-29",
     "race": "Indian",
-    "clothing_color": "black",
+    "clothing_color": "blue",
     "height_bucket": null,
     "crop_path": "person_crops/person_9.jpg",
     "first_seen_frame": 577,

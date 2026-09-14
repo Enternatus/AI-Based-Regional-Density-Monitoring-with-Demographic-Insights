@@ -1,3 +1,4 @@
+import argparse
 import cv2
 import json
 import os
@@ -8,7 +9,22 @@ from datetime import datetime, timezone
 from pathlib import Path
 from ultralytics import YOLO
  
-VIDEO_PATH = "sample_crowd.mp4"   # <-- same video used in select_regions.py
+parser = argparse.ArgumentParser(description="CrowdSense Regional Density Monitor")
+parser.add_argument(
+    "--source", "-s",
+    default=os.environ.get("VIDEO_PATH", "sample_crowd.mp4"),
+    help="Path to video file (default: sample_crowd.mp4)"
+)
+parser.add_argument(
+    "--fps", "-f",
+    type=float,
+    default=float(os.environ.get("TARGET_FPS", 8.0)),
+    help="Target playback FPS for visual tracking and graph synchronization (default: 8.0)"
+)
+args, _ = parser.parse_known_args()
+
+VIDEO_PATH = args.source
+TARGET_PLAYBACK_FPS = args.fps
 REGIONS_FILE = "regions.json"
 DENSITY_SNAPSHOT_FILE = "density_snapshot.json"
 DENSITY_HISTORY_FILE = "density_history.json"
@@ -142,7 +158,7 @@ def main():
     history = []
     run_id = f"run_{datetime.now(timezone.utc).strftime('%Y%m%d_%H%M%S')}"
     started_at = datetime.now(timezone.utc).isoformat()
-    fps = int(cap.get(cv2.CAP_PROP_FPS)) or 30
+    fps = TARGET_PLAYBACK_FPS or int(cap.get(cv2.CAP_PROP_FPS)) or 8.0
 
     write_json_atomically(DENSITY_HISTORY_FILE, history)
     last_counts = None

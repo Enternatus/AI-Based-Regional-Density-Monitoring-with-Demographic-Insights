@@ -69,7 +69,7 @@ function PersonGridCard({ p, onClick }) {
         <img
           src={crop}
           alt={`Track ${p.person_id || p.id}`}
-          className="w-full h-full object-cover"
+          className="w-full h-full object-cover object-top"
           onError={(e) => {
             e.target.style.display = "none";
             e.target.nextSibling.style.display = "flex";
@@ -183,7 +183,7 @@ function PersonDetailModal({ p, onClose }) {
             <img
               src={crop}
               alt={`Track ${p.person_id || p.id}`}
-              className="w-full h-full object-cover"
+              className="w-full h-full object-cover object-top"
               onError={(e) => {
                 e.target.style.display = "none";
                 e.target.nextSibling.style.display = "flex";

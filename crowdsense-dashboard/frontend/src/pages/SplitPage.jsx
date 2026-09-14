@@ -113,7 +113,7 @@ function DemoPanel({ demographics }) {
                 <img
                   src={cropUrl(id)}
                   alt={`Person ${id}`}
-                  className="w-full h-full object-cover"
+                  className="w-full h-full object-cover object-top"
                   onError={(e) => {
                     e.target.style.opacity = "0.2";
                   }}
