@@ -698,7 +698,7 @@ def generate_annotated_density_stream():
                 # Draw region polygons and labels
                 for name, poly in regions_raw.items():
                     cv2.polylines(frame, [poly], True, (56, 189, 248), 2)
-                    label_pos = tuple(poly[0]) if len(poly) > 0 else (20, 20)
+                    label_pos = (int(poly[0][0]) + 6, int(poly[0][1]) + 20) if len(poly) > 0 else (20, 20)
                     cv2.putText(
                         frame, name.replace("_", " ").title(),
                         label_pos, cv2.FONT_HERSHEY_SIMPLEX, 0.5, (56, 189, 248), 1

@@ -165,9 +165,7 @@ def main():
                 region = get_region(cx, cy, regions)
                 if region:
                     counts[region] += 1
-                    cv2.rectangle(frame, (int(x1), int(y1)), (int(x2), int(y2)), (0, 255, 0), 2)
-                    cv2.circle(frame, (int(cx), int(cy)), 4, (255, 255, 255), -1)
- 
+
             frame_index = int(cap.get(cv2.CAP_PROP_POS_FRAMES))
             last_counts = counts.copy()
             last_frame_index = frame_index
@@ -185,9 +183,10 @@ def main():
             for name, poly in regions.items():
                 level, color = density_level(counts[name])
                 cv2.polylines(frame, [poly], True, color, 2)
-                label_pos = tuple(poly[0])
-                cv2.putText(frame, f"{name}: {counts[name]} ({level})",
-                            label_pos, cv2.FONT_HERSHEY_SIMPLEX, 0.6, color, 2)
+                display_name = name.replace("_", " ").title()
+                label_pos = (int(poly[0][0]) + 6, int(poly[0][1]) + 20)
+                cv2.putText(frame, f"{display_name}: {counts[name]} ({level})",
+                            label_pos, cv2.FONT_HERSHEY_SIMPLEX, 0.55, color, 2)
  
             total = sum(counts.values())
             cv2.putText(frame, f"Total (in regions): {total}", (10, 30),
