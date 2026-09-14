@@ -1,3 +1,5 @@
+import argparse
+import glob
 import sys
 import os
 import time
@@ -15,7 +17,15 @@ from uniface.detection import RetinaFace
 from uniface.face_utils import face_alignment
 from unsettled_fallback import apply_last_resort_live, apply_unsettled_fallback
 
-VIDEO_PATH = "close_range_crowd.mp4"
+parser = argparse.ArgumentParser(description="CrowdSense Demographic Intelligence Monitor")
+parser.add_argument(
+    "--source", "-s",
+    default=os.environ.get("VIDEO_PATH", "close_range_crowd.mp4"),
+    help="Path to video file (.mp4) or directory of frames (default: close_range_crowd.mp4)"
+)
+args, _ = parser.parse_known_args()
+VIDEO_PATH = args.source
+
 HEADLESS = os.environ.get("HEADLESS", "0") == "1"
 # While a track has no confirmed answer yet, how often (in frames) to
 # retry detection. Retrying every single frame is expensive (full face
@@ -107,15 +117,68 @@ print("Loading FairFace...")
 fairface_model = FairFace(model_path="fairface_model/weights/fairface.onnx")
 face_detector = RetinaFace()
 
-cap = cv2.VideoCapture(VIDEO_PATH)
+class FrameDirectoryCapture:
+    """Mimics cv2.VideoCapture interface for a directory of sequential image frames."""
+    def __init__(self, folder_path):
+        patterns = ["*.jpg", "*.jpeg", "*.png", "*.bmp"]
+        self.files = []
+        for p in patterns:
+            self.files.extend(glob.glob(os.path.join(folder_path, "**", p), recursive=True))
+        self.files = sorted(self.files)
+        self.idx = 0
+        self.fps = 15.0
 
-# Skip the first ~100 frames, which are empty background
-# (no people) at the start of every ChokePoint sequence.
-cap.set(cv2.CAP_PROP_POS_FRAMES, 100)
+    def isOpened(self):
+        return len(self.files) > 0
 
+    def read(self):
+        if self.idx >= len(self.files):
+            return False, None
+        img = cv2.imread(self.files[self.idx])
+        self.idx += 1
+        return (img is not None), img
+
+    def get(self, propId):
+        if propId == cv2.CAP_PROP_FPS:
+            return self.fps
+        elif propId == cv2.CAP_PROP_FRAME_COUNT:
+            return float(len(self.files))
+        elif propId == cv2.CAP_PROP_POS_FRAMES:
+            return float(self.idx)
+        return 0.0
+
+    def set(self, propId, value):
+        if propId == cv2.CAP_PROP_POS_FRAMES:
+            self.idx = min(int(value), len(self.files))
+            return True
+        return False
+
+    def release(self):
+        self.files = []
+
+
+if os.path.isdir(VIDEO_PATH):
+    cap = FrameDirectoryCapture(VIDEO_PATH)
+    source_type = "frame directory"
+else:
+    cap = cv2.VideoCapture(VIDEO_PATH)
+    source_type = "video file"
+
+if not cap.isOpened():
+    print(f"Error: Could not open {source_type} at '{VIDEO_PATH}'.")
+    sys.exit(1)
+
+total_frames = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
 video_fps = cap.get(cv2.CAP_PROP_FPS)
 if not video_fps or video_fps <= 0:
-    video_fps = 30.0  # sane fallback if the video metadata doesn't report fps
+    video_fps = 15.0  # sane fallback if metadata does not report FPS
+print(f"Source: '{VIDEO_PATH}' ({source_type}, {total_frames} frames @ {video_fps:.1f} FPS)")
+
+# Skip the first ~100 frames only on ChokePoint sequence (empty background)
+if "close_range_crowd" in str(VIDEO_PATH) or "P1E_S1_C1" in str(VIDEO_PATH):
+    cap.set(cv2.CAP_PROP_POS_FRAMES, 100)
+    print("Skipped initial 100 empty background frames (ChokePoint sequence).")
+
 SETTLE_FRAMES = int(SETTLE_SECONDS * video_fps)
 
 # --- Record loading -------------------------------------------------------
