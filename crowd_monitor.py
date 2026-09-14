@@ -3,6 +3,7 @@ import json
 import os
 import time
 import numpy as np
+import tempfile
 from datetime import datetime, timezone
 from pathlib import Path
 from ultralytics import YOLO
@@ -11,6 +12,7 @@ VIDEO_PATH = "sample_crowd.mp4"   # <-- same video used in select_regions.py
 REGIONS_FILE = "regions.json"
 DENSITY_SNAPSHOT_FILE = "density_snapshot.json"
 DENSITY_HISTORY_FILE = "density_history.json"
+LIVE_FRAME_FILE = Path(tempfile.gettempdir()) / "crowdsense_live_density.jpg"
 SNAPSHOT_EVERY_N_FRAMES = 5
 MAX_HISTORY_SAMPLES = 3600
  
@@ -84,6 +86,25 @@ def write_json_atomically(path, data):
             pass
 
 
+def write_frame_atomically(path, buffer):
+    path = Path(path)
+    tmp_path = path.with_suffix(f"{path.suffix}.{os.getpid()}.tmp")
+    try:
+        tmp_path.write_bytes(buffer)
+        for _ in range(3):
+            try:
+                tmp_path.replace(path)
+                return
+            except PermissionError:
+                time.sleep(0.005)
+    except Exception:
+        pass
+    try:
+        path.write_bytes(buffer)
+    except Exception:
+        pass
+
+
 def build_sample(frame_index, counts, run_status, run_id=None, started_at=None, source_video=None, video_fps=30, completed_at=None):
     sample = {
         "run_id": run_id,
@@ -128,52 +149,65 @@ def main():
     last_frame_index = 0
     stopped_early = False
  
-    while cap.isOpened():
-        ret, frame = cap.read()
-        if not ret:
-            break
+    try:
+        while cap.isOpened():
+            ret, frame = cap.read()
+            if not ret:
+                break
  
-        results = model(frame, classes=[0], verbose=False)  # class 0 = person
+            results = model(frame, classes=[0], verbose=False)  # class 0 = person
  
-        counts = {name: 0 for name in regions}
+            counts = {name: 0 for name in regions}
  
-        for box in results[0].boxes.xyxy:
-            x1, y1, x2, y2 = box.tolist()
-            cx, cy = (x1 + x2) / 2, (y1 + y2) / 2
-            region = get_region(cx, cy, regions)
-            if region:
-                counts[region] += 1
-                cv2.circle(frame, (int(cx), int(cy)), 4, (255, 255, 255), -1)
+            for box in results[0].boxes.xyxy:
+                x1, y1, x2, y2 = box.tolist()
+                cx, cy = (x1 + x2) / 2, (y1 + y2) / 2
+                region = get_region(cx, cy, regions)
+                if region:
+                    counts[region] += 1
+                    cv2.rectangle(frame, (int(x1), int(y1)), (int(x2), int(y2)), (0, 255, 0), 2)
+                    cv2.circle(frame, (int(cx), int(cy)), 4, (255, 255, 255), -1)
  
-        frame_index = int(cap.get(cv2.CAP_PROP_POS_FRAMES))
-        last_counts = counts.copy()
-        last_frame_index = frame_index
-        if frame_index % SNAPSHOT_EVERY_N_FRAMES == 0:
-            snapshot = build_sample(
-                frame_index, counts, "running",
-                run_id=run_id, started_at=started_at,
-                source_video=VIDEO_PATH, video_fps=fps
-            )
-            history.append(snapshot)
-            history = history[-MAX_HISTORY_SAMPLES:]
-            write_json_atomically(DENSITY_HISTORY_FILE, history)
-            write_json_atomically(DENSITY_SNAPSHOT_FILE, snapshot)
-        # draw region polygons colored by density level
-        for name, poly in regions.items():
-            level, color = density_level(counts[name])
-            cv2.polylines(frame, [poly], True, color, 2)
-            label_pos = tuple(poly[0])
-            cv2.putText(frame, f"{name}: {counts[name]} ({level})",
-                        label_pos, cv2.FONT_HERSHEY_SIMPLEX, 0.6, color, 2)
+            frame_index = int(cap.get(cv2.CAP_PROP_POS_FRAMES))
+            last_counts = counts.copy()
+            last_frame_index = frame_index
+            if frame_index % SNAPSHOT_EVERY_N_FRAMES == 0:
+                snapshot = build_sample(
+                    frame_index, counts, "running",
+                    run_id=run_id, started_at=started_at,
+                    source_video=VIDEO_PATH, video_fps=fps
+                )
+                history.append(snapshot)
+                history = history[-MAX_HISTORY_SAMPLES:]
+                write_json_atomically(DENSITY_HISTORY_FILE, history)
+                write_json_atomically(DENSITY_SNAPSHOT_FILE, snapshot)
+            # draw region polygons colored by density level
+            for name, poly in regions.items():
+                level, color = density_level(counts[name])
+                cv2.polylines(frame, [poly], True, color, 2)
+                label_pos = tuple(poly[0])
+                cv2.putText(frame, f"{name}: {counts[name]} ({level})",
+                            label_pos, cv2.FONT_HERSHEY_SIMPLEX, 0.6, color, 2)
  
-        total = sum(counts.values())
-        cv2.putText(frame, f"Total (in regions): {total}", (10, 30),
-                    cv2.FONT_HERSHEY_SIMPLEX, 0.7, (255, 255, 255), 2)
+            total = sum(counts.values())
+            cv2.putText(frame, f"Total (in regions): {total}", (10, 30),
+                        cv2.FONT_HERSHEY_SIMPLEX, 0.7, (255, 255, 255), 2)
  
-        cv2.imshow("CrowdSense - Region Density Monitor", frame)
-        if cv2.waitKey(1) & 0xFF == ord('q'):
-            stopped_early = True
-            break
+            # Broadcast live frame for dashboard synchronization
+            success, buf = cv2.imencode(".jpg", frame, [cv2.IMWRITE_JPEG_QUALITY, 70])
+            if success:
+                write_frame_atomically(LIVE_FRAME_FILE, buf.tobytes())
+
+            cv2.imshow("CrowdSense - Region Density Monitor", frame)
+            if cv2.waitKey(1) & 0xFF == ord('q'):
+                stopped_early = True
+                break
+    finally:
+        try:
+            if LIVE_FRAME_FILE.exists():
+                LIVE_FRAME_FILE.unlink()
+        except Exception:
+            pass
 
     # Publish the true final frame even when it is not on the sample boundary.
     if last_counts is not None:

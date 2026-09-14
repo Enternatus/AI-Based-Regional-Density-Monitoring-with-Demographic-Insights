@@ -40,6 +40,7 @@ Run:
 """
 import json
 import re
+import tempfile
 import time
 from datetime import datetime, timezone
 from pathlib import Path
@@ -71,6 +72,7 @@ CROPS_ROOT = ACTIVE_ROOT  # crop_path in each record is already relative to repo
 REGIONS_PATH = ACTIVE_ROOT / "regions.json" if (ACTIVE_ROOT / "regions.json").exists() else (SAMPLE_ROOT / "regions.json")
 DENSITY_SNAPSHOT_PATH = ACTIVE_ROOT / "density_snapshot.json" if (ACTIVE_ROOT / "density_snapshot.json").exists() else (PROJECT_ROOT / "density_snapshot.json")
 DENSITY_HISTORY_PATH = ACTIVE_ROOT / "density_history.json" if (ACTIVE_ROOT / "density_history.json").exists() else (PROJECT_ROOT / "density_history.json")
+LIVE_FRAME_PATH = Path(tempfile.gettempdir()) / "crowdsense_live_density.jpg"
 
 LOW_THRESHOLD = 3
 HIGH_THRESHOLD = 8
@@ -645,12 +647,11 @@ def video_demographics():
 
 
 def generate_annotated_density_stream():
-    """Generates an MJPEG stream of annotated density frames from sample_crowd.mp4 with zone overlays."""
+    """Serves real-time annotated camera detection frames synchronized with crowd_monitor.py if running;
+    gracefully falls back to simulated video loop when the pipeline is idle."""
     video_path = PROJECT_ROOT / "sample_crowd.mp4"
     if not video_path.exists():
         video_path = SAMPLE_ROOT / "sample_crowd.mp4"
-    if not video_path.exists():
-        return
 
     regions_raw = {}
     if REGIONS_PATH.exists():
@@ -661,36 +662,58 @@ def generate_annotated_density_stream():
         except Exception:
             pass
 
-    cap = cv2.VideoCapture(str(video_path))
+    cap = None
     try:
         while True:
-            ret, frame = cap.read()
-            if not ret:
-                cap.set(cv2.CAP_PROP_POS_FRAMES, 0)
+            # Check if crowd_monitor.py is actively outputting live frames (< 2.5s old)
+            if LIVE_FRAME_PATH.exists():
+                try:
+                    mtime = LIVE_FRAME_PATH.stat().st_mtime
+                    if time.time() - mtime < 2.5:
+                        with open(LIVE_FRAME_PATH, "rb") as f:
+                            frame_bytes = f.read()
+                        if frame_bytes:
+                            yield (
+                                b"--frame\r\n"
+                                b"Content-Type: image/jpeg\r\n\r\n" + frame_bytes + b"\r\n"
+                            )
+                            time.sleep(0.04)
+                            continue
+                except Exception:
+                    pass
+
+            # Fallback to simulated loop if monitor is not running
+            if cap is None and video_path.exists():
+                cap = cv2.VideoCapture(str(video_path))
+
+            if cap is not None and cap.isOpened():
                 ret, frame = cap.read()
                 if not ret:
-                    break
+                    cap.set(cv2.CAP_PROP_POS_FRAMES, 0)
+                    ret, frame = cap.read()
+                    if not ret:
+                        time.sleep(0.1)
+                        continue
 
-            # Draw region polygons and labels
-            for name, poly in regions_raw.items():
-                cv2.polylines(frame, [poly], True, (56, 189, 248), 2)
-                label_pos = tuple(poly[0]) if len(poly) > 0 else (20, 20)
-                cv2.putText(
-                    frame, name.replace("_", " ").title(),
-                    label_pos, cv2.FONT_HERSHEY_SIMPLEX, 0.5, (56, 189, 248), 1
-                )
+                # Draw region polygons and labels
+                for name, poly in regions_raw.items():
+                    cv2.polylines(frame, [poly], True, (56, 189, 248), 2)
+                    label_pos = tuple(poly[0]) if len(poly) > 0 else (20, 20)
+                    cv2.putText(
+                        frame, name.replace("_", " ").title(),
+                        label_pos, cv2.FONT_HERSHEY_SIMPLEX, 0.5, (56, 189, 248), 1
+                    )
 
-            success, buffer = cv2.imencode(".jpg", frame, [cv2.IMWRITE_JPEG_QUALITY, 60])
-            if not success:
-                continue
-
-            yield (
-                b"--frame\r\n"
-                b"Content-Type: image/jpeg\r\n\r\n" + buffer.tobytes() + b"\r\n"
-            )
+                success, buffer = cv2.imencode(".jpg", frame, [cv2.IMWRITE_JPEG_QUALITY, 60])
+                if success:
+                    yield (
+                        b"--frame\r\n"
+                        b"Content-Type: image/jpeg\r\n\r\n" + buffer.tobytes() + b"\r\n"
+                    )
             time.sleep(0.04)  # ~25 FPS
     finally:
-        cap.release()
+        if cap is not None:
+            cap.release()
 
 
 @app.get("/api/stream/density")
