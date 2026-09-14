@@ -1715,7 +1715,7 @@ body {
   color: var(--text-faint);
 }
 
-/* People Explorer V2 */
+/* Demographic Profiles */
 .people-kpi-strip {
   display: grid;
   grid-template-columns: repeat(4, 1fr);

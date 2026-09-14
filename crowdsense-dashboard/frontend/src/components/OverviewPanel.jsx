@@ -82,7 +82,7 @@ export default function OverviewPanel({
             Full Density &rarr;
           </button>
           <button type="button" className="run-nav-btn" onClick={() => onNavigate && onNavigate("people")}>
-            People Explorer &rarr;
+            Demographic Profiles &rarr;
           </button>
           <button type="button" className="run-nav-btn run-nav-split" onClick={() => onNavigate && onNavigate("split")}>
             Split Console &rarr;

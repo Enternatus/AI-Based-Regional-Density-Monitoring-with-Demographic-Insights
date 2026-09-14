@@ -109,7 +109,7 @@ function RunStrip({ runMeta, onNavigate }) {
           <span className="text-[11px]">Density &rarr;</span>
         </Button>
         <Button variant="ghost" onClick={() => onNavigate?.("people")}>
-          <span className="text-[11px]">People &rarr;</span>
+          <span className="text-[11px]">Profiles &rarr;</span>
         </Button>
         <Button variant="ghost" onClick={() => onNavigate?.("split")}>
           <span className="text-[11px]">Split &rarr;</span>

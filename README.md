@@ -49,9 +49,9 @@ Real-time per-zone occupancy tracking across user-defined polygon regions with i
 ![Spatial Density Monitor](demo/images/v2_density_monitor.png)
 ![Regional Breakdown & Trend Hover](demo/images/v2_density_regional_breakdown.png)
 
-### 👤 3. People Explorer V2 & Multi-Attribute Search
+### 👤 3. Demographic Profiles V2 & Multi-Attribute Search
 Full demographic research explorer with natural language search, multi-attribute dropdown filters (Gender, Age, Appearance Group, Shirt Color), 1:1 bust crops, Cards/Table toggle, and one-click CSV/JSON dataset export.
-![People Explorer V2](demo/images/v2_people_explorer.png)
+![Demographic Profiles V2](demo/images/v2_people_explorer.png)
 
 ### 🔍 4. Person Evidence Dossiers & Provenance Verification
 Clickable forensic dossiers showing uncropped bust images, FairFace model confidence scores, observation timelines (frames & duration), and multi-frame verification logs.
@@ -120,7 +120,7 @@ flowchart TB
 ### 📊 CrowdSense Dashboard V2
 - **Overview landing console** — Executive operations dashboard with explicit pipeline status (`Live` / `Run completed` / `Paused`), 4 hero KPIs, multi-zone status cards, session trend preview, and demographic distribution bars.
 - **Spatial density monitor V2** — Multi-zone interactive SVG trend chart with Total vs. By Region comparison, interactive frame tooltips, danger threshold lines, directional trend indicators (`Rising ▲` / `Falling ▼` / `Stable ▬`), and rolling sparklines.
-- **People explorer V2** — Natural language query parsing, multi-attribute dropdown filters (Gender, Age, Appearance Group, Shirt Color), Cards vs. Table view toggle, and one-click `📥 CSV` / `📥 JSON` dataset export.
+- **Demographic Profiles V2** — Natural language query parsing, multi-attribute dropdown filters (Gender, Age, Appearance Group, Shirt Color), Cards vs. Table view toggle, and one-click `📥 CSV` / `📥 JSON` dataset export.
 - **Evidence dossiers** — Forensic inspection modals displaying uncropped 1:1 bust crops, FairFace confidence bars, observation windows in frames and seconds, task-optimized source video attribution, and multi-frame verification logs.
 - **Disambiguated split view** — Side-by-side operations console with independent module source labels (`sample_crowd.mp4` vs. `close_range_crowd.mp4`) and quick navigation links.
 

@@ -3,7 +3,7 @@ import React from "react";
 const tabs = [
   { id: "overview", label: "Overview" },
   { id: "density", label: "Density Monitor" },
-  { id: "people", label: "People Explorer" },
+  { id: "people", label: "Demographic Profiles" },
   { id: "split", label: "Split View" },
 ];
 

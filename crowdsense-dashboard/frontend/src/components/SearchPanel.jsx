@@ -176,7 +176,7 @@ export default function SearchPanel() {
       <div className="panel-header people-header">
         <div>
           <span className="panel-kicker">Multi-Attribute Demographic Telemetry</span>
-          <h1 className="panel-title panel-title-large">People Explorer</h1>
+          <h1 className="panel-title panel-title-large">Demographic Profiles</h1>
         </div>
         <div className="header-meta-group">
           <DataSourceBadge type="people" />
