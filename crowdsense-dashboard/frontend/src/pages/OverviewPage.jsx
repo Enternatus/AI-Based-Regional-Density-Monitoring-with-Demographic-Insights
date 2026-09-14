@@ -307,18 +307,59 @@ function TrendChartSection({ historyData = [] }) {
   const chartData = useMemo(() => {
     if (!historyData || historyData.length === 0) return mockSnapshots;
     return historyData.map((h, i) => {
-      const timeStr = h.timestamp
-        ? new Date(h.timestamp).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })
-        : `T-${historyData.length - i}`;
-      const rc = h.region_counts || {};
-      const regKeys = Object.keys(rc);
+      let timeStr = `T-${historyData.length - i}`;
+      const rawTime = h.timestamp || h.updated_at;
+      if (rawTime) {
+        try {
+          timeStr = new Date(rawTime).toLocaleTimeString([], {
+            hour: "2-digit",
+            minute: "2-digit",
+            second: "2-digit",
+          });
+        } catch {
+          /* fallback */
+        }
+      } else if (h.frame_index != null) {
+        timeStr = `#${h.frame_index}`;
+      }
+
+      let zoneA = 0;
+      let zoneB = 0;
+      let zoneC = 0;
+      let calculatedTotal = 0;
+
+      if (Array.isArray(h.regions)) {
+        h.regions.forEach((r, idx) => {
+          const cnt = r.count ?? 0;
+          calculatedTotal += cnt;
+          const id = (r.region_id || r.name || "").toLowerCase();
+          if (id.includes("left") || idx === 0) zoneA = cnt;
+          else if (id.includes("cent") || idx === 1) zoneB = cnt;
+          else if (id.includes("right") || idx === 2) zoneC = cnt;
+        });
+      } else if (h.regions && typeof h.regions === "object") {
+        const vals = Object.values(h.regions);
+        zoneA = vals[0] ?? 0;
+        zoneB = vals[1] ?? 0;
+        zoneC = vals[2] ?? 0;
+        calculatedTotal = zoneA + zoneB + zoneC;
+      } else if (h.region_counts && typeof h.region_counts === "object") {
+        const vals = Object.values(h.region_counts);
+        zoneA = vals[0] ?? 0;
+        zoneB = vals[1] ?? 0;
+        zoneC = vals[2] ?? 0;
+        calculatedTotal = zoneA + zoneB + zoneC;
+      }
+
+      const total = h.total ?? h.total_count ?? calculatedTotal;
+
       return {
         frame: h.frame_index ?? i * 30,
         time: timeStr,
-        total: h.total_count ?? 0,
-        zone_a: rc[regKeys[0]] ?? 0,
-        zone_b: rc[regKeys[1]] ?? 0,
-        zone_c: rc[regKeys[2]] ?? 0,
+        total: total,
+        zone_a: zoneA,
+        zone_b: zoneB,
+        zone_c: zoneC,
       };
     });
   }, [historyData]);
@@ -336,11 +377,15 @@ function TrendChartSection({ historyData = [] }) {
           </div>
           <div className="flex items-center gap-1.5">
             <span className="w-2 h-0.5 bg-amber-500 rounded-full inline-block" />
-            <span className="text-[10px] text-slate-500 font-mono">Zone A</span>
+            <span className="text-[10px] text-slate-500 font-mono">Left Walkway</span>
           </div>
           <div className="flex items-center gap-1.5">
             <span className="w-2 h-0.5 bg-violet-500 rounded-full inline-block" />
-            <span className="text-[10px] text-slate-500 font-mono">Zone B</span>
+            <span className="text-[10px] text-slate-500 font-mono">Central Plaza</span>
+          </div>
+          <div className="flex items-center gap-1.5">
+            <span className="w-2 h-0.5 bg-emerald-500 rounded-full inline-block" />
+            <span className="text-[10px] text-slate-500 font-mono">Right Walkway</span>
           </div>
         </div>
       </div>
@@ -356,6 +401,14 @@ function TrendChartSection({ historyData = [] }) {
                 <stop offset="5%" stopColor="#f59e0b" stopOpacity={0.1} />
                 <stop offset="95%" stopColor="#f59e0b" stopOpacity={0} />
               </linearGradient>
+              <linearGradient id="gB" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="5%" stopColor="#8b5cf6" stopOpacity={0.1} />
+                <stop offset="95%" stopColor="#8b5cf6" stopOpacity={0} />
+              </linearGradient>
+              <linearGradient id="gC" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="5%" stopColor="#22c55e" stopOpacity={0.1} />
+                <stop offset="95%" stopColor="#22c55e" stopOpacity={0} />
+              </linearGradient>
             </defs>
             <CartesianGrid strokeDasharray="2 4" stroke="#1e2733" vertical={false} />
             <XAxis
@@ -365,12 +418,13 @@ function TrendChartSection({ historyData = [] }) {
               axisLine={false}
             />
             <YAxis
+              domain={[0, "auto"]}
               tick={{ fill: "#475569", fontSize: 10, fontFamily: "JetBrains Mono" }}
               tickLine={false}
               axisLine={false}
             />
             <Tooltip content={<CustomTooltip />} />
-            <ReferenceLine y={20} stroke="#ef444440" strokeDasharray="3 3" />
+            <ReferenceLine y={8} stroke="#ef444440" strokeDasharray="3 3" />
             <Area
               type="monotone"
               dataKey="total"
@@ -383,7 +437,7 @@ function TrendChartSection({ historyData = [] }) {
             <Area
               type="monotone"
               dataKey="zone_a"
-              name="Zone A"
+              name="Left Walkway"
               stroke="#f59e0b"
               strokeWidth={1}
               fill="url(#gA)"
@@ -392,10 +446,19 @@ function TrendChartSection({ historyData = [] }) {
             <Area
               type="monotone"
               dataKey="zone_b"
-              name="Zone B"
+              name="Central Plaza"
               stroke="#8b5cf6"
               strokeWidth={1}
-              fill="none"
+              fill="url(#gB)"
+              dot={false}
+            />
+            <Area
+              type="monotone"
+              dataKey="zone_c"
+              name="Right Walkway"
+              stroke="#22c55e"
+              strokeWidth={1}
+              fill="url(#gC)"
               dot={false}
             />
           </AreaChart>

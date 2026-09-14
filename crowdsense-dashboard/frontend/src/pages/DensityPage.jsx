@@ -71,18 +71,59 @@ function TrendFeed({ historyData }) {
   const chartData = useMemo(() => {
     if (!historyData || historyData.length === 0) return mockSnapshots;
     return historyData.map((h, i) => {
-      const timeStr = h.timestamp
-        ? new Date(h.timestamp).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })
-        : `T-${historyData.length - i}`;
-      const rc = h.region_counts || {};
-      const regKeys = Object.keys(rc);
+      let timeStr = `T-${historyData.length - i}`;
+      const rawTime = h.timestamp || h.updated_at;
+      if (rawTime) {
+        try {
+          timeStr = new Date(rawTime).toLocaleTimeString([], {
+            hour: "2-digit",
+            minute: "2-digit",
+            second: "2-digit",
+          });
+        } catch {
+          /* fallback */
+        }
+      } else if (h.frame_index != null) {
+        timeStr = `#${h.frame_index}`;
+      }
+
+      let zoneA = 0;
+      let zoneB = 0;
+      let zoneC = 0;
+      let calculatedTotal = 0;
+
+      if (Array.isArray(h.regions)) {
+        h.regions.forEach((r, idx) => {
+          const cnt = r.count ?? 0;
+          calculatedTotal += cnt;
+          const id = (r.region_id || r.name || "").toLowerCase();
+          if (id.includes("left") || idx === 0) zoneA = cnt;
+          else if (id.includes("cent") || idx === 1) zoneB = cnt;
+          else if (id.includes("right") || idx === 2) zoneC = cnt;
+        });
+      } else if (h.regions && typeof h.regions === "object") {
+        const vals = Object.values(h.regions);
+        zoneA = vals[0] ?? 0;
+        zoneB = vals[1] ?? 0;
+        zoneC = vals[2] ?? 0;
+        calculatedTotal = zoneA + zoneB + zoneC;
+      } else if (h.region_counts && typeof h.region_counts === "object") {
+        const vals = Object.values(h.region_counts);
+        zoneA = vals[0] ?? 0;
+        zoneB = vals[1] ?? 0;
+        zoneC = vals[2] ?? 0;
+        calculatedTotal = zoneA + zoneB + zoneC;
+      }
+
+      const total = h.total ?? h.total_count ?? calculatedTotal;
+
       return {
         frame: h.frame_index ?? i * 30,
         time: timeStr,
-        total: h.total_count ?? 0,
-        zone_a: rc[regKeys[0]] ?? 0,
-        zone_b: rc[regKeys[1]] ?? 0,
-        zone_c: rc[regKeys[2]] ?? 0,
+        total: total,
+        zone_a: zoneA,
+        zone_b: zoneB,
+        zone_c: zoneC,
       };
     });
   }, [historyData]);
@@ -92,21 +133,21 @@ function TrendFeed({ historyData }) {
       <div className="flex items-center justify-between mb-4">
         <div className="flex items-center gap-4">
           {[
-            ["Total", "#06b6d4"],
-            ["Zone A", "#f59e0b"],
-            ["Zone B", "#8b5cf6"],
-            ["Zone C", "#22c55e"],
+            ["Total Occupancy", "#06b6d4"],
+            ["Left Walkway", "#f59e0b"],
+            ["Central Plaza", "#8b5cf6"],
+            ["Right Walkway", "#22c55e"],
           ].map(([name, color]) => (
             <div key={name} className="flex items-center gap-1.5">
               <span
                 className="w-2 h-0.5 rounded-full inline-block"
                 style={{ backgroundColor: color }}
               />
-              <span className="text-[10px] font-mono text-slate-500">{name}</span>
+              <span className="text-[10px] font-mono text-slate-400">{name}</span>
             </div>
           ))}
         </div>
-        <Mono className="text-slate-600">{chartData.length} snapshots · Active Session</Mono>
+        <Mono className="text-slate-500">{chartData.length} snapshots · Active Session</Mono>
       </div>
       <ResponsiveContainer width="100%" height={280}>
         <AreaChart data={chartData} margin={{ top: 4, right: 4, bottom: 0, left: -20 }}>
@@ -131,6 +172,7 @@ function TrendFeed({ historyData }) {
             axisLine={false}
           />
           <YAxis
+            domain={[0, "auto"]}
             tick={{ fill: "#475569", fontSize: 10, fontFamily: "JetBrains Mono" }}
             tickLine={false}
             axisLine={false}
@@ -150,7 +192,7 @@ function TrendFeed({ historyData }) {
           <Area
             type="monotone"
             dataKey="total"
-            name="Total"
+            name="Total Occupancy"
             stroke="#06b6d4"
             strokeWidth={1.5}
             fill="url(#gTotal)"
@@ -159,7 +201,7 @@ function TrendFeed({ historyData }) {
           <Area
             type="monotone"
             dataKey="zone_a"
-            name="Zone A"
+            name="Left Walkway"
             stroke="#f59e0b"
             strokeWidth={1}
             fill="url(#gA)"
@@ -168,7 +210,7 @@ function TrendFeed({ historyData }) {
           <Area
             type="monotone"
             dataKey="zone_b"
-            name="Zone B"
+            name="Central Plaza"
             stroke="#8b5cf6"
             strokeWidth={1}
             fill="url(#gB)"
@@ -177,7 +219,7 @@ function TrendFeed({ historyData }) {
           <Area
             type="monotone"
             dataKey="zone_c"
-            name="Zone C"
+            name="Right Walkway"
             stroke="#22c55e"
             strokeWidth={1}
             fill="url(#gC)"
