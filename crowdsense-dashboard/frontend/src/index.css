@@ -1,0 +1,79 @@
+@import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&display=swap');
+@import 'tailwindcss';
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-border: var(--border);
+  --color-ring: var(--ring);
+  --radius-sm: calc(var(--radius) - 2px);
+  --radius-md: var(--radius);
+  --radius-lg: calc(var(--radius) + 2px);
+}
+
+:root {
+  --background: #090b0e;
+  --foreground: #e2e8f0;
+  --card: #0f1318;
+  --card-foreground: #e2e8f0;
+  --primary: #06b6d4;
+  --primary-foreground: #090b0e;
+  --secondary: #161b22;
+  --secondary-foreground: #94a3b8;
+  --muted: #131820;
+  --muted-foreground: #64748b;
+  --accent: #06b6d4;
+  --accent-foreground: #090b0e;
+  --border: #1e2733;
+  --ring: #06b6d4;
+  --radius: 4px;
+
+  /* semantic states */
+  --state-live: #22c55e;
+  --state-warning: #f59e0b;
+  --state-critical: #ef4444;
+  --state-violet: #8b5cf6;
+  --state-cyan: #06b6d4;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html, body {
+  margin: 0;
+  padding: 0;
+  background: var(--background);
+  color: var(--foreground);
+  font-family: 'DM Sans', system-ui, sans-serif;
+  font-size: 14px;
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+}
+
+.font-mono {
+  font-family: 'JetBrains Mono', monospace;
+}
+
+/* Scrollbar */
+::-webkit-scrollbar { width: 4px; height: 4px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: #1e2733; border-radius: 2px; }
+::-webkit-scrollbar-thumb:hover { background: #2d3a4a; }
+
+/* Focus ring */
+:focus-visible {
+  outline: 2px solid var(--ring);
+  outline-offset: 2px;
+}

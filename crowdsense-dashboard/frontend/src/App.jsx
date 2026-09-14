@@ -1,10 +1,12 @@
 import React, { useEffect, useState } from "react";
-import OverviewPanel from "./components/OverviewPanel.jsx";
-import DensityPanel from "./components/DensityPanel.jsx";
-import SearchPanel from "./components/SearchPanel.jsx";
-import DataSourceBadge from "./components/common/DataSourceBadge.jsx";
+import Header from "./components/Header.jsx";
+import Nav from "./components/Nav.jsx";
 import ErrorBoundary from "./components/common/ErrorBoundary.jsx";
-import { getOverview, getDensityHistory, getPeopleSummary } from "./api/crowdsense.js";
+import OverviewPage from "./pages/OverviewPage.jsx";
+import DensityPage from "./pages/DensityPage.jsx";
+import PeoplePage from "./pages/PeoplePage.jsx";
+import SplitPage from "./pages/SplitPage.jsx";
+import { getOverview, getDensity, getDensityHistory, getPeopleSummary } from "./api/crowdsense.js";
 
 export default function App() {
   const [dashboardState, setDashboardState] = useState({
@@ -15,26 +17,10 @@ export default function App() {
     connected: false,
     loading: true,
   });
-  const [clock, setClock] = useState(new Date());
+
   const [view, setView] = useState("overview"); // "overview" | "density" | "people" | "split"
-  const [splitRatio, setSplitRatio] = useState(() => {
-    try {
-      return localStorage.getItem("crowdsense_split_ratio") || "focus";
-    } catch {
-      return "focus";
-    }
-  });
 
-  function handleSplitRatio(ratio) {
-    setSplitRatio(ratio);
-    try {
-      localStorage.setItem("crowdsense_split_ratio", ratio);
-    } catch {
-      /* ignore */
-    }
-  }
-
-  // Centralized dashboard polling orchestrator: single periodic request stream
+  // Centralized dashboard polling orchestrator: single periodic request stream (5s)
   useEffect(() => {
     let cancelled = false;
 
@@ -42,23 +28,32 @@ export default function App() {
       try {
         const results = await Promise.allSettled([
           getOverview(),
+          getDensity(),
           getDensityHistory(30),
           getPeopleSummary(),
         ]);
 
         if (cancelled) return;
 
-        const [ovRes, histRes, demoRes] = results;
+        const [ovRes, densRes, histRes, demoRes] = results;
         const anySuccess = results.some((r) => r.status === "fulfilled");
 
         setDashboardState((prev) => {
           const nextOverview = ovRes.status === "fulfilled" ? ovRes.value : prev.overview;
-          const nextHistory = histRes.status === "fulfilled" ? (histRes.value?.history || []) : prev.history;
-          const nextDemographics = demoRes.status === "fulfilled" ? demoRes.value : prev.demographics;
+          const nextDensity =
+            densRes.status === "fulfilled"
+              ? densRes.value
+              : nextOverview?.density ?? prev.density;
+          const nextHistory =
+            histRes.status === "fulfilled"
+              ? histRes.value?.history || histRes.value?.snapshots || []
+              : prev.history;
+          const nextDemographics =
+            demoRes.status === "fulfilled" ? demoRes.value : prev.demographics;
 
           return {
             overview: nextOverview,
-            density: nextOverview?.density ?? prev.density,
+            density: nextDensity,
             history: nextHistory,
             demographics: nextDemographics,
             connected: anySuccess,
@@ -85,167 +80,18 @@ export default function App() {
     };
   }, []);
 
-  useEffect(() => {
-    const t = setInterval(() => setClock(new Date()), 1000);
-    return () => clearInterval(t);
-  }, []);
-
-  const { overview, density, history, demographics, connected, loading } = dashboardState;
-
   return (
-    <div className="console">
-      {/* Top Navbar */}
-      <header className="topbar">
-        <div className="topbar-left">
-          <span className="topbar-title">CROWDSENSE</span>
-          <span className="topbar-badge">v2.1</span>
-          <span className="topbar-subtitle">Operational Crowd & Demographic Intelligence</span>
-        </div>
-        <div className="topbar-right">
-          <span className="connection-status">
-            <span className={`live-dot ${connected ? "" : "stale"}`} />
-            {connected ? "Backend Connected (Port 8000)" : "Backend Offline / Retrying"}
-          </span>
-          <span className="system-clock">{clock.toLocaleTimeString()}</span>
-        </div>
-      </header>
-
-      {/* Primary Navigation Tabs */}
-      <nav className="view-switcher" aria-label="Main Navigation">
-        <button
-          type="button"
-          className={`view-button ${view === "overview" ? "active" : ""}`}
-          onClick={() => setView("overview")}
-        >
-          <span className="btn-icon">📊</span> Overview
-        </button>
-        <button
-          type="button"
-          className={`view-button ${view === "density" ? "active" : ""}`}
-          onClick={() => setView("density")}
-        >
-          <span className="btn-icon">📈</span> Density Monitor
-        </button>
-        <button
-          type="button"
-          className={`view-button ${view === "people" ? "active" : ""}`}
-          onClick={() => setView("people")}
-        >
-          <span className="btn-icon">👤</span> People Explorer
-        </button>
-        <button
-          type="button"
-          className={`view-button ${view === "split" ? "active" : ""}`}
-          onClick={() => setView("split")}
-        >
-          <span className="btn-icon">⚇</span> Split View
-        </button>
-      </nav>
-
-      {/* Main View Port */}
-      <main className={`main ${view === "split" ? "main-split" : "main-full"}`}>
-        <ErrorBoundary onReset={() => setView("overview")}>
+    <div className="flex flex-col h-screen bg-[#090b0e] text-[#e2e8f0] overflow-hidden font-sans">
+      <Header connected={dashboardState.connected} />
+      <Nav active={view} onChange={setView} />
+      <main className="flex-1 overflow-y-auto">
+        <ErrorBoundary>
           {view === "overview" && (
-            <OverviewPanel
-              overview={overview}
-              demographics={demographics}
-              history={history}
-              connected={connected}
-              loading={loading}
-              onNavigate={(dest) => setView(dest)}
-            />
+            <OverviewPage dashboardState={dashboardState} onNavigate={setView} />
           )}
-
-          {view === "density" && (
-            <DensityPanel
-              data={density}
-              historyProp={history}
-              connected={connected}
-            />
-          )}
-
-          {view === "people" && (
-            <SearchPanel />
-          )}
-
-          {view === "split" && (
-            <div className="split-view-wrapper">
-              {/* Split Screen Allocation Toolbar */}
-              <div className="split-view-toolbar">
-                <div className="split-toolbar-info">
-                  <span className="split-toolbar-badge">DUAL STREAM</span>
-                  <span className="split-toolbar-title">
-                    Density Telemetry (Wide-Angle) + Gender &amp; Demographic Tracking (Close-Range)
-                  </span>
-                </div>
-                <div className="split-ratio-controls" role="group" aria-label="Split Screen Allocation">
-                  <span className="split-ratio-label">Screen Share:</span>
-                  <button
-                    type="button"
-                    className={`split-ratio-btn ${splitRatio === "focus" ? "active" : ""}`}
-                    onClick={() => handleSplitRatio("focus")}
-                    title="Allocates ~70% screen to Gender Monitor & Demographics (Recommended)"
-                  >
-                    Demographics Focus (30 / 70)
-                  </button>
-                  <button
-                    type="button"
-                    className={`split-ratio-btn ${splitRatio === "max" ? "active" : ""}`}
-                    onClick={() => handleSplitRatio("max")}
-                    title="Allocates ~80% screen to Gender Monitor & Demographics (Max Cards)"
-                  >
-                    Demographics Max (20 / 80)
-                  </button>
-                  <button
-                    type="button"
-                    className={`split-ratio-btn ${splitRatio === "balanced" ? "active" : ""}`}
-                    onClick={() => handleSplitRatio("balanced")}
-                    title="Equal 50 / 50 split"
-                  >
-                    Equal (50 / 50)
-                  </button>
-                </div>
-              </div>
-
-              <div className={`split-view-container ratio-${splitRatio}`}>
-                {/* Left Module: Wide-Angle Density */}
-                <div className="split-column split-left-column">
-                  <div className="split-column-header">
-                    <span className="split-column-tag">Spatial Density (Wide-Angle)</span>
-                    <button
-                      type="button"
-                      className="split-nav-cta"
-                      onClick={() => setView("density")}
-                      title="Expand to full Density Monitor"
-                    >
-                      Full Density &rarr;
-                    </button>
-                  </div>
-                  <DensityPanel
-                    data={density}
-                    historyProp={history}
-                    connected={connected}
-                  />
-                </div>
-
-                {/* Right Module: Close-Range Demographic & Gender Monitor */}
-                <div className="split-column split-right-column">
-                  <div className="split-column-header">
-                    <span className="split-column-tag tag-demo">Demographic &amp; Gender Monitor (Close-Range)</span>
-                    <button
-                      type="button"
-                      className="split-nav-cta"
-                      onClick={() => setView("people")}
-                      title="Expand to full Demographic & Gender Explorer"
-                    >
-                      Full Explorer &rarr;
-                    </button>
-                  </div>
-                  <SearchPanel />
-                </div>
-              </div>
-            </div>
-          )}
+          {view === "density" && <DensityPage dashboardState={dashboardState} />}
+          {view === "people" && <PeoplePage dashboardState={dashboardState} />}
+          {view === "split" && <SplitPage dashboardState={dashboardState} />}
         </ErrorBoundary>
       </main>
     </div>
