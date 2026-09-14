@@ -354,25 +354,36 @@ export default function DensityPage({ dashboardState = {} }) {
       {feed === "raw" && (
         <Card className="overflow-hidden">
           <div className="bg-[#060809] flex flex-col items-center justify-center relative min-h-[380px] max-h-[520px]">
-            <video
-              src="http://127.0.0.1:8000/api/video/density"
-              controls
-              autoPlay
-              loop
-              muted
-              playsInline
+            <img
+              src="http://127.0.0.1:8000/api/stream/density/raw"
+              alt="Raw Surveillance Video Stream"
               className="w-full h-full max-h-[500px] object-contain block"
+              onError={(e) => {
+                e.target.style.display = "none";
+                e.target.nextSibling.style.display = "flex";
+              }}
             />
+            <div className="hidden flex-col items-center justify-center p-8 text-center text-slate-500">
+              <span className="text-2xl mb-2">📹</span>
+              <p className="font-mono text-xs text-slate-400 mb-1">
+                Stream connecting or backend offline
+              </p>
+              <p className="text-[11px] text-slate-600">
+                Ensure FastAPI server is running on port 8000
+              </p>
+            </div>
           </div>
           <div className="flex items-center justify-between px-3 py-2 border-t border-[#1e2733] bg-[#0d1117]">
             <div className="flex items-center gap-2">
               <span className="w-1.5 h-1.5 rounded-full bg-cyan-400" />
               <Mono className="text-slate-300">Raw Source Video</Mono>
               <span className="text-[10px] text-slate-600">·</span>
-              <Mono className="text-slate-600">Native fixed wide-angle view</Mono>
+              <Mono className="text-slate-600">Native clean wide-angle view</Mono>
             </div>
             <div className="flex items-center gap-2">
               <Mono>Source: {runMeta.source_video}</Mono>
+              <span className="text-[10px] text-slate-600">·</span>
+              <Mono>{runMeta.video_fps} FPS</Mono>
             </div>
           </div>
         </Card>

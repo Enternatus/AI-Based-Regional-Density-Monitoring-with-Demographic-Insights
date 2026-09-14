@@ -151,6 +151,7 @@ def main():
  
     try:
         while cap.isOpened():
+            t_frame_start = time.perf_counter()
             ret, frame = cap.read()
             if not ret:
                 break
@@ -198,7 +199,11 @@ def main():
                 write_frame_atomically(LIVE_FRAME_FILE, buf.tobytes())
 
             cv2.imshow("CrowdSense - Region Density Monitor", frame)
-            if cv2.waitKey(1) & 0xFF == ord('q'):
+            # Frame pacing: delay so video plays at natural camera speed (15 FPS)
+            elapsed_ms = (time.perf_counter() - t_frame_start) * 1000
+            target_frame_ms = 1000.0 / max(1, fps)
+            wait_ms = max(1, int(target_frame_ms - elapsed_ms))
+            if cv2.waitKey(wait_ms) & 0xFF == ord('q'):
                 stopped_early = True
                 break
     finally:

@@ -73,7 +73,8 @@ export default function App() {
     }
 
     pollDashboard();
-    const interval = setInterval(pollDashboard, 5000);
+    // Poll every 1.2s for smooth real-time telemetry and graph animation
+    const interval = setInterval(pollDashboard, 1200);
     return () => {
       cancelled = true;
       clearInterval(interval);

@@ -646,6 +646,45 @@ def video_demographics():
     return FileResponse(video_path, media_type="video/mp4")
 
 
+def generate_raw_density_stream():
+    """Serves clean raw unannotated video frames from sample_crowd.mp4 as an MJPEG stream."""
+    video_path = PROJECT_ROOT / "sample_crowd.mp4"
+    if not video_path.exists():
+        video_path = SAMPLE_ROOT / "sample_crowd.mp4"
+    if not video_path.exists():
+        return
+
+    cap = cv2.VideoCapture(str(video_path))
+    try:
+        while True:
+            ret, frame = cap.read()
+            if not ret:
+                cap.set(cv2.CAP_PROP_POS_FRAMES, 0)
+                ret, frame = cap.read()
+                if not ret:
+                    time.sleep(0.1)
+                    continue
+
+            success, buffer = cv2.imencode(".jpg", frame, [cv2.IMWRITE_JPEG_QUALITY, 75])
+            if success:
+                yield (
+                    b"--frame\r\n"
+                    b"Content-Type: image/jpeg\r\n\r\n" + buffer.tobytes() + b"\r\n"
+                )
+            time.sleep(0.066)  # 15 FPS
+    finally:
+        cap.release()
+
+
+@app.get("/api/stream/density/raw")
+def stream_density_raw():
+    """Serves clean raw unannotated MJPEG stream from sample_crowd.mp4 for browser playback."""
+    return StreamingResponse(
+        generate_raw_density_stream(),
+        media_type="multipart/x-mixed-replace; boundary=frame"
+    )
+
+
 def generate_annotated_density_stream():
     """Serves real-time annotated camera detection frames synchronized with crowd_monitor.py if running;
     gracefully falls back to simulated video loop when the pipeline is idle."""
