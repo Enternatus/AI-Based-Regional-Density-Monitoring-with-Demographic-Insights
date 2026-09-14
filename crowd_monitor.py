@@ -1,5 +1,6 @@
 import cv2
 import json
+import os
 import time
 import numpy as np
 from datetime import datetime, timezone
@@ -46,11 +47,41 @@ def density_level(count):
 
 
 def write_json_atomically(path, data):
-    """Avoid the API reading a half-written JSON file while the monitor runs."""
+    """Avoid the API reading a half-written JSON file while the monitor runs.
+    Resilient on Windows / OneDrive: retries on transient file locks and falls back cleanly."""
     path = Path(path)
-    temporary_path = path.with_suffix(path.suffix + ".tmp")
-    temporary_path.write_text(json.dumps(data))
-    temporary_path.replace(path)
+    content = json.dumps(data)
+    temporary_path = path.with_suffix(f"{path.suffix}.{os.getpid()}.tmp")
+
+    try:
+        temporary_path.write_text(content)
+    except Exception:
+        try:
+            path.write_text(content)
+        except Exception:
+            pass
+        return
+
+    replaced = False
+    for _ in range(5):
+        try:
+            temporary_path.replace(path)
+            replaced = True
+            break
+        except (PermissionError, OSError):
+            time.sleep(0.015)
+
+    if not replaced:
+        try:
+            path.write_text(content)
+        except Exception:
+            pass
+
+    if temporary_path.exists():
+        try:
+            temporary_path.unlink()
+        except Exception:
+            pass
 
 
 def build_sample(frame_index, counts, run_status, run_id=None, started_at=None, source_video=None, video_fps=30, completed_at=None):

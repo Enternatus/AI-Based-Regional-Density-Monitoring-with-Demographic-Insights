@@ -10,6 +10,8 @@ crowdsense-dashboard/frontend/dist/
 crowdsense-dashboard/backend/pipeline_repo
 density_snapshot.json
 density_history.json
+*.tmp
+*.tmp.*
 
 # Safety copies — local only, not pushed
 crowdsense-dashboard (3)_MODIFIED/
