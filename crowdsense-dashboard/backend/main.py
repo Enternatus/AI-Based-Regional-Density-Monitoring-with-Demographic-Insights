@@ -404,9 +404,7 @@ def get_person_crop(person_id: str):
     record = records.get(person_id)
     if not record:
         raise HTTPException(status_code=404, detail="person not found")
-    crop_path_str = record.get("crop_path")
-    if not crop_path_str:
-        raise HTTPException(status_code=404, detail="no crop_path on this record yet (still detecting)")
+    crop_path_str = record.get("crop_path") or f"person_crops/person_{person_id}.jpg"
     
     # Path traversal protection: sanitize filename
     safe_name = Path(crop_path_str).name
@@ -419,17 +417,22 @@ def get_person_crop(person_id: str):
         SAMPLE_ROOT.resolve(),
         (HERE / "sample_data").resolve(),
     ]
-    if not any(str(crop_path).startswith(str(r)) for r in allowed_roots):
-        raise HTTPException(status_code=400, detail="invalid crop path traversal attempt")
 
     if not crop_path.exists():
-        for fallback_dir in [PROJECT_ROOT, SAMPLE_ROOT, HERE / "sample_data" / "person_crops", PROJECT_ROOT / "person_crops"]:
+        for fallback_dir in [
+            PROJECT_ROOT / "person_crops",
+            SAMPLE_ROOT / "person_crops",
+            HERE / "sample_data" / "person_crops",
+            PROJECT_ROOT / "sample_data" / "person_crops",
+            PROJECT_ROOT,
+            SAMPLE_ROOT,
+        ]:
             candidate = (fallback_dir / safe_name).resolve()
             if candidate.exists() and any(str(candidate).startswith(str(r)) for r in allowed_roots):
                 crop_path = candidate
                 break
 
-    if not crop_path.exists():
+    if not crop_path.exists() or not any(str(crop_path).startswith(str(r)) for r in allowed_roots):
         raise HTTPException(status_code=404, detail="crop image not found on disk")
     return FileResponse(
         crop_path,

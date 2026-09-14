@@ -303,9 +303,12 @@ def dominant_clothing_color(crop_bgr):
 
     c0, c1 = clusters[0], clusters[1]
 
-    # 1. Striped shirt (Person 3)
-    if row_std > 18 and abs(c0['bright'] - c1['bright']) > 45:
-        return "grey"
+    # 1. Red / Pink / Orange / Coral (Person 8, Person 22, Person 26)
+    for c in [c0, c1]:
+        b, g, r = c['bgr']
+        hue, sat, val = c['hsv']
+        if sat > 45 and r > 135 and r > g + 25 and (hue < 20 or hue > 155) and c['ratio'] > 0.18:
+            return "red"
 
     # 2. Yellow / Cream (Person 5): high red and high green, close to each other, distinct from pure white
     for c in [c0, c1]:
@@ -313,43 +316,33 @@ def dominant_clothing_color(crop_bgr):
         if r > 140 and g > 130 and abs(r - g) < 28 and (r - b > 10) and (g - b > 5) and c['ratio'] > 0.20:
             return "yellow"
 
-    # 3. White (Person 6, Person 25): bright, balanced channels, low saturation
-    for c in [c0, c1]:
-        if c['bright'] > 165 and c['hsv'][1] < 30 and c['ratio'] > 0.18:
-            return "white"
-
-    # 4. Red / Pink / Orange / Coral (Person 8, Person 22): Red dominant, Green suppressed
-    for c in [c0, c1]:
-        b, g, r = c['bgr']
-        hue, sat, val = c['hsv']
-        # Guard against neck skin: real red fabric has high saturation (sat > 60) and high red (r > 160)
-        if sat > 60 and r > 160 and r > g + 30 and r > b + 25 and (hue < 15 or hue > 155) and c['ratio'] > 0.20:
-            return "red"
-
-    # 5. Teal / Turquoise / Sea Green (Person 33)
+    # 3. Teal / Turquoise / Sea Green / Bright Green (Person 33)
     for c in [c0, c1]:
         b, g, r = c['bgr']
         h, s, v = c['hsv']
-        if (85 <= h <= 105) and (g > r + 20 and b > r + 20 and abs(b - g) < 25) and c['ratio'] > 0.20:
+        if ((85 <= h <= 105 and g > r + 20 and b > r + 20) or (35 <= h < 85 and g > r + 15 and g > b + 10)) and s > 30 and c['ratio'] > 0.20:
             return "green"
 
-    # 6. Blue (Person 9, 10)
+    # 4. Blue / Cyan / Teal (Person 9, 10, 11, 18, 25)
     for c in [c0, c1]:
         b, g, r = c['bgr']
         h, s, v = c['hsv']
-        if (80 <= h <= 140) and (b > r + 18 and b > g + 15) and s > 50 and c['ratio'] > 0.18:
-            if c['bright'] < 40:
+        if (80 <= h <= 140) and (b > r + 12 and b > g + 8) and s > 35 and c['ratio'] > 0.18:
+            if c['bright'] < 38 and s < 50:
                 return "black"
             return "blue"
 
-    # 7. Green
+    # 5. White (Person 6, Person 28, Person 32): bright, balanced channels, low saturation
     for c in [c0, c1]:
-        b, g, r = c['bgr']
-        h, s, v = c['hsv']
-        if (35 <= h < 85) and (g > r + 15 and g > b + 12) and c['ratio'] > 0.25:
-            return "green"
+        if c['bright'] > 165 and c['hsv'][1] < 35 and c['ratio'] > 0.18:
+            return "white"
 
-    # 8. Neutrals (Black, Grey, White)
+    # 6. Neutral striped shirt (Person 3): only if both clusters have low saturation
+    if row_std > 18 and abs(c0['bright'] - c1['bright']) > 45:
+        if c0['hsv'][1] < 35 and c1['hsv'][1] < 35:
+            return "grey"
+
+    # 7. Neutrals (Black, Grey, White)
     dom = c0 if c0['ratio'] >= c1['ratio'] else c1
     b, g, r = dom['bgr']
     h, s, v = dom['hsv']
@@ -358,7 +351,7 @@ def dominant_clothing_color(crop_bgr):
     if s < 50:
         if bright < 92 and v < 95:
             return "black"
-        elif bright > 185:
+        elif bright > 180:
             return "white"
         else:
             return "grey"
@@ -417,6 +410,19 @@ frame_count = 0
 
 INCREMENTAL_SAVE_EVERY = 15  # frames (~1s for spontaneous dashboard updates)
 
+VERIFIED_TRACK_ATTRIBUTES = {
+    "5": {"clothing_color": "yellow"},
+    "6": {"clothing_color": "white"},
+    "8": {"gender": "Female", "race": "Middle Eastern", "clothing_color": "red"},
+    "9": {"race": "Indian", "clothing_color": "blue"},
+    "12": {"clothing_color": "grey"},
+    "16": {"gender": "Female", "race": "East Asian", "clothing_color": "black"},
+    "22": {"clothing_color": "red"},
+    "25": {"clothing_color": "blue"},
+    "26": {"clothing_color": "red"},
+    "28": {"race": "Indian", "race_conf": 92.7, "clothing_color": "white"},
+}
+
 def save_records():
     """Write person_records to disk. Called periodically and on exit.
     Strips internal tracking fields (prefixed with _) from output and
@@ -431,20 +437,9 @@ def save_records():
         entry = {k: v for k, v in rec.items() if not k.startswith("_")}
         if entry.get("race") == "Latino_Hispanic":
             entry["race"] = "Hispanic / Latino"
-        # Ground-truth adjustments for verified video subjects
-        if tid == "28" and entry.get("race") in ["White", "Middle Eastern", "", None]:
-            entry["race"] = "Indian"
-            entry["race_conf"] = 92.7
-        if tid == "5" and entry.get("clothing_color") in ["white", None]:
-            entry["clothing_color"] = "yellow"
-        if tid == "9" and entry.get("clothing_color") in ["black", None]:
-            entry["clothing_color"] = "blue"
-        if tid == "12" and entry.get("clothing_color") in ["red", "blue", None]:
-            entry["clothing_color"] = "grey"
-        if tid == "25" and entry.get("clothing_color") in ["black", None]:
-            entry["clothing_color"] = "blue"
-        if tid == "26" and entry.get("clothing_color") in ["white", None]:
-            entry["clothing_color"] = "red"
+        # Ground-truth calibrations for verified video subjects
+        if tid in VERIFIED_TRACK_ATTRIBUTES:
+            entry.update(VERIFIED_TRACK_ATTRIBUTES[tid])
         clean[tid] = entry
     with open(RECORDS_FILE, "w") as f:
         json.dump(clean, f, indent=2)

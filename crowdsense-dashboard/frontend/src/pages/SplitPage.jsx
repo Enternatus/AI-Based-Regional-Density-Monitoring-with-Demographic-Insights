@@ -144,6 +144,9 @@ function DemoPanel({ demographics }) {
                     src={cropUrl(id)}
                     alt={`Person ${id}`}
                     className="w-full h-full object-cover object-top"
+                    onLoad={(e) => {
+                      e.target.style.opacity = "1";
+                    }}
                     onError={(e) => {
                       e.target.style.opacity = "0.2";
                     }}

@@ -70,9 +70,13 @@ function PersonGridCard({ p, onClick }) {
           src={crop}
           alt={`Track ${p.person_id || p.id}`}
           className="w-full h-full object-cover object-top"
+          onLoad={(e) => {
+            e.target.style.display = "block";
+            if (e.target.nextSibling) e.target.nextSibling.style.display = "none";
+          }}
           onError={(e) => {
             e.target.style.display = "none";
-            e.target.nextSibling.style.display = "flex";
+            if (e.target.nextSibling) e.target.nextSibling.style.display = "flex";
           }}
         />
         <div className="hidden w-full h-full flex-col items-center justify-center bg-[#0d1117] text-slate-600">
@@ -184,9 +188,13 @@ function PersonDetailModal({ p, onClose }) {
               src={crop}
               alt={`Track ${p.person_id || p.id}`}
               className="w-full h-full object-cover object-top"
+              onLoad={(e) => {
+                e.target.style.display = "block";
+                if (e.target.nextSibling) e.target.nextSibling.style.display = "none";
+              }}
               onError={(e) => {
                 e.target.style.display = "none";
-                e.target.nextSibling.style.display = "flex";
+                if (e.target.nextSibling) e.target.nextSibling.style.display = "flex";
               }}
             />
             <div className="hidden w-full h-full flex-col items-center justify-center bg-[#0d1117] text-slate-600">

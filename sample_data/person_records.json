@@ -694,7 +694,7 @@
   },
   "2": {
     "gender": "Male",
-    "gender_conf": 98.53700796763103,
+    "gender_conf": 98.54142864545186,
     "age": "20-29",
     "race": "East Asian",
     "clothing_color": "black",
@@ -732,9 +732,9 @@
         "gender": "Male",
         "gender_conf": 100.0,
         "age": "20-29",
-        "age_conf": 70.6,
+        "age_conf": 54.8,
         "race": "East Asian",
-        "race_conf": 94.3,
+        "race_conf": 98.0,
         "accepted": true
       }
     ],
@@ -1435,7 +1435,7 @@
     "gender_conf": 100.0,
     "age": "20-29",
     "race": "East Asian",
-    "clothing_color": "black",
+    "clothing_color": "blue",
     "height_bucket": null,
     "crop_path": "person_crops/person_11.jpg",
     "first_seen_frame": 745,
@@ -2221,7 +2221,7 @@
         "gender": "Female",
         "gender_conf": 99.7,
         "age": "20-29",
-        "age_conf": 56.8,
+        "age_conf": 57.0,
         "race": "East Asian",
         "race_conf": 90.6,
         "accepted": true
@@ -2253,7 +2253,7 @@
         "gender": "Female",
         "gender_conf": 99.9,
         "age": "20-29",
-        "age_conf": 59.1,
+        "age_conf": 58.8,
         "race": "East Asian",
         "race_conf": 92.0,
         "accepted": false,
@@ -2265,11 +2265,11 @@
         "gender": "Female",
         "gender_conf": 99.9,
         "age": "30-39",
-        "age_conf": 44.5,
+        "age_conf": 44.7,
         "race": "East Asian",
-        "race_conf": 87.4,
+        "race_conf": 87.3,
         "accepted": false,
-        "sharpness": 2.2,
+        "sharpness": 2.1,
         "pose_offset": 0.08
       },
       {
@@ -2277,12 +2277,12 @@
         "gender": "Female",
         "gender_conf": 99.9,
         "age": "30-39",
-        "age_conf": 26.5,
+        "age_conf": 26.1,
         "race": "East Asian",
-        "race_conf": 86.5,
+        "race_conf": 86.2,
         "accepted": false,
         "sharpness": 2.0,
-        "pose_offset": 0.05
+        "pose_offset": 0.06
       },
       {
         "frame": 1041,
@@ -2325,7 +2325,7 @@
         "gender": "Female",
         "gender_conf": 99.7,
         "age": "20-29",
-        "age_conf": 67.0,
+        "age_conf": 66.8,
         "race": "East Asian",
         "race_conf": 87.8,
         "accepted": false,
@@ -2350,7 +2350,7 @@
       {
         "frame": 1038,
         "stage": "quality_rejected",
-        "sharpness": 2.2,
+        "sharpness": 2.1,
         "pose_offset": 0.08
       },
       {
@@ -2358,13 +2358,13 @@
         "stage": "predicted_low_quality",
         "gender": "Female",
         "gender_conf": 99.9,
-        "sharpness": 2.2
+        "sharpness": 2.1
       },
       {
         "frame": 1040,
         "stage": "quality_rejected",
         "sharpness": 2.0,
-        "pose_offset": 0.05
+        "pose_offset": 0.06
       },
       {
         "frame": 1040,
@@ -2972,7 +2972,7 @@
     "gender_conf": 97.86236584186554,
     "age": "30-39",
     "race": "White",
-    "clothing_color": "grey",
+    "clothing_color": "black",
     "height_bucket": null,
     "crop_path": "person_crops/person_23.jpg",
     "first_seen_frame": 1412,
@@ -3513,8 +3513,8 @@
         "gender_conf": 100.0,
         "age": "30-39",
         "age_conf": 54.8,
-        "race": "Indian",
-        "race_conf": 92.7,
+        "race": "White",
+        "race_conf": 85.2,
         "accepted": true
       }
     ],
