@@ -207,15 +207,9 @@ if os.path.exists(RECORDS_FILE):
 
 person_records = {}
 
-# Clean leftover crops from previous runs -- they accumulate and confuse
-# the dashboard (e.g. 54 crops on disk for 27 records, with IDs from
-# entirely different videos).
-if os.path.exists("person_crops"):
-    for old_crop in os.listdir("person_crops"):
-        old_path = os.path.join("person_crops", old_crop)
-        if os.path.isfile(old_path):
-            os.remove(old_path)
-    print("Cleared leftover crops from previous run.")
+# Ensure crop directory exists. Individual tracks will overwrite their respective
+# crops as they are detected.
+os.makedirs("person_crops", exist_ok=True)
 
 # Per-track, per-attribute rolling history of ACCEPTED (label, confidence)
 # reads, used for confidence-weighted smoothing. Not written to disk --
