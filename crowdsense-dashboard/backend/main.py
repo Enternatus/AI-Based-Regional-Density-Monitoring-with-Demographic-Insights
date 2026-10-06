@@ -707,7 +707,10 @@ def generate_annotated_density_stream():
         try:
             with open(REGIONS_PATH) as f:
                 raw = json.load(f)
-                regions_raw = {k: np.array(pts, dtype=np.int32) for k, pts in raw.items()}
+                regions_raw = {}
+                for k, pts in raw.items():
+                    p_arr = pts["points"] if isinstance(pts, dict) and "points" in pts else pts
+                    regions_raw[k] = np.array(p_arr, dtype=np.int32)
         except Exception:
             pass
 

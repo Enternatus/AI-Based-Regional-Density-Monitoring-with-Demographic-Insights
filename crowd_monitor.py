@@ -45,7 +45,11 @@ def load_regions(path):
     with open(path, "r") as f:
         raw = json.load(f)
     # convert to numpy arrays for cv2.pointPolygonTest
-    return {name: np.array(pts, dtype=np.int32) for name, pts in raw.items()}
+    regions = {}
+    for name, val in raw.items():
+        pts = val["points"] if isinstance(val, dict) and "points" in val else val
+        regions[name] = np.array(pts, dtype=np.int32)
+    return regions
  
  
 def get_region(cx, cy, regions):

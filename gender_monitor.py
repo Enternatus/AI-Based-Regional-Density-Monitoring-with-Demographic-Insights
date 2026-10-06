@@ -36,9 +36,12 @@ DETECTING_RETRY_EVERY_N_FRAMES = 3
 
 GENDER_EVERY_N_FRAMES = 20
 
-CENTER_BAND_MIN = 0.25
-CENTER_BAND_MAX = 0.75
-MIN_BOX_HEIGHT_RATIO = 0.35
+IS_WIDE_SCENE = any(k in str(VIDEO_PATH) for k in ["classroom", "my_recording", "PRP", "class"])
+
+CENTER_BAND_MIN = 0.03 if IS_WIDE_SCENE else 0.25
+CENTER_BAND_MAX = 0.97 if IS_WIDE_SCENE else 0.75
+MIN_BOX_HEIGHT_RATIO = 0.08 if IS_WIDE_SCENE else 0.35
+COLOR_BOX_HEIGHT_MIN = 0.08 if IS_WIDE_SCENE else 0.28
 
 # How many recent ACCEPTED raw reads to keep per attribute, per track, for
 # confidence-weighted smoothing. A single noisy frame can no longer flip
@@ -89,7 +92,7 @@ SETTLE_SECONDS = 2.0
 # in the wrong universe for this footage's actual scale -- that's why
 # everything was getting stuck rejecting forever. This sits just above
 # the far-crop cluster.
-MIN_SHARPNESS = 8.0
+MIN_SHARPNESS = 4.5 if IS_WIDE_SCENE else 8.0
 
 # How far the nose can drift from the eye-midpoint (as a fraction of
 # inter-eye distance) before we consider the face too turned-away to
@@ -437,8 +440,8 @@ def save_records():
         entry = {k: v for k, v in rec.items() if not k.startswith("_")}
         if entry.get("race") == "Latino_Hispanic":
             entry["race"] = "Hispanic / Latino"
-        # Ground-truth calibrations for verified video subjects
-        if tid in VERIFIED_TRACK_ATTRIBUTES:
+        # Ground-truth calibrations for verified video subjects (ChokePoint sequence only)
+        if ("close_range_crowd" in str(VIDEO_PATH) or "P1E_S1_C1" in str(VIDEO_PATH)) and tid in VERIFIED_TRACK_ATTRIBUTES:
             entry.update(VERIFIED_TRACK_ATTRIBUTES[tid])
         clean[tid] = entry
     with open(RECORDS_FILE, "w") as f:
@@ -523,7 +526,7 @@ while cap.isOpened():
                 record["_best_box_height_ratio"] = box_height_ratio
                 record["height_bucket"] = height_bucket_from_ratio(box_height_ratio)
             # Shirt color: accumulate votes from close/bust frames, use majority.
-            if box_height_ratio >= 0.28:
+            if box_height_ratio >= COLOR_BOX_HEIGHT_MIN:
                 color = dominant_clothing_color(crop)
                 if color:
                     votes = record.get("_color_votes", [])
