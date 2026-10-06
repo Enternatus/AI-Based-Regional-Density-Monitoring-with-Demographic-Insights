@@ -2,12 +2,14 @@ import argparse
 import cv2
 import json
 import os
+import re
 import time
 import numpy as np
 import tempfile
 from datetime import datetime, timezone
 from pathlib import Path
 from ultralytics import YOLO
+from iou_tracker import IoUTracker
  
 parser = argparse.ArgumentParser(description="CrowdSense Regional Density Monitor")
 parser.add_argument(
@@ -21,11 +23,27 @@ parser.add_argument(
     default=float(os.environ.get("TARGET_FPS", 8.0)),
     help="Target playback FPS for visual tracking and graph synchronization (default: 8.0)"
 )
+parser.add_argument(
+    "--max-frames",
+    type=int,
+    default=int(os.environ.get("MAX_FRAMES", "0")),
+    help="Stop after N frames (0 = entire video). Useful for verification."
+)
+parser.add_argument(
+    "--headless",
+    action="store_true",
+    default=os.environ.get("HEADLESS", "0") == "1",
+    help="Skip OpenCV windows (dashboard / CI)."
+)
 args, _ = parser.parse_known_args()
 
 VIDEO_PATH = args.source
 TARGET_PLAYBACK_FPS = args.fps
+MAX_FRAMES = args.max_frames
+HEADLESS = args.headless
 REGIONS_FILE = "regions.json"
+DETECT_CONF = 0.25
+TRACK_IOU = 0.5
 DENSITY_SNAPSHOT_FILE = "density_snapshot.json"
 DENSITY_HISTORY_FILE = "density_history.json"
 LIVE_FRAME_FILE = Path(tempfile.gettempdir()) / "crowdsense_live_density.jpg"
@@ -41,15 +59,26 @@ COLOR_MEDIUM = (0, 255, 255) # yellow
 COLOR_HIGH = (0, 0, 255)     # red
  
  
+def region_slug(label):
+    return re.sub(r"[^a-z0-9]+", "_", str(label).lower()).strip("_")
+
+
 def load_regions(path):
     with open(path, "r") as f:
         raw = json.load(f)
-    # convert to numpy arrays for cv2.pointPolygonTest
     regions = {}
-    for name, val in raw.items():
-        pts = val["points"] if isinstance(val, dict) and "points" in val else val
-        regions[name] = np.array(pts, dtype=np.int32)
-    return regions
+    display_names = {}
+    for key, val in raw.items():
+        if isinstance(val, dict) and "points" in val:
+            pts = val["points"]
+            display = val.get("name", key)
+        else:
+            pts = val
+            display = key
+        rid = region_slug(display)
+        regions[rid] = np.array(pts, dtype=np.int32)
+        display_names[rid] = display
+    return regions, display_names
  
  
 def get_region(cx, cy, regions):
@@ -125,7 +154,7 @@ def write_frame_atomically(path, buffer):
         pass
 
 
-def build_sample(frame_index, counts, run_status, run_id=None, started_at=None, source_video=None, video_fps=30, completed_at=None):
+def build_sample(frame_index, counts, run_status, run_id=None, started_at=None, source_video=None, video_fps=30, completed_at=None, display_names=None):
     sample = {
         "run_id": run_id,
         "source_video": source_video or VIDEO_PATH,
@@ -135,7 +164,11 @@ def build_sample(frame_index, counts, run_status, run_id=None, started_at=None, 
         "frame_index": frame_index,
         "run_status": run_status,
         "regions": [
-            {"region_id": name, "name": name, "count": count}
+            {
+                "region_id": name,
+                "name": (display_names or {}).get(name, name),
+                "count": count,
+            }
             for name, count in counts.items()
         ],
     }
@@ -145,24 +178,26 @@ def build_sample(frame_index, counts, run_status, run_id=None, started_at=None, 
  
  
 def main():
-    regions = load_regions(REGIONS_FILE)
+    regions, display_names = load_regions(REGIONS_FILE)
     if not regions:
         print("No regions found. Run select_regions.py first.")
         return
  
     model = YOLO("yolov8n.pt")  # auto-downloads on first run
+    tracker = IoUTracker(iou_threshold=0.35, max_age=45)
     cap = cv2.VideoCapture(VIDEO_PATH)
  
     if not cap.isOpened():
         print(f"Could not open {VIDEO_PATH}")
         return
  
-    print("Running. Press 'q' to quit.")
+    print("Running. Press 'q' to quit." if not HEADLESS else "Running headless.")
     # History represents this run only: do not blend it with an old clip.
     history = []
     run_id = f"run_{datetime.now(timezone.utc).strftime('%Y%m%d_%H%M%S')}"
     started_at = datetime.now(timezone.utc).isoformat()
     fps = TARGET_PLAYBACK_FPS or int(cap.get(cv2.CAP_PROP_FPS)) or 8.0
+    person_counts = []
 
     write_json_atomically(DENSITY_HISTORY_FILE, history)
     last_counts = None
@@ -175,17 +210,35 @@ def main():
             ret, frame = cap.read()
             if not ret:
                 break
- 
-            results = model(frame, classes=[0], verbose=False)  # class 0 = person
+
+            frame_h, frame_w = frame.shape[:2]
+            # Detect people, then assign stable IDs via IoU so seated students
+            # are never dropped for having zero Kalman velocity.
+            results = model.predict(
+                frame, classes=[0], conf=DETECT_CONF, iou=TRACK_IOU, verbose=False
+            )
+            det_boxes = []
+            if results[0].boxes is not None and len(results[0].boxes):
+                det_boxes = results[0].boxes.xyxy.cpu().numpy().tolist()
+            tracks = tracker.update(det_boxes, frame_wh=(frame_w, frame_h))
  
             counts = {name: 0 for name in regions}
  
-            for box in results[0].boxes.xyxy:
-                x1, y1, x2, y2 = box.tolist()
+            for tid, box in tracks:
+                x1, y1, x2, y2 = box
                 cx, cy = (x1 + x2) / 2, (y1 + y2) / 2
                 region = get_region(cx, cy, regions)
                 if region:
                     counts[region] += 1
+                ix1, iy1, ix2, iy2 = map(int, box)
+                cv2.rectangle(frame, (ix1, iy1), (ix2, iy2), (255, 255, 0), 2)
+                cv2.putText(
+                    frame, f"ID {tid}", (ix1, max(16, iy1 - 6)),
+                    cv2.FONT_HERSHEY_SIMPLEX, 0.45, (255, 255, 0), 1,
+                )
+
+            n_people = len(tracks)
+            person_counts.append(n_people)
 
             frame_index = int(cap.get(cv2.CAP_PROP_POS_FRAMES))
             last_counts = counts.copy()
@@ -194,8 +247,10 @@ def main():
                 snapshot = build_sample(
                     frame_index, counts, "running",
                     run_id=run_id, started_at=started_at,
-                    source_video=VIDEO_PATH, video_fps=fps
+                    source_video=VIDEO_PATH, video_fps=fps,
+                    display_names=display_names,
                 )
+                snapshot["person_count"] = n_people
                 history.append(snapshot)
                 history = history[-MAX_HISTORY_SAMPLES:]
                 write_json_atomically(DENSITY_HISTORY_FILE, history)
@@ -204,13 +259,13 @@ def main():
             for name, poly in regions.items():
                 level, color = density_level(counts[name])
                 cv2.polylines(frame, [poly], True, color, 2)
-                display_name = name.replace("_", " ").title()
+                display_name = display_names.get(name, name.replace("_", " ").title())
                 label_pos = (int(poly[0][0]) + 6, int(poly[0][1]) + 20)
                 cv2.putText(frame, f"{display_name}: {counts[name]} ({level})",
                             label_pos, cv2.FONT_HERSHEY_SIMPLEX, 0.55, color, 2)
  
             total = sum(counts.values())
-            cv2.putText(frame, f"Total (in regions): {total}", (10, 30),
+            cv2.putText(frame, f"Total (in regions): {total}  tracked: {n_people}", (10, 30),
                         cv2.FONT_HERSHEY_SIMPLEX, 0.7, (255, 255, 255), 2)
  
             # Broadcast live frame for dashboard synchronization
@@ -218,14 +273,19 @@ def main():
             if success:
                 write_frame_atomically(LIVE_FRAME_FILE, buf.tobytes())
 
-            cv2.imshow("CrowdSense - Region Density Monitor", frame)
-            # Frame pacing: delay so video plays at natural camera speed (15 FPS)
-            elapsed_ms = (time.perf_counter() - t_frame_start) * 1000
-            target_frame_ms = 1000.0 / max(1, fps)
-            wait_ms = max(1, int(target_frame_ms - elapsed_ms))
-            if cv2.waitKey(wait_ms) & 0xFF == ord('q'):
+            if MAX_FRAMES and frame_index >= MAX_FRAMES:
                 stopped_early = True
                 break
+
+            if not HEADLESS:
+                cv2.imshow("CrowdSense - Region Density Monitor", frame)
+                # Frame pacing: delay so video plays at natural camera speed (15 FPS)
+                elapsed_ms = (time.perf_counter() - t_frame_start) * 1000
+                target_frame_ms = 1000.0 / max(1, fps)
+                wait_ms = max(1, int(target_frame_ms - elapsed_ms))
+                if cv2.waitKey(wait_ms) & 0xFF == ord('q'):
+                    stopped_early = True
+                    break
     finally:
         try:
             if LIVE_FRAME_FILE.exists():
@@ -241,13 +301,27 @@ def main():
             last_frame_index, last_counts, final_status,
             run_id=run_id, started_at=started_at,
             source_video=VIDEO_PATH, video_fps=fps,
-            completed_at=completed_at
+            completed_at=completed_at,
+            display_names=display_names,
         )
+        if person_counts:
+            final_sample["person_count"] = person_counts[-1]
+            final_sample["person_count_stats"] = {
+                "min": int(min(person_counts)),
+                "max": int(max(person_counts)),
+                "mean": round(sum(person_counts) / len(person_counts), 2),
+            }
         if not history or history[-1]["frame_index"] != last_frame_index:
             history.append(final_sample)
             history = history[-MAX_HISTORY_SAMPLES:]
             write_json_atomically(DENSITY_HISTORY_FILE, history)
         write_json_atomically(DENSITY_SNAPSHOT_FILE, final_sample)
+        if person_counts:
+            print(
+                f"Tracked people min/mean/max: "
+                f"{min(person_counts)}/{sum(person_counts)/len(person_counts):.1f}/{max(person_counts)}"
+            )
+            print(f"Final region counts: {last_counts}")
 
     cap.release()
     cv2.destroyAllWindows()

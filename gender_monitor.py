@@ -16,6 +16,7 @@ from models.predictor import FairFace
 from uniface.detection import RetinaFace
 from uniface.face_utils import face_alignment
 from unsettled_fallback import apply_last_resort_live, apply_unsettled_fallback
+from iou_tracker import IoUTracker
 
 parser = argparse.ArgumentParser(description="CrowdSense Demographic Intelligence Monitor")
 parser.add_argument(
@@ -23,8 +24,15 @@ parser.add_argument(
     default=os.environ.get("VIDEO_PATH", "close_range_crowd.mp4"),
     help="Path to video file (.mp4) or directory of frames (default: close_range_crowd.mp4)"
 )
+parser.add_argument(
+    "--max-frames",
+    type=int,
+    default=int(os.environ.get("MAX_FRAMES", "0")),
+    help="Stop after N frames (0 = entire video)."
+)
 args, _ = parser.parse_known_args()
 VIDEO_PATH = args.source
+MAX_FRAMES = args.max_frames
 
 HEADLESS = os.environ.get("HEADLESS", "0") == "1"
 # While a track has no confirmed answer yet, how often (in frames) to
@@ -36,12 +44,19 @@ DETECTING_RETRY_EVERY_N_FRAMES = 3
 
 GENDER_EVERY_N_FRAMES = 20
 
-IS_WIDE_SCENE = any(k in str(VIDEO_PATH) for k in ["classroom", "my_recording", "PRP", "class"])
+IS_WIDE = any(k in str(VIDEO_PATH).lower() for k in ["classroom", "prp", "my_recording", "class"])
+IS_WIDE_SCENE = IS_WIDE
 
-CENTER_BAND_MIN = 0.03 if IS_WIDE_SCENE else 0.25
-CENTER_BAND_MAX = 0.97 if IS_WIDE_SCENE else 0.75
-MIN_BOX_HEIGHT_RATIO = 0.08 if IS_WIDE_SCENE else 0.35
-COLOR_BOX_HEIGHT_MIN = 0.08 if IS_WIDE_SCENE else 0.28
+# For wide classroom scenes seated students are ~8–20% of frame height
+# and span nearly the full width — corridor (ChokePoint) gates do not apply.
+CENTER_BAND_MIN = 0.02 if IS_WIDE else 0.25
+CENTER_BAND_MAX = 0.98 if IS_WIDE else 0.75
+MIN_BOX_HEIGHT_RATIO = 0.06 if IS_WIDE else 0.35
+COLOR_BOX_HEIGHT_MIN = 0.06 if IS_WIDE else 0.28
+DETECT_CONF = 0.25
+TRACK_CONF = 0.15
+TRACK_IOU = 0.5
+FULL_FRAME_FACE_EVERY = 12
 
 # How many recent ACCEPTED raw reads to keep per attribute, per track, for
 # confidence-weighted smoothing. A single noisy frame can no longer flip
@@ -92,7 +107,7 @@ SETTLE_SECONDS = 2.0
 # in the wrong universe for this footage's actual scale -- that's why
 # everything was getting stuck rejecting forever. This sits just above
 # the far-crop cluster.
-MIN_SHARPNESS = 4.5 if IS_WIDE_SCENE else 8.0
+MIN_SHARPNESS = 4.0 if IS_WIDE else 8.0
 
 # How far the nose can drift from the eye-midpoint (as a fraction of
 # inter-eye distance) before we consider the face too turned-away to
@@ -176,6 +191,8 @@ video_fps = cap.get(cv2.CAP_PROP_FPS)
 if not video_fps or video_fps <= 0:
     video_fps = 15.0  # sane fallback if metadata does not report FPS
 print(f"Source: '{VIDEO_PATH}' ({source_type}, {total_frames} frames @ {video_fps:.1f} FPS)")
+print(f"Scene gating: {'WIDE classroom' if IS_WIDE else 'corridor'} "
+      f"(center {CENTER_BAND_MIN}-{CENTER_BAND_MAX}, min_h={MIN_BOX_HEIGHT_RATIO})")
 
 # Skip the first ~100 frames only on ChokePoint sequence (empty background)
 if "close_range_crowd" in str(VIDEO_PATH) or "P1E_S1_C1" in str(VIDEO_PATH):
@@ -462,7 +479,122 @@ def extract_bust_or_full_crop(crop_bgr):
     return crop_bgr
 
 
+def match_face_in_box(faces, x1, y1, x2, y2):
+    """Pick the largest face whose center falls inside the person box."""
+    best = None
+    best_area = -1.0
+    for face in faces or []:
+        fx1, fy1, fx2, fy2 = [float(v) for v in face.bbox[:4]]
+        face_cx, face_cy = (fx1 + fx2) / 2.0, (fy1 + fy2) / 2.0
+        if x1 <= face_cx <= x2 and y1 <= face_cy <= y2:
+            area = max(0.0, fx2 - fx1) * max(0.0, fy2 - fy1)
+            if area > best_area:
+                best = face
+                best_area = area
+    return best
+
+
+def apply_fairface_from_face(record, track_id, image_bgr, face, crop):
+    """Run quality gate + FairFace on an already-detected face."""
+    landmarks = face.landmarks
+    aligned_face, _ = face_alignment(image_bgr, landmarks, image_size=224)
+    ok, blur, offset = is_good_quality(aligned_face, landmarks)
+    if DEBUG:
+        status = "OK  " if ok else "SKIP"
+        print(f"[{status}] track {track_id} frame {frame_count}: "
+              f"sharpness={blur:.0f} (min {MIN_SHARPNESS}), "
+              f"pose_offset={offset:.2f} (max {MAX_POSE_OFFSET})")
+    if not ok:
+        log_gate(record, frame_count, "quality_rejected",
+                 sharpness=round(blur, 1), pose_offset=round(offset, 2))
+        result = fairface_model.predict(aligned_face)
+        g_label, g_conf, _g_margin = top_and_margin(result["gender_scores"])
+        a_label, a_conf, _a_margin = top_and_margin(result["age_scores"])
+        r_label, r_conf, _r_margin = top_and_margin(result["race_scores"])
+        record["low_quality_attempts"].append({
+            "frame": frame_count,
+            "gender": g_label, "gender_conf": round(g_conf, 1),
+            "age": a_label, "age_conf": round(a_conf, 1),
+            "race": r_label, "race_conf": round(r_conf, 1),
+            "accepted": False,
+            "sharpness": round(blur, 1),
+            "pose_offset": round(offset, 2),
+        })
+        if len(record["low_quality_attempts"]) > 40:
+            record["low_quality_attempts"].pop(0)
+        log_gate(record, frame_count, "predicted_low_quality",
+                 gender=g_label, gender_conf=round(g_conf, 1),
+                 sharpness=round(blur, 1))
+        apply_last_resort_live(record)
+        return
+
+    result = fairface_model.predict(aligned_face)
+    g_label, g_conf, g_margin = top_and_margin(result["gender_scores"])
+    a_label, a_conf, a_margin = top_and_margin(result["age_scores"])
+    r_label, r_conf, r_margin = top_and_margin(result["race_scores"])
+
+    gender_accepted = (
+        g_conf >= MIN_ACCEPT_CONF["gender"] and g_margin >= MIN_MARGIN["gender"]
+    )
+    any_accepted = gender_accepted or (
+        a_conf >= MIN_ACCEPT_CONF["age"] and a_margin >= MIN_MARGIN["age"]
+    ) or (
+        r_conf >= MIN_ACCEPT_CONF["race"] and r_margin >= MIN_MARGIN["race"]
+    )
+
+    record["raw_attempts"].append({
+        "frame": frame_count,
+        "gender": g_label, "gender_conf": round(g_conf, 1),
+        "age": a_label, "age_conf": round(a_conf, 1),
+        "race": r_label, "race_conf": round(r_conf, 1),
+        "accepted": any_accepted,
+    })
+    if len(record["raw_attempts"]) > 40:
+        record["raw_attempts"].pop(0)
+    log_gate(record, frame_count, "predicted",
+             gender=g_label, gender_conf=round(g_conf, 1),
+             accepted=any_accepted)
+
+    smoothed_gender, smoothed_gender_conf = update_attribute(
+        "gender", track_id, g_label, g_conf, g_margin)
+    smoothed_age, _ = update_attribute(
+        "age", track_id, a_label, a_conf, a_margin)
+    smoothed_race, _ = update_attribute(
+        "race", track_id, r_label, r_conf, r_margin)
+
+    if any_accepted:
+        if record.get("source") == "last_resort":
+            record["source"] = None
+        if smoothed_gender is not None:
+            record["gender"] = smoothed_gender
+            record["gender_conf"] = smoothed_gender_conf
+        if smoothed_age is not None:
+            record["age"] = smoothed_age
+        if smoothed_race is not None:
+            record["race"] = smoothed_race
+        if g_conf > best_conf_seen.get(track_id, -1):
+            crop_path = f"person_crops/person_{track_id}.jpg"
+            os.makedirs("person_crops", exist_ok=True)
+            cv2.imwrite(crop_path, extract_bust_or_full_crop(crop))
+            record["crop_path"] = crop_path
+            best_conf_seen[track_id] = g_conf
+
+    if gender_accepted:
+        if record["settle_start_frame"] is None:
+            record["settle_start_frame"] = frame_count
+
+    if (record["settle_start_frame"] is not None
+            and (frame_count - record["settle_start_frame"]) >= SETTLE_FRAMES):
+        record["locked"] = True
+        record["confirmed"] = True
+        record["source"] = "settled"
+        save_records()
+
+
 print("Running. Press 'q' to quit.")
+person_tracker = IoUTracker(iou_threshold=0.35, max_age=45)
+cached_full_faces = []
+tracked_person_counts = []
 
 while cap.isOpened():
     ret, frame = cap.read()
@@ -471,21 +603,33 @@ while cap.isOpened():
 
     frame_h, frame_w = frame.shape[:2]
 
-    # persist=True keeps the same ID for the same person across frames
-    # *within this run only* -- see note above.
-    results = yolo_model.track(frame, classes=[0], verbose=False, persist=True)
+    # ByteTrack drops static seated people. Detect first, then assign IDs
+    # with IoU/centroid matching so zero-velocity boxes stay confirmed.
+    pred = yolo_model.predict(
+        frame, classes=[0], conf=DETECT_CONF, iou=TRACK_IOU, verbose=False
+    )
+    det_boxes = []
+    if pred[0].boxes is not None and len(pred[0].boxes):
+        det_boxes = pred[0].boxes.xyxy.cpu().numpy().tolist()
+    tracks = person_tracker.update(det_boxes, frame_wh=(frame_w, frame_h))
+    tracked_person_counts.append(len(tracks))
 
-    if results[0].boxes is not None and results[0].boxes.id is not None:
-        boxes = results[0].boxes.xyxy.tolist()
-        track_ids = results[0].boxes.id.int().tolist()
+    if IS_WIDE and (frame_count % FULL_FRAME_FACE_EVERY == 0 or not cached_full_faces):
+        try:
+            cached_full_faces = list(face_detector.detect(frame) or [])
+        except Exception:
+            cached_full_faces = []
 
+    if tracks:
         # Clean unannotated copy of the frame for cropping, attribute analysis,
         # and saving thumbnails, preventing bounding boxes from bleeding into crops.
         clean_frame = frame.copy()
 
-        for box, track_id in zip(boxes, track_ids):
-            track_id = str(track_id)  # keep keys consistent with JSON (always string keys)
+        for tid, box in tracks:
+            track_id = str(tid)  # keep keys consistent with JSON (always string keys)
             x1, y1, x2, y2 = map(int, box)
+            x1, y1 = max(0, x1), max(0, y1)
+            x2, y2 = min(frame_w, x2), min(frame_h, y2)
             crop = clean_frame[y1:y2, x1:x2]
 
             if track_id not in person_records:
@@ -546,7 +690,9 @@ while cap.isOpened():
             # or forehead when the person is entering/leaving frame edge.
             crop_h, crop_w = crop.shape[:2] if crop.size > 0 else (0, 0)
             crop_area = crop_h * crop_w
-            if crop.size > 0 and crop_h >= 50 and crop_w >= 25:
+            min_crop_h = 30 if IS_WIDE else 50
+            min_crop_w = 15 if IS_WIDE else 25
+            if crop.size > 0 and crop_h >= min_crop_h and crop_w >= min_crop_w:
                 if not record.get("crop_path"):
                     # First usable crop
                     crop_path = f"person_crops/person_{track_id}.jpg"
@@ -589,139 +735,19 @@ while cap.isOpened():
                     and crop.size > 0
                     and is_well_positioned):
                 try:
-                    faces = face_detector.detect(crop)
-                    if not faces:
+                    if IS_WIDE:
+                        face = match_face_in_box(cached_full_faces, x1, y1, x2, y2)
+                        image_for_align = clean_frame
+                    else:
+                        faces = face_detector.detect(crop)
+                        face = faces[0] if faces else None
+                        image_for_align = crop
+                    if not face:
                         log_gate(record, frame_count, "no_face_detected")
-                    if faces:
-                        face = faces[0]
-                        landmarks = face.landmarks
-                        aligned_face, _ = face_alignment(crop, landmarks, image_size=224)
-
-                        # Quality-rejected crops stay out of the reliable
-                        # pipeline (no smoothing / settle). FairFace still
-                        # runs so we can show a flagged last-resort guess.
-                        ok, blur, offset = is_good_quality(aligned_face, landmarks)
-                        if DEBUG:
-                            status = "OK  " if ok else "SKIP"
-                            print(f"[{status}] track {track_id} frame {frame_count}: "
-                                  f"sharpness={blur:.0f} (min {MIN_SHARPNESS}), "
-                                  f"pose_offset={offset:.2f} (max {MAX_POSE_OFFSET})")
-                        if not ok:
-                            log_gate(record, frame_count, "quality_rejected",
-                                      sharpness=round(blur, 1), pose_offset=round(offset, 2))
-                            # Last-resort path: still ask FairFace, but store
-                            # the guess separately so it can never enter
-                            # smoothing / settle / confirmed.
-                            result = fairface_model.predict(aligned_face)
-                            g_label, g_conf, _g_margin = top_and_margin(result["gender_scores"])
-                            a_label, a_conf, _a_margin = top_and_margin(result["age_scores"])
-                            r_label, r_conf, _r_margin = top_and_margin(result["race_scores"])
-                            record["low_quality_attempts"].append({
-                                "frame": frame_count,
-                                "gender": g_label, "gender_conf": round(g_conf, 1),
-                                "age": a_label, "age_conf": round(a_conf, 1),
-                                "race": r_label, "race_conf": round(r_conf, 1),
-                                "accepted": False,
-                                "sharpness": round(blur, 1),
-                                "pose_offset": round(offset, 2),
-                            })
-                            if len(record["low_quality_attempts"]) > 40:
-                                record["low_quality_attempts"].pop(0)
-                            log_gate(record, frame_count, "predicted_low_quality",
-                                      gender=g_label, gender_conf=round(g_conf, 1),
-                                      sharpness=round(blur, 1))
-                            apply_last_resort_live(record)
-
-                        if ok:
-                            result = fairface_model.predict(aligned_face)
-
-                            # Judge each attribute independently on its OWN
-                            # confidence and margin -- gender being easy on
-                            # a given frame says nothing about whether race
-                            # was.
-                            g_label, g_conf, g_margin = top_and_margin(result["gender_scores"])
-                            a_label, a_conf, a_margin = top_and_margin(result["age_scores"])
-                            r_label, r_conf, r_margin = top_and_margin(result["race_scores"])
-
-                            gender_accepted = (
-                                g_conf >= MIN_ACCEPT_CONF["gender"] and g_margin >= MIN_MARGIN["gender"]
-                            )
-                            any_accepted = gender_accepted or (
-                                a_conf >= MIN_ACCEPT_CONF["age"] and a_margin >= MIN_MARGIN["age"]
-                            ) or (
-                                r_conf >= MIN_ACCEPT_CONF["race"] and r_margin >= MIN_MARGIN["race"]
-                            )
-
-                            # Store EVERY raw attempt, accepted or not --
-                            # full history for later inspection, not just
-                            # whatever the smoothed answer ended up being.
-                            # Capped so it can't grow unbounded over a long
-                            # track.
-                            record["raw_attempts"].append({
-                                "frame": frame_count,
-                                "gender": g_label, "gender_conf": round(g_conf, 1),
-                                "age": a_label, "age_conf": round(a_conf, 1),
-                                "race": r_label, "race_conf": round(r_conf, 1),
-                                "accepted": any_accepted,
-                            })
-                            if len(record["raw_attempts"]) > 40:
-                                record["raw_attempts"].pop(0)
-                            log_gate(record, frame_count, "predicted",
-                                      gender=g_label, gender_conf=round(g_conf, 1),
-                                      accepted=any_accepted)
-
-                            smoothed_gender, smoothed_gender_conf = update_attribute(
-                                "gender", track_id, g_label, g_conf, g_margin)
-                            smoothed_age, _ = update_attribute(
-                                "age", track_id, a_label, a_conf, a_margin)
-                            smoothed_race, _ = update_attribute(
-                                "race", track_id, r_label, r_conf, r_margin)
-
-                            if any_accepted:
-                                if record.get("source") == "last_resort":
-                                    record["source"] = None
-
-                                if smoothed_gender is not None:
-                                    record["gender"] = smoothed_gender
-                                    record["gender_conf"] = smoothed_gender_conf
-                                if smoothed_age is not None:
-                                    record["age"] = smoothed_age
-                                if smoothed_race is not None:
-                                    record["race"] = smoothed_race
-
-                                # Keep the crop from whichever single raw
-                                # read had the highest gender confidence,
-                                # not just the first read -- used only for
-                                # picking a representative reference image.
-                                if g_conf > best_conf_seen.get(track_id, -1):
-                                    crop_path = f"person_crops/person_{track_id}.jpg"
-                                    os.makedirs("person_crops", exist_ok=True)
-                                    cv2.imwrite(crop_path, extract_bust_or_full_crop(crop))
-                                    record["crop_path"] = crop_path
-                                    best_conf_seen[track_id] = g_conf
-
-                            # Settle/lock timing is gated on GENDER
-                            # specifically -- age/race accepting on their
-                            # own must never start or satisfy this timer.
-                            # Locking stops all further detection for the
-                            # track, so if the timer could fire off race/
-                            # age alone, a track could freeze forever as
-                            # "confirmed" while gender still shows
-                            # "Detecting...".
-                            if gender_accepted:
-                                if record["settle_start_frame"] is None:
-                                    record["settle_start_frame"] = frame_count
-
-                            # Lock once enough settle time has passed since
-                            # the first ACCEPTED GENDER read -- stop
-                            # updating for good, so the label stays put and
-                            # readable.
-                            if (record["settle_start_frame"] is not None
-                                    and (frame_count - record["settle_start_frame"]) >= SETTLE_FRAMES):
-                                record["locked"] = True
-                                record["confirmed"] = True
-                                record["source"] = "settled"
-                                save_records()
+                    else:
+                        apply_fairface_from_face(
+                            record, track_id, image_for_align, face, crop
+                        )
                 except Exception:
                     pass
 
@@ -748,9 +774,13 @@ while cap.isOpened():
     # Incremental save so data isn't lost if the script is interrupted
     if frame_count > 0 and frame_count % INCREMENTAL_SAVE_EVERY == 0:
         save_records()
-        print(f"[frame {frame_count}] Incremental save: {len(person_records)} records")
+        n_now = tracked_person_counts[-1] if tracked_person_counts else 0
+        print(f"[frame {frame_count}] Incremental save: {len(person_records)} records, "
+              f"{n_now} boxes this frame")
 
     frame_count += 1
+    if MAX_FRAMES and frame_count >= MAX_FRAMES:
+        break
     if not HEADLESS:
         cv2.imshow("Gender Detection - FairFace", frame)
         # 1ms is enough to pump the GUI and catch 'q'.
@@ -786,3 +816,10 @@ if last_resort_count:
 save_records()
 
 print(f"Saved {len(person_records)} person record(s) to {RECORDS_FILE}")
+if tracked_person_counts:
+    print(
+        f"Tracked people min/mean/max: "
+        f"{min(tracked_person_counts)}/"
+        f"{sum(tracked_person_counts)/len(tracked_person_counts):.1f}/"
+        f"{max(tracked_person_counts)}"
+    )
