@@ -63,7 +63,7 @@ def region_slug(label):
     return re.sub(r"[^a-z0-9]+", "_", str(label).lower()).strip("_")
 
 
-def load_regions(path):
+def load_regions(path, frame_width=None, frame_height=None):
     with open(path, "r") as f:
         raw = json.load(f)
     regions = {}
@@ -76,7 +76,15 @@ def load_regions(path):
             pts = val
             display = key
         rid = region_slug(display)
-        regions[rid] = np.array(pts, dtype=np.int32)
+        points = np.asarray(pts, dtype=np.float32)
+        # Region files use normalized 0..1 coordinates so polygons remain
+        # aligned when the same camera feed is opened at a different size.
+        if points.size and np.nanmax(np.abs(points)) <= 1.0:
+            if not frame_width or not frame_height:
+                raise ValueError("Frame dimensions are required for normalized regions")
+            points[:, 0] *= max(1, int(frame_width) - 1)
+            points[:, 1] *= max(1, int(frame_height) - 1)
+        regions[rid] = np.rint(points).astype(np.int32)
         display_names[rid] = display
     return regions, display_names
  
@@ -178,17 +186,20 @@ def build_sample(frame_index, counts, run_status, run_id=None, started_at=None, 
  
  
 def main():
-    regions, display_names = load_regions(REGIONS_FILE)
-    if not regions:
-        print("No regions found. Run select_regions.py first.")
-        return
- 
     model = YOLO("yolov8n.pt")  # auto-downloads on first run
-    tracker = IoUTracker(iou_threshold=0.35, max_age=45)
+    tracker = IoUTracker(iou_threshold=0.35, max_age=150)
     cap = cv2.VideoCapture(VIDEO_PATH)
  
     if not cap.isOpened():
         print(f"Could not open {VIDEO_PATH}")
+        return
+
+    frame_width = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
+    frame_height = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
+    regions, display_names = load_regions(REGIONS_FILE, frame_width, frame_height)
+    if not regions:
+        print("No regions found. Run select_regions.py first.")
+        cap.release()
         return
  
     print("Running. Press 'q' to quit." if not HEADLESS else "Running headless.")
@@ -260,9 +271,14 @@ def main():
                 level, color = density_level(counts[name])
                 cv2.polylines(frame, [poly], True, color, 2)
                 display_name = display_names.get(name, name.replace("_", " ").title())
-                label_pos = (int(poly[0][0]) + 6, int(poly[0][1]) + 20)
-                cv2.putText(frame, f"{display_name}: {counts[name]} ({level})",
-                            label_pos, cv2.FONT_HERSHEY_SIMPLEX, 0.55, color, 2)
+                label = f"{display_name}: {counts[name]} ({level})"
+                (label_width, _label_height), _baseline = cv2.getTextSize(
+                    label, cv2.FONT_HERSHEY_SIMPLEX, 0.55, 2
+                )
+                label_x = min(max(4, int(poly[0][0]) + 6), max(4, frame_w - label_width - 4))
+                label_y = min(max(20, int(poly[0][1]) + 20), frame_h - 6)
+                cv2.putText(frame, label,
+                            (label_x, label_y), cv2.FONT_HERSHEY_SIMPLEX, 0.55, color, 2)
  
             total = sum(counts.values())
             cv2.putText(frame, f"Total (in regions): {total}  tracked: {n_people}", (10, 30),

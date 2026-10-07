@@ -107,6 +107,11 @@ function PersonGridCard({ p, onClick }) {
         <p className="text-[10px] text-slate-500 font-mono capitalize">
           Shirt: {p.clothing_color || "unknown"}
         </p>
+        {p.scene_context && (
+          <p className="text-[9px] text-slate-500 font-mono">
+            Scene context: Indian · students typically approx. 18–20
+          </p>
+        )}
       </div>
     </Card>
   );
@@ -210,15 +215,25 @@ function PersonDetailModal({ p, onClose }) {
                 value: `${p.gender} ${p.gender_conf != null ? `(${p.gender_conf.toFixed(1)}%)` : ""}`,
               },
               {
-                label: "AGE BRACKET",
+                label: "FAIRFACE AGE ESTIMATE",
                 value: `${p.age} ${p.age_conf != null ? `(${p.age_conf.toFixed(1)}%)` : ""}`,
               },
               {
-                label: "APPEARANCE GROUP",
+                label: "FAIRFACE APPEARANCE ESTIMATE",
                 value: `${(p.race || p.appearance_group || "").replace("Latino_Hispanic", "Hispanic / Latino")} ${
                   p.race_conf != null ? `(${p.race_conf.toFixed(1)}%)` : ""
                 }`,
               },
+              ...(p.scene_context ? [
+                {
+                  label: "SCENE NATIONALITY CONTEXT",
+                  value: p.scene_context.nationality,
+                },
+                {
+                  label: "TYPICAL STUDENT AGE CONTEXT",
+                  value: p.scene_context.typical_student_age,
+                },
+              ] : []),
               {
                 label: "SHIRT COLOR",
                 value: p.clothing_color || "Unknown",

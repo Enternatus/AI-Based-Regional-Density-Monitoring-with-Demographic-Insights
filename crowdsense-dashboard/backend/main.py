@@ -595,6 +595,7 @@ def get_overview():
     ages = Counter(r.get("age") for r in records.values() if r.get("age"))
     races = Counter((r.get("race") or "").replace("Latino_Hispanic", "Hispanic / Latino") for r in records.values() if r.get("race"))
     colors = Counter(r.get("clothing_color") for r in records.values() if r.get("clothing_color"))
+    scene_context = next((r.get("scene_context") for r in records.values() if r.get("scene_context")), None)
 
     return {
         "density": {
@@ -624,6 +625,7 @@ def get_overview():
                 "race": races.most_common(1)[0][0] if races else None,
                 "clothing_color": colors.most_common(1)[0][0] if colors else None,
             },
+            "scene_context": scene_context,
             "source_video": "close_range_crowd.mp4",
             "video_fps": 30,
         }
@@ -809,8 +811,11 @@ def get_people_summary():
     races = Counter()
     clothing_colors = Counter()
     source_types = Counter()
+    scene_context = None
     
     for r in records.values():
+        if scene_context is None and r.get("scene_context"):
+            scene_context = r["scene_context"]
         g = r.get("gender")
         if g and g != "Detecting...":
             genders[g] += 1
@@ -845,6 +850,7 @@ def get_people_summary():
         "race": dict(races.most_common()),
         "clothing_color": dict(clothing_colors.most_common()),
         "source_type": dict(source_types),
+        "scene_context": scene_context,
         "recent_persons": recent[:18],
         "source_video": "close_range_crowd.mp4",
         "video_fps": 30,

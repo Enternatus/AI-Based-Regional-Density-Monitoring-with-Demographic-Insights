@@ -238,7 +238,7 @@ export default function OverviewPanel({
               </div>
 
               <div className="dist-group">
-                <span className="dist-title">Age Brackets</span>
+                <span className="dist-title">FairFace Age Estimates</span>
                 <div className="age-tags">
                   {Object.entries(demographics.age || {}).map(([bracket, count]) => (
                     <span key={bracket} className="age-tag">
@@ -246,6 +246,12 @@ export default function OverviewPanel({
                     </span>
                   ))}
                 </div>
+                {people?.scene_context && (
+                  <p className="text-[10px] text-slate-500 mt-2">
+                    Scene context: {people.scene_context.nationality}; {people.scene_context.typical_student_age}.
+                    This is group context, separate from individual model estimates.
+                  </p>
+                )}
               </div>
             </div>
           )}

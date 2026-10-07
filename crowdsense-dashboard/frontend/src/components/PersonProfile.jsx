@@ -129,7 +129,7 @@ export default function PersonProfile({ person, onClose }) {
 
         {/* Scientific Disclosure */}
         <div className="profile-disclosure">
-          <strong>Scientific Methodology:</strong> Attributes are generated using YOLOv8 bounding boxes, FairFace multi-task demographic networks, and K-Means fabric color extraction. They represent statistical visual classifications, not personal identity.
+          <strong>Scientific Methodology:</strong> Attributes are generated using YOLOv8 bounding boxes, FairFace multi-task demographic networks, and K-Means fabric color extraction. Model age and appearance are estimates; the Indian nationality and typical student age shown below are operator-provided scene context, not per-person model findings.
         </div>
 
         {/* Demographic & Visual Attributes */}
@@ -139,10 +139,16 @@ export default function PersonProfile({ person, onClose }) {
             <Attribute label="Gender" value={data.gender} />
             <Attribute label="Age Bracket" value={data.age} />
             <Attribute
-              label="Appearance Group"
+              label="FairFace Appearance Estimate"
               value={data.race ? data.race.replace("Latino_Hispanic", "Hispanic / Latino") : ""}
             />
             <Attribute label="Shirt Fabric Color" value={data.clothing_color} />
+            {data.scene_context?.nationality && (
+              <Attribute label="Scene Nationality Context" value={data.scene_context.nationality} />
+            )}
+            {data.scene_context?.typical_student_age && (
+              <Attribute label="Typical Student Age Context" value={data.scene_context.typical_student_age} />
+            )}
           </div>
         </div>
 

@@ -53,10 +53,10 @@ CENTER_BAND_MIN = 0.02 if IS_WIDE else 0.25
 CENTER_BAND_MAX = 0.98 if IS_WIDE else 0.75
 MIN_BOX_HEIGHT_RATIO = 0.06 if IS_WIDE else 0.35
 COLOR_BOX_HEIGHT_MIN = 0.06 if IS_WIDE else 0.28
-DETECT_CONF = 0.25
+DETECT_CONF = float(os.environ.get("PERSON_DETECT_CONF", "0.23"))
 TRACK_CONF = 0.15
-TRACK_IOU = 0.5
-FULL_FRAME_FACE_EVERY = 12
+TRACK_IOU = 0.45
+FULL_FRAME_FACE_EVERY = 3
 
 # How many recent ACCEPTED raw reads to keep per attribute, per track, for
 # confidence-weighted smoothing. A single noisy frame can no longer flip
@@ -90,6 +90,7 @@ MIN_MARGIN = {
 # trades "always current" for "stable and readable", which is what you
 # actually want for a label a person is meant to read off the screen.
 SETTLE_SECONDS = 2.0
+MIN_GENDER_READS_TO_SETTLE = 3
 
 # --- Input-quality gating -------------------------------------------------
 # Confidence/margin gating (above) only catches AMBIGUOUS reads. It does
@@ -129,7 +130,12 @@ RECORDS_FILE = "person_records.json"
 from ultralytics import YOLO
 
 print("Loading YOLO...")
-yolo_model = YOLO("yolov8n.pt")
+YOLO_MODEL = os.environ.get("PERSON_MODEL", "yolov8n.pt")
+# A larger inference size helps retain distant/partly occluded students in
+# wide classroom frames. Keep it configurable because it trades throughput
+# for recall, especially on CPU-only machines.
+DETECT_IMGSZ = int(os.environ.get("PERSON_IMGSZ", "1280" if IS_WIDE else "640"))
+yolo_model = YOLO(YOLO_MODEL)
 
 print("Loading FairFace...")
 fairface_model = FairFace(model_path="fairface_model/weights/fairface.onnx")
@@ -284,15 +290,11 @@ def pose_offset(landmarks):
 
 
 def dominant_clothing_color(crop_bgr):
-    """Accurate clothing color detection for close-up bust crops.
-    In these video frames, the person's face/head occupies the upper 65%,
-    and the torso/shirt occupies the bottom 30-35% (0.70 to 0.98 of crop height).
-    Uses 2-cluster K-means to isolate shirt fabric from neck skin / shadows,
-    and analyzes both brightness and color channels."""
+    """Estimate shirt color from the upper-middle torso, avoiding desks and legs."""
     h, w = crop_bgr.shape[:2]
     if h < 35 or w < 20:
         return None
-    torso = crop_bgr[int(h * 0.70):int(h * 0.98), int(w * 0.10):int(w * 0.90)]
+    torso = crop_bgr[int(h * 0.30):int(h * 0.62), int(w * 0.18):int(w * 0.82)]
     if torso.size == 0 or torso.shape[0] < 5 or torso.shape[1] < 5:
         return None
 
@@ -411,6 +413,14 @@ def _smoothed_from_history(history):
     return smoothed_label, smoothed_conf
 
 
+def gender_history_is_stable(history):
+    """Only settle a gender estimate after several agreeing quality reads."""
+    if len(history) < MIN_GENDER_READS_TO_SETTLE:
+        return False
+    recent_labels = [label for label, _confidence in history[-MIN_GENDER_READS_TO_SETTLE:]]
+    return len(set(recent_labels)) == 1
+
+
 def update_attribute(attr_name, track_id, label, conf, margin):
     """Accept/reject a raw read for one attribute. If accepted, add it to
     this track's rolling history and return the updated confidence-weighted
@@ -494,6 +504,35 @@ def match_face_in_box(faces, x1, y1, x2, y2):
     return best
 
 
+def assign_faces_to_tracks(faces, tracks):
+    """Assign each full-frame face to at most one person box.
+
+    A face can fall inside overlapping person boxes in a classroom. Choosing
+    the smallest containing box (then nearest normalized center) avoids
+    feeding the same student's face to neighboring tracks.
+    """
+    assigned = {}
+    for face in faces or []:
+        fx1, fy1, fx2, fy2 = [float(v) for v in face.bbox[:4]]
+        cx, cy = (fx1 + fx2) / 2.0, (fy1 + fy2) / 2.0
+        candidates = []
+        for track_id, box in tracks:
+            track_id = str(track_id)
+            x1, y1, x2, y2 = map(float, box)
+            if x1 <= cx <= x2 and y1 <= cy <= y2:
+                area = max(1.0, (x2 - x1) * (y2 - y1))
+                dx = (cx - (x1 + x2) / 2.0) / max(1.0, x2 - x1)
+                dy = (cy - (y1 + y2) / 2.0) / max(1.0, y2 - y1)
+                candidates.append((area, dx * dx + dy * dy, track_id))
+        if candidates:
+            _area, _distance, best_track = min(candidates)
+            face_area = max(1.0, (fx2 - fx1) * (fy2 - fy1))
+            previous = assigned.get(best_track)
+            if previous is None or face_area > previous[0]:
+                assigned[best_track] = (face_area, face)
+    return {track_id: face for track_id, (_area, face) in assigned.items()}
+
+
 def apply_fairface_from_face(record, track_id, image_bgr, face, crop):
     """Run quality gate + FairFace on an already-detected face."""
     landmarks = face.landmarks
@@ -548,6 +587,7 @@ def apply_fairface_from_face(record, track_id, image_bgr, face, crop):
         "age": a_label, "age_conf": round(a_conf, 1),
         "race": r_label, "race_conf": round(r_conf, 1),
         "accepted": any_accepted,
+        "gender_accepted": gender_accepted,
     })
     if len(record["raw_attempts"]) > 40:
         record["raw_attempts"].pop(0)
@@ -579,9 +619,14 @@ def apply_fairface_from_face(record, track_id, image_bgr, face, crop):
             record["crop_path"] = crop_path
             best_conf_seen[track_id] = g_conf
 
-    if gender_accepted:
+    gender_history = raw_history["gender"][track_id]
+    gender_stable = gender_history_is_stable(gender_history)
+    if gender_accepted and gender_stable:
         if record["settle_start_frame"] is None:
             record["settle_start_frame"] = frame_count
+    elif not gender_stable:
+        # An early confident mistake must not start a permanent lock timer.
+        record["settle_start_frame"] = None
 
     if (record["settle_start_frame"] is not None
             and (frame_count - record["settle_start_frame"]) >= SETTLE_FRAMES):
@@ -592,8 +637,10 @@ def apply_fairface_from_face(record, track_id, image_bgr, face, crop):
 
 
 print("Running. Press 'q' to quit.")
-person_tracker = IoUTracker(iou_threshold=0.35, max_age=45)
+person_tracker = IoUTracker(iou_threshold=0.35, max_age=150)
 cached_full_faces = []
+cached_full_faces_frame = -1
+faces_by_track = {}
 tracked_person_counts = []
 
 while cap.isOpened():
@@ -603,10 +650,11 @@ while cap.isOpened():
 
     frame_h, frame_w = frame.shape[:2]
 
-    # ByteTrack drops static seated people. Detect first, then assign IDs
-    # with IoU/centroid matching so zero-velocity boxes stay confirmed.
+    # A single larger-scale pass avoids generating a second set of overlapping
+    # people boxes while improving recall for distant students.
     pred = yolo_model.predict(
-        frame, classes=[0], conf=DETECT_CONF, iou=TRACK_IOU, verbose=False
+        frame, classes=[0], conf=DETECT_CONF, iou=TRACK_IOU,
+        imgsz=DETECT_IMGSZ, max_det=100, verbose=False
     )
     det_boxes = []
     if pred[0].boxes is not None and len(pred[0].boxes):
@@ -614,11 +662,15 @@ while cap.isOpened():
     tracks = person_tracker.update(det_boxes, frame_wh=(frame_w, frame_h))
     tracked_person_counts.append(len(tracks))
 
-    if IS_WIDE and (frame_count % FULL_FRAME_FACE_EVERY == 0 or not cached_full_faces):
+    if IS_WIDE and (
+        frame_count % FULL_FRAME_FACE_EVERY == 0 or cached_full_faces_frame < 0
+    ):
         try:
             cached_full_faces = list(face_detector.detect(frame) or [])
         except Exception:
             cached_full_faces = []
+        cached_full_faces_frame = frame_count
+        faces_by_track = assign_faces_to_tracks(cached_full_faces, tracks)
 
     if tracks:
         # Clean unannotated copy of the frame for cropping, attribute analysis,
@@ -643,10 +695,14 @@ while cap.isOpened():
                     "crop_path": None,
                     "first_seen_frame": frame_count,
                     "last_seen_frame": frame_count,
-                    "settle_start_frame": None,  # frame of first ACCEPTED read
+                    "settle_start_frame": None,  # starts after 3 agreeing quality reads
                     "locked": False,             # True once attributes are final
                     "confirmed": False,          # True once it settled normally (not a fallback guess)
                     "source": None,              # settled | best_raw | last_resort | None (still detecting)
+                    "scene_context": ({
+                        "nationality": "Indian (provided scene context)",
+                        "typical_student_age": "Approximately 18–20 years (group context)",
+                    } if IS_WIDE else None),
                     "raw_attempts": [],          # FairFace on quality-OK crops (reliable pipeline)
                     "low_quality_attempts": [],  # FairFace on rejected crops -- last-resort only
                     "gate_log": [],              # every detection ATTEMPT, including ones that never
@@ -736,8 +792,27 @@ while cap.isOpened():
                     and is_well_positioned):
                 try:
                     if IS_WIDE:
-                        face = match_face_in_box(cached_full_faces, x1, y1, x2, y2)
+                        # Full-frame landmarks are valid only for the exact
+                        # frame they were detected on; stale landmarks applied
+                        # to a moving student can produce the wrong face crop.
+                        face = (faces_by_track.get(track_id)
+                                if cached_full_faces_frame == frame_count else None)
                         image_for_align = clean_frame
+                        # Full-frame face detection can miss small classroom
+                        # faces. Retry inside this person's crop before leaving
+                        # the track in Detecting state.
+                        last_crop_attempt = record.get("_last_crop_face_attempt", -FULL_FRAME_FACE_EVERY)
+                        if (not face
+                                and frame_count - last_crop_attempt >= FULL_FRAME_FACE_EVERY):
+                            record["_last_crop_face_attempt"] = frame_count
+                            crop_faces = face_detector.detect(crop)
+                            face = max(
+                                crop_faces or [],
+                                key=lambda item: max(0.0, float(item.bbox[2]) - float(item.bbox[0]))
+                                * max(0.0, float(item.bbox[3]) - float(item.bbox[1])),
+                                default=None,
+                            )
+                            image_for_align = crop
                     else:
                         faces = face_detector.detect(crop)
                         face = faces[0] if faces else None
@@ -761,13 +836,12 @@ while cap.isOpened():
             else:
                 color = (180, 180, 180)  # grey = still detecting, not a guess
             cv2.rectangle(frame, (x1, y1), (x2, y2), color, 2)
-            label = f"ID {track_id}: {record['gender']} ({record['gender_conf']:.0f}%)"
-            if record["age"]:
-                label += f" | {record['age']} | {record['race']}"
-            if record["locked"]:
-                label += " [confirmed]"
-            elif is_guess:
-                label += " [guess]"
+            gender_mark = {"Male": "M", "Female": "F"}.get(record["gender"], "?")
+            if is_guess:
+                gender_mark += "?"
+            label = f"ID {track_id}: {gender_mark}"
+            if record["gender"] != "Detecting...":
+                label += f" {record['gender_conf']:.0f}%"
             cv2.putText(frame, label, (x1, y1 - 10),
                         cv2.FONT_HERSHEY_SIMPLEX, 0.6, color, 2)
 

@@ -240,6 +240,17 @@ python crowd_monitor.py
 python gender_monitor.py
 ```
 
+For wide classroom footage, person detection uses a larger image size and a
+moderate confidence cutoff to recover distant students without running a
+second overlapping detector pass. Tune the recall/speed tradeoff with `PERSON_IMGSZ`
+(default `1280` for classroom video),
+`PERSON_DETECT_CONF` (default `0.18`), and `PERSON_MODEL` (default
+`yolov8n.pt`). Larger image sizes and models can improve recall but run slower;
+start with the defaults, then compare a short clip before lowering confidence
+further. Classroom runs also save the operator-provided Indian nationality and
+typical 18–20 student-age context separately from FairFace's per-person model
+estimates.
+
 ### 4. Launch the dashboard
 
 ```bash
