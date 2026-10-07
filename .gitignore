@@ -31,6 +31,8 @@ current_person.jpg
 mall_dataset/
 P1E_S1_C1/
 recording_frames/
+class_recording_frames/
+extracted_frames/
 # Large media files - never commit
 my_recording.mp4
 recording_frames.zip
